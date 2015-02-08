@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="listentries">
+        <item>Online mode</item>
+        <item>Offline mode</item>
+    </string-array>
+    <string-array name="listvalues">
+        <item>online</item>
+        <item>offline</item>
+    </string-array>      
+</resources>

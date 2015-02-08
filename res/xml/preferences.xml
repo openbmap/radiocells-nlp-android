@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <!--
+    <PreferenceCategory android:title="Credentials" >
+        <EditTextPreference
+            android:dialogTitle="Enter Openbmap user"
+            android:key="credentials.user"
+            android:summary="Openbmap user name"
+            android:title="User" />
+        <EditTextPreference
+            android:dialogTitle="Enter Openbmap password"
+            android:key="credentials.password"
+            android:password="true"
+            android:summary="Openbmap Password"
+            android:title="Password" />
+    </PreferenceCategory>
+    -->
+    <PreferenceCategory android:title="Operation mode" >
+        <ListPreference
+            android:defaultValue="offline"
+            android:entries="@array/listentries"
+            android:entryValues="@array/listvalues"
+            android:key="mode"
+            android:summary="When using offline mode, download a wifi database, when using online mode, be sure to activate mobile data"
+            android:title="Online/offline mode" />
+    </PreferenceCategory>
+    <PreferenceCategory android:title="Geolocation database" >
+
+        <!--
+        <ListPreference
+            android:defaultValue="none"
+            android:key="data.ref_database"
+            android:summary="Offline geolocation database"
+            android:title="Database" >
+        </ListPreference>
+        -->
+
+        <Preference
+            android:key="data.download_wifi_catalog"
+            android:summary="Download offline geolocation database (~400 MB)"
+            android:title="Download database" >
+        </Preference>
+
+        <EditTextPreference
+            android:defaultValue="/org.openbmap.unifiednlp/"
+            android:dialogMessage="Enter folder"
+            android:key="data.dir"
+            android:summary="Choose directory for offline geolocation database"
+            android:title="Data directory" />
+    </PreferenceCategory>
+    <PreferenceCategory android:title="System" >
+        <Preference
+            android:key="gps.ossettings"
+            android:summary="Check Android system GPS settings"
+            android:title="GPS settings" >
+        </Preference>
+    </PreferenceCategory>
+    <PreferenceCategory android:title="Debug" >
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="acra.enable"
+            android:summaryOff="Don't send crash reports"
+            android:summaryOn="Send crash reports"
+            android:title="Crash reports" />
+    </PreferenceCategory>
+
+</PreferenceScreen>

@@ -1,0 +1,10 @@
+<resources>
+
+    <string name="app_name">org.openbmap.unifiedNlpProvider</string>
+
+    <string name="error_saving_file">Error saving file</string>
+
+    <string name="error_create_folder">Couldn\'t create folder</string>
+
+    <string name="prefs_none">None</string>
+</resources>
