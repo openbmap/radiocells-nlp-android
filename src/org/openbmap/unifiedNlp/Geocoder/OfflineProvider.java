@@ -76,12 +76,18 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
 				}
 
 				String whereClause = "";
+				String[] whereArgs = params[0].toArray(new String[0]);
+				
+				if (whereArgs.length < 1) {
+					Log.w(TAG, "Query contained no bssids, skipping update");
+					return null;
+				}
+				
 				for (String k: params[0]) {
 					if (whereClause.length() > 1 ) { whereClause += " OR ";}
 					whereClause += " bssid = ?";
 				}
-				String[] whereArgs = params[0].toArray(new String[0]);
-				for (int index =0; index < whereArgs.length; index++){
+				for (int index = 0; index < whereArgs.length; index++){
 					whereArgs[index] = whereArgs[index].replace(":", "").toUpperCase() ;
 					//Log.i(TAG, "Sanitzed where "+ whereArgs[index]);
 				}
