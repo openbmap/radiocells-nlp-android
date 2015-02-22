@@ -79,6 +79,14 @@ public class SettingsActivity extends PreferenceActivity {
 		initGpsSystemSettingsControl();
 	}
 
+	@Override
+	protected final void onDestroy() {
+		if (mReceiver != null) {
+			unregisterReceiver(mReceiver);
+		}
+		super.onDestroy();
+	}
+	
 	/**
 	 * Initializes wifi catalog source preference
 	 */
