@@ -19,8 +19,10 @@ package org.openbmap.unifiedNlp.Geocoder;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.openbmap.unifiedNlp.Preferences;
+import org.openbmap.unifiedNlp.services.Cell;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -31,6 +33,7 @@ import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Environment;
 import android.preference.PreferenceManager;
+import android.telephony.CellInfo;
 import android.util.Log;
 
 public class OfflineProvider extends AbstractProvider implements ILocationProvider {
@@ -61,7 +64,7 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public void getLocation(ArrayList<String> wifiList) {
+	public void getLocation(ArrayList<String> wifiList, List<Cell> cellsList) {
 		new AsyncTask<ArrayList<String>, Void, Location>() {
 
 			@SuppressLint("DefaultLocale")

@@ -1,8 +1,12 @@
 package org.openbmap.unifiedNlp.Geocoder;
 
 import java.util.ArrayList;
+import java.util.List;
+
+import org.openbmap.unifiedNlp.services.Cell;
 
 import android.location.Location;
+import android.telephony.CellInfo;
 import android.util.Log;
 
 public abstract class AbstractProvider implements ILocationProvider {
@@ -11,7 +15,7 @@ public abstract class AbstractProvider implements ILocationProvider {
 	private Location mLastLocation;
 	private Long mLastFix;
 
-	public abstract void getLocation(ArrayList<String> wifiList);
+	public abstract void getLocation(ArrayList<String> wifiList, List<Cell> cellsList);
 
 	/**
 	 * Returns last location update
