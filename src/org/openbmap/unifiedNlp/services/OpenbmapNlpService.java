@@ -152,106 +152,107 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
 			if (wifiManager.isWifiEnabled() || (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2 &&
 					wifiManager.isScanAlwaysAvailable())) {
 				//Log.i(TAG, "Scanning wifis");
-				scanning = wifiManager.startScan();;
+				scanning = wifiManager.startScan();
 
-				if (this.mWifiScanResults == null) {
-					/**
-					 * Processes scan results and sends query to geocoding service
-					 */
-					this.mWifiScanResults = new WifiScanCallback() {
+                /**
+                 * Processes scan results and sends query to geocoding service
+                 */if (this.mWifiScanResults == null) {
+                    this.mWifiScanResults = new WifiScanCallback() {
 
-						public void onWifiResultsAvailable() {
-							//Log.d(TAG, "Wifi results are available now.");
+                        public void onWifiResultsAvailable() {
+                            //Log.d(TAG, "Wifi results are available now.");
 
-							if (scanning) {
-								//Log.i(TAG, "Wifi scan results arrived..");
-								List<ScanResult> scans = wifiManager.getScanResults();
-								ArrayList<String> wifis = new ArrayList<String>();
+                            if (scanning) {
+                                //Log.i(TAG, "Wifi scan results arrived..");
+                                List<ScanResult> scans = wifiManager.getScanResults();
+                                ArrayList<String> wifis = new ArrayList<>();
 
-								if (scans != null) {
-									// Generates a list of wifis from scan results
-									for (ScanResult r : scans) {
-										if (r.BSSID != null) {
-											wifis.add(r.BSSID);
-										}
-									}
-									Log.i(TAG, "Using " + wifis.size() + " wifis for geolocation");
-								} else {
-									// @see http://code.google.com/p/android/issues/detail?id=19078
-									Log.e(TAG, "WifiManager.getScanResults returned null");
-								}
+                                if (scans != null) {
+                                    // Generates a list of wifis from scan results
+                                    for (ScanResult r : scans) {
+                                        if (r.BSSID != null) {
+                                            wifis.add(r.BSSID);
+                                        }
+                                    }
+                                    Log.i(TAG, "Using " + wifis.size() + " wifis for geolocation");
+                                } else {
+                                    // @see http://code.google.com/p/android/issues/detail?id=19078
+                                    Log.e(TAG, "WifiManager.getScanResults returned null");
+                                }
 
-								List<CellInfo> cellsRawList = mTelephonyManager.getAllCellInfo();
-								if (cellsRawList != null) {
-									Log.d(TAG, "Found " + cellsRawList.size() + " cells");
-								} else {
-									Log.d(TAG, "No cell available (getAllCellInfo returned null)");
-								}
-								
-								List<Cell> cells = new ArrayList<Cell>();
-								
-								String operator = mTelephonyManager.getNetworkOperator();
-								int mnc;
-								int mcc;
-								
-								// getNetworkOperator() may return empty string, probably due to dropped connection
-								if (operator != null && operator.length() > 3) {
-									mcc = Integer.valueOf(operator.substring(0, 3));
-									mnc = Integer.valueOf(operator.substring(3));
-								} else {
-									Log.e(TAG, "Error retrieving network operator, skipping cell");
-									mcc = 0;
-									mnc = 0;
-								}
-								
-								for (CellInfo c : cellsRawList) {
-									Cell cell = new Cell();
-									if (c instanceof CellInfoGsm) {
-										Log.d(TAG, "GSM cell found");
-										cell.cellId = ((CellInfoGsm)c).getCellIdentity().getCid();
-										cell.lac = ((CellInfoGsm)c).getCellIdentity().getLac();
-										//cell.mcc = ((CellInfoGsm)c).getCellIdentity().getMcc();
-										//cell.mnc = ((CellInfoGsm)c).getCellIdentity().getMnc();
-										cell.mcc = mcc;
-										cell.mnc = mnc;
-									} else if (c instanceof CellInfoCdma ) {
-										/*
-										object.put("cellId", ((CellInfoCdma)s).getCellIdentity().getBasestationId());
-										object.put("locationAreaCode", ((CellInfoCdma)s).getCellIdentity().getLac());
-										object.put("mobileCountryCode", ((CellInfoCdma)s).getCellIdentity().get());
-										object.put("mobileNetworkCode", ((CellInfoCdma)s).getCellIdentity().getMnc());*/
-										Log.wtf(TAG, "Using of CDMA cells for NLP not yet implemented");
-									} else if (c instanceof CellInfoLte ) {
-										Log.d(TAG, "LTE cell found");
-										cell.cellId = ((CellInfoLte)c).getCellIdentity().getCi();
-										cell.lac = ((CellInfoLte)c).getCellIdentity().getTac();
-										//cell.mcc = ((CellInfoLte)c).getCellIdentity().getMcc();
-										//cell.mnc = ((CellInfoLte)c).getCellIdentity().getMnc();
-										cell.mcc = mcc;
-										cell.mnc = mnc;
-									} else if (c instanceof CellInfoWcdma ) {
-										Log.d(TAG, "CellInfoWcdma cell found");
-										cell.cellId = ((CellInfoWcdma)c).getCellIdentity().getCid();
-										cell.lac = ((CellInfoWcdma)c).getCellIdentity().getLac();
-										//cell.mcc = ((CellInfoWcdma)c).getCellIdentity().getMcc();
-										//cell.mnc = ((CellInfoWcdma)c).getCellIdentity().getMnc();
-										cell.mcc = mcc;
-										cell.mnc = mnc;
-									}	
-									cells.add(cell);
-								}
-								
-								if (System.currentTimeMillis() - queryTime > REFRESH_INTERVAL) {
-									queryTime = System.currentTimeMillis();
-									mGeocoder.getLocation(wifis, cells);
-								}
-							} else {
-								Log.v(TAG, "Too frequent requests.. Skipping geolocation update..");
-							}
-							scanning = false;
-						}
-					};
-				}
+                                List<CellInfo> cellsRawList = mTelephonyManager.getAllCellInfo();
+                                if (cellsRawList != null) {
+                                    Log.d(TAG, "Found " + cellsRawList.size() + " cells");
+                                } else {
+                                    Log.d(TAG, "No cell available (getAllCellInfo returned null)");
+                                }
+
+                                List<Cell> cells = new ArrayList<>();
+
+                                String operator = mTelephonyManager.getNetworkOperator();
+                                int mnc;
+                                int mcc;
+
+                                // getNetworkOperator() may return empty string, probably due to dropped connection
+                                if (operator != null && operator.length() > 3) {
+                                    mcc = Integer.valueOf(operator.substring(0, 3));
+                                    mnc = Integer.valueOf(operator.substring(3));
+                                } else {
+                                    Log.e(TAG, "Error retrieving network operator, skipping cell");
+                                    mcc = 0;
+                                    mnc = 0;
+                                }
+
+                                if (cellsRawList != null) {
+                                    for (CellInfo c : cellsRawList) {
+                                        Cell cell = new Cell();
+                                        if (c instanceof CellInfoGsm) {
+                                            Log.d(TAG, "GSM cell found");
+                                            cell.cellId = ((CellInfoGsm) c).getCellIdentity().getCid();
+                                            cell.lac = ((CellInfoGsm) c).getCellIdentity().getLac();
+                                            //cell.mcc = ((CellInfoGsm)c).getCellIdentity().getMcc();
+                                            //cell.mnc = ((CellInfoGsm)c).getCellIdentity().getMnc();
+                                            cell.mcc = mcc;
+                                            cell.mnc = mnc;
+                                        } else if (c instanceof CellInfoCdma) {
+                                            /*
+                                            object.put("cellId", ((CellInfoCdma)s).getCellIdentity().getBasestationId());
+                                            object.put("locationAreaCode", ((CellInfoCdma)s).getCellIdentity().getLac());
+                                            object.put("mobileCountryCode", ((CellInfoCdma)s).getCellIdentity().get());
+                                            object.put("mobileNetworkCode", ((CellInfoCdma)s).getCellIdentity().getMnc());*/
+                                            Log.wtf(TAG, "Using of CDMA cells for NLP not yet implemented");
+                                        } else if (c instanceof CellInfoLte) {
+                                            Log.d(TAG, "LTE cell found");
+                                            cell.cellId = ((CellInfoLte) c).getCellIdentity().getCi();
+                                            cell.lac = ((CellInfoLte) c).getCellIdentity().getTac();
+                                            //cell.mcc = ((CellInfoLte)c).getCellIdentity().getMcc();
+                                            //cell.mnc = ((CellInfoLte)c).getCellIdentity().getMnc();
+                                            cell.mcc = mcc;
+                                            cell.mnc = mnc;
+                                        } else if (c instanceof CellInfoWcdma) {
+                                            Log.d(TAG, "CellInfoWcdma cell found");
+                                            cell.cellId = ((CellInfoWcdma) c).getCellIdentity().getCid();
+                                            cell.lac = ((CellInfoWcdma) c).getCellIdentity().getLac();
+                                            //cell.mcc = ((CellInfoWcdma)c).getCellIdentity().getMcc();
+                                            //cell.mnc = ((CellInfoWcdma)c).getCellIdentity().getMnc();
+                                            cell.mcc = mcc;
+                                            cell.mnc = mnc;
+                                        }
+                                        cells.add(cell);
+                                    }
+                                }
+
+                                if (System.currentTimeMillis() - queryTime > REFRESH_INTERVAL) {
+                                    queryTime = System.currentTimeMillis();
+                                    mGeocoder.getLocation(wifis, cells);
+                                }
+                            } else {
+                                Log.v(TAG, "Too frequent requests.. Skipping geolocation update..");
+                            }
+                            scanning = false;
+                        }
+                    };
+                }
 			}
 		}
 		return null;
