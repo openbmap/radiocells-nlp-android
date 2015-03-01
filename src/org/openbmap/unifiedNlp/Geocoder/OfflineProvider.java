@@ -33,7 +33,6 @@ import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Environment;
 import android.preference.PreferenceManager;
-import android.telephony.CellInfo;
 import android.util.Log;
 
 public class OfflineProvider extends AbstractProvider implements ILocationProvider {
@@ -74,7 +73,7 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
 					throw new IllegalArgumentException("Wifi list was null");
 				}
 
-				if (prefs.getString(Preferences.KEY_WIFI_CATALOG_FILE, Preferences.VAL_WIFI_CATALOG_NONE).equals(Preferences.VAL_WIFI_CATALOG_NONE)) {
+				if (prefs.getString(Preferences.KEY_WIFI_CATALOG_FILE, Preferences.WIFI_CATALOG_NONE).equals(Preferences.WIFI_CATALOG_NONE)) {
 					throw new IllegalArgumentException("No catalog database was specified");
 				}
 

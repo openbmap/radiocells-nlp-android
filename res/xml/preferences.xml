@@ -14,47 +14,38 @@
             android:password="true"
             android:summary="Openbmap Password"
             android:title="Password" />
-    </PreferenceCategory>
+    </PreferenceCategory>
     -->
     <PreferenceCategory android:title="Operation mode" >
         <ListPreference
-            android:defaultValue="offline"
+            android:defaultValue="online"
             android:entries="@array/listentries"
             android:entryValues="@array/listvalues"
             android:key="mode"
-            android:summary="When using offline mode, download a wifi database, when using online mode, be sure to activate mobile data"
+            android:summary="When using offline mode, be sure to press 'Update offline database' below. Online mode queries the openbmap geolocation service and requires mobile data access"
             android:title="Online/offline mode" />
     </PreferenceCategory>
     <PreferenceCategory android:title="Geolocation database" >
 
-        <!--
         <ListPreference
             android:defaultValue="none"
             android:key="data.ref_database"
-            android:summary="Offline geolocation database"
-            android:title="Database" >
-        </ListPreference>
-        -->
+            android:summary="Select a offline database\nIf none is available, click 'Update offline database'"
+            android:title="Offline database" >
+        </ListPreference>
 
         <Preference
             android:key="data.download_wifi_catalog"
-            android:summary="Download offline geolocation database (~400 MB)"
-            android:title="Download database" >
+            android:summary="Click to download the latest offline geolocation database\n(approx. 400 MB)"
+            android:title="Update offline database" >
         </Preference>
 
         <EditTextPreference
             android:defaultValue="/org.openbmap.unifiednlp/"
             android:dialogMessage="Enter folder"
             android:key="data.dir"
-            android:summary="Choose directory for offline geolocation database"
-            android:title="Data directory" />
-    </PreferenceCategory>
-    <PreferenceCategory android:title="System" >
-        <Preference
-            android:key="gps.ossettings"
-            android:summary="Check Android system GPS settings"
-            android:title="GPS settings" >
-        </Preference>
+            android:summary="Choose folder for offline database"
+            android:title="Database folder" />
     </PreferenceCategory>
     <PreferenceCategory android:title="Debug" >
         <CheckBoxPreference
@@ -64,5 +55,4 @@
             android:summaryOn="Send crash reports"
             android:title="Crash reports" />
     </PreferenceCategory>
-
 </PreferenceScreen>

@@ -53,8 +53,12 @@ public final class Preferences {
 	 */
 	
 	public static final String VAL_OPERATION_MODE = "offline";
-	
-	/**
+
+    public static final String OPERATION_MODE_OFFLINE = "offline";
+
+    public static final String OPERATION_MODE_ONLINE = "online";
+
+    /**
 	 * Root folder for all additional data
 	 */
 	public static final String VAL_DATA_FOLDER = "/org.openbmap.unifiednlp";
@@ -67,7 +71,7 @@ public final class Preferences {
 	/**
 	 * Reference database not set 
 	 */
-	public static final String VAL_WIFI_CATALOG_NONE = "none";
+	public static final String WIFI_CATALOG_NONE = "none";
 	
 	/**
 	 * File extension for wifi catalog
