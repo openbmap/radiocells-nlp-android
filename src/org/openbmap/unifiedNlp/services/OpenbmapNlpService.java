@@ -149,7 +149,7 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
 		}
 
 		if (wifiManager != null) {
-			if (wifiManager.isWifiEnabled() || (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2 &&
+			if (wifiManager.isWifiEnabled() || (Build.VERSION.SDK_INT >= 18 &&
 					wifiManager.isScanAlwaysAvailable())) {
 				//Log.i(TAG, "Scanning wifis");
 				scanning = wifiManager.startScan();
@@ -165,7 +165,7 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
                             if (scanning) {
                                 //Log.i(TAG, "Wifi scan results arrived..");
                                 List<ScanResult> scans = wifiManager.getScanResults();
-                                ArrayList<String> wifis = new ArrayList<>();
+                                ArrayList<String> wifis = new ArrayList<String>();
 
                                 if (scans != null) {
                                     // Generates a list of wifis from scan results
@@ -187,7 +187,7 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
                                     Log.d(TAG, "No cell available (getAllCellInfo returned null)");
                                 }
 
-                                List<Cell> cells = new ArrayList<>();
+                                List<Cell> cells = new ArrayList<Cell>();
 
                                 String operator = mTelephonyManager.getNetworkOperator();
                                 int mnc;
@@ -244,7 +244,11 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
 
                                 if (System.currentTimeMillis() - queryTime > REFRESH_INTERVAL) {
                                     queryTime = System.currentTimeMillis();
-                                    mGeocoder.getLocation(wifis, cells);
+                                    if (mGeocoder != null) {
+                                        mGeocoder.getLocation(wifis, cells);
+                                    } else {
+                                        Log.e(TAG, "Geocoder is null!");
+                                    }
                                 }
                             } else {
                                 Log.v(TAG, "Too frequent requests.. Skipping geolocation update..");

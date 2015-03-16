@@ -12,13 +12,6 @@ import org.openbmap.unifiedNlp.services.JSONParser;
 import android.content.Context;
 import android.location.Location;
 import android.os.AsyncTask;
-import android.telephony.CellIdentityGsm;
-import android.telephony.CellInfo;
-import android.telephony.CellInfoCdma;
-import android.telephony.CellInfoGsm;
-import android.telephony.CellInfoLte;
-import android.telephony.CellInfoWcdma;
-import android.telephony.SignalStrength;
 import android.util.Log;
 
 public class OnlineProvider extends AbstractProvider implements ILocationProvider {
