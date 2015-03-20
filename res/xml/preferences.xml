@@ -40,12 +40,18 @@
             android:title="Update offline database" >
         </Preference>
 
-        <EditTextPreference
+        <Preference android:title="Database folder"
+            android:key="data.dir"
+            android:summary="Choose folder for offline database"/>
+
+        <!--<EditTextPreference
             android:defaultValue="/org.openbmap.unifiednlp/"
             android:dialogMessage="Enter folder"
             android:key="data.dir"
             android:summary="Choose folder for offline database"
             android:title="Database folder" />
+        -->
+
     </PreferenceCategory>
     <PreferenceCategory android:title="Debug" >
         <CheckBoxPreference
