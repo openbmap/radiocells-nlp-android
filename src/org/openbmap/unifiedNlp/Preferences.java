@@ -28,16 +28,22 @@ public final class Preferences {
 	public static final String KEY_GPS_SAVE_COMPLETE_TRACK = "gps.save_track";
 	public static final String KEY_DATA_FOLDER = "data.dir";
 	public static final String KEY_OPERATION_MODE = "mode";
+
 	/**
 	 * Wifi catalog download button
 	 */
 	public static final String KEY_DOWNLOAD_WIFI_CATALOG = "data.download_wifi_catalog";
 	
 	/**
-	 * Selected wifi catalog file
-	 */
-	public static final String KEY_WIFI_CATALOG_FILE = "data.ref_database";
-	
+     * Selected wifi catalog file
+     */
+    public static final String KEY_WIFI_CATALOG_FILE = "data.ref_database";
+
+    /**
+     * Wifi catalog version
+     */
+    public static final String KEY_WIFI_CATALOG_VERSION = "data.ref_database_version";
+
 	/**
 	 * Openbmap user name
 	 */
@@ -67,11 +73,17 @@ public final class Preferences {
 	 * Default reference database filename
 	 */
 	public static final String VAL_WIFI_CATALOG_FILE = "openbmap.sqlite";
-	
-	/**
-	 * Reference database not set 
-	 */
+
+    /**
+     * Reference database not set
+     */
 	public static final String WIFI_CATALOG_NONE = "none";
+
+
+     /**
+     * Reference database version not set
+     */
+    public static final String WIFI_CATALOG_VERSION_NONE = "not yet downloaded";
 	
 	/**
 	 * File extension for wifi catalog

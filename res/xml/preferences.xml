@@ -22,27 +22,27 @@
             android:entries="@array/listentries"
             android:entryValues="@array/listvalues"
             android:key="mode"
-            android:summary="When using offline mode, be sure to press 'Update offline database' below. Online mode queries the openbmap geolocation service and requires mobile data access"
-            android:title="Online/offline mode" />
+            android:summary="@string/operation_mode_summary"
+            android:title="@string/operation_mode_title" />
     </PreferenceCategory>
     <PreferenceCategory android:title="Geolocation database" >
 
         <ListPreference
             android:defaultValue="none"
             android:key="data.ref_database"
-            android:summary="Select a offline database\nIf none is available, click 'Update offline database'"
-            android:title="Offline database" >
+            android:summary="@string/wifi_catalog_summary"
+            android:title="@string/wifi_catalog_title" >
         </ListPreference>
 
         <Preference
             android:key="data.download_wifi_catalog"
-            android:summary="Click to download the latest offline geolocation database\n(approx. 400 MB)"
-            android:title="Update offline database" >
+            android:summary="@string/update_wifi_catalog_summary"
+            android:title="@string/update_wifi_catalog_title" >
         </Preference>
 
-        <Preference android:title="Database folder"
+        <Preference android:title="@string/database_folder_title"
             android:key="data.dir"
-            android:summary="Choose folder for offline database"/>
+            android:summary="@string/database_folder_summary"/>
 
         <!--<EditTextPreference
             android:defaultValue="/org.openbmap.unifiednlp/"
@@ -53,12 +53,12 @@
         -->
 
     </PreferenceCategory>
-    <PreferenceCategory android:title="Debug" >
+    <PreferenceCategory android:title="@string/debug_title" >
         <CheckBoxPreference
             android:defaultValue="false"
             android:key="acra.enable"
-            android:summaryOff="Don't send crash reports"
-            android:summaryOn="Send crash reports"
-            android:title="Crash reports" />
+            android:summaryOff="@string/crash_report_summary_off"
+            android:summaryOn="@string/crash_report_summary_on"
+            android:title="@string/crash_reports_title" />
     </PreferenceCategory>
 </PreferenceScreen>

@@ -2,9 +2,35 @@
 
     <string name="app_name">org.openbmap.unifiedNlpProvider</string>
 
+    <string name="download_started">Downloading..</string>
+
     <string name="error_saving_file">Error saving file</string>
 
     <string name="error_create_folder">Couldn\'t create folder</string>
 
     <string name="prefs_none">None</string>
+
+    <string name="operation_mode_summary">When using offline mode, be sure to press \'Update offline database\' below. Online mode queries the openbmap geolocation service and requires mobile data access</string>
+
+    <string name="operation_mode_title">Online/offline mode</string>
+
+    <string name="wifi_catalog_title">Offline database</string>
+
+    <string name="wifi_catalog_summary">Select a offline database\nIf none is available, click \'Update offline database\'</string>
+
+    <string name="update_wifi_catalog_title">Update offline database</string>
+
+    <string name="update_wifi_catalog_summary">Click to download the latest offline geolocation database (approx. 400 MB)</string>
+
+    <string name="database_folder_title">Database folder</string>
+
+    <string name="database_folder_summary">Choose folder for offline database</string>
+
+    <string name="debug_title">Debug</string>
+
+    <string name="crash_report_summary_off">Don\'t send crash reports</string>
+
+    <string name="crash_report_summary_on">Send crash reports</string>
+
+    <string name="crash_reports_title">Crash reports</string>
 </resources>

@@ -34,14 +34,11 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.media.audiofx.BassBoost;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.preference.EditTextPreference;
-import android.view.View;
-import android.view.View.OnClickListener;
-import android.widget.Button;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.Preference.OnPreferenceChangeListener;
@@ -55,6 +52,8 @@ import android.util.Log;
 import android.widget.Toast;
 
 import java.io.FilenameFilter;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /**
  * Preferences activity.
@@ -72,20 +71,20 @@ public class SettingsActivity extends PreferenceActivity {
         super.onCreate(savedInstanceState);
         addPreferencesFromResource(R.xml.preferences);
 
-        initWifiCatalogFolderControl();
+        initCatalogFolderControl();
 
         // with versions >= GINGERBREAD use download manager
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {
             initDownloadManager();
         }
 
-        initWifiCatalogDownloadControl();
+        initCatalogDownloadControl();
         initActiveWifiCatalogControl(PreferenceManager.getDefaultSharedPreferences(this).getString(Preferences.KEY_DATA_FOLDER, Preferences.VAL_DATA_FOLDER));
 
         initOperationMode();
 
-        Log.d(TAG, "Selected wifi catalog: " + getSelectedOfflineCatalog());
-        if (getSelectedOfflineCatalog().equals(Preferences.WIFI_CATALOG_NONE)) {
+        Log.d(TAG, "Selected wifi catalog: " + getSelectedCatalog());
+        if (getSelectedCatalog().equals(Preferences.WIFI_CATALOG_NONE)) {
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setMessage("Download offline wifi catalog now?\n(approx. 400MB)");
             builder.setTitle("No offline catalog selected");
@@ -109,8 +108,15 @@ public class SettingsActivity extends PreferenceActivity {
         }
     }
 
+    private String getCatalogVersion() {
+        return PreferenceManager.getDefaultSharedPreferences(this).getString(Preferences.KEY_WIFI_CATALOG_VERSION, Preferences.WIFI_CATALOG_VERSION_NONE);
+    }
 
-    private String getSelectedOfflineCatalog() {
+    private void setCatalogVersion(String version) {
+        PreferenceManager.getDefaultSharedPreferences(this).edit().putString(Preferences.KEY_WIFI_CATALOG_VERSION, version).commit();
+    }
+
+    private String getSelectedCatalog() {
         return PreferenceManager.getDefaultSharedPreferences(this).getString(Preferences.KEY_WIFI_CATALOG_FILE, Preferences.WIFI_CATALOG_NONE);
     }
 
@@ -129,19 +135,29 @@ public class SettingsActivity extends PreferenceActivity {
     /**
      * Initializes wifi catalog source preference
      */
-    private void initWifiCatalogDownloadControl() {
+    private void initCatalogDownloadControl() {
         Preference pref = findPreference(Preferences.KEY_DOWNLOAD_WIFI_CATALOG);
-
+        pref.setSummary(getString(R.string.update_wifi_catalog_summary) + "\n\nLocal version: " + getCatalogVersion());
         pref.setOnPreferenceClickListener(new OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(final Preference preference) {
                 Log.v(TAG, "Downloading wifi catalog");
+
+                Toast.makeText(SettingsActivity.this, R.string.download_started, Toast.LENGTH_LONG).show();
+
+                setCatalogVersion(Preferences.WIFI_CATALOG_VERSION_NONE);
+                Preference pref = findPreference(Preferences.KEY_DOWNLOAD_WIFI_CATALOG);
+                pref.setSummary(getString(R.string.update_wifi_catalog_summary) + "\n\nLocal version: " + getCatalogVersion());
+
                 downloadCatalog();
                 return true;
             }
         });
     }
 
+    /**
+     * Downloads wifi catalog
+     */
     private void downloadCatalog() {
         // try to create directory
         File folder = new File(Environment.getExternalStorageDirectory().getPath()
@@ -241,7 +257,7 @@ public class SettingsActivity extends PreferenceActivity {
 
             //initActiveWifiCatalogControl(catalogFolder);
             // handling wifi catalog files
-            activateWifiCatalog(file);
+            activateCatalog(file);
         }
     }
 
@@ -250,49 +266,11 @@ public class SettingsActivity extends PreferenceActivity {
      *
      * @return EditTextPreference with data directory.
      */
-    private void initWifiCatalogFolderControl() {
-        /*
-        EditTextPreference pref = (EditTextPreference) findPreference(Preferences.KEY_DATA_FOLDER);
-		//pref.setSummary(PreferenceManager.getDefaultSharedPreferences(this).getString(Preferences.KEY_WIFI_CATALOG_FOLDER, Preferences.VAL_WIFI_CATALOG_FOLDER));
-		pref.setOnPreferenceChangeListener(new OnPreferenceChangeListener() {
-			@Override
-			public boolean onPreferenceChange(final Preference preference, final Object newValue) {
-				String pathName = "";
-
-				// Ensure there is always a leading slash
-				if (!((String) newValue).startsWith(File.separator)) {
-					pathName = File.separator + (String) newValue;
-				} else {
-					pathName = (String) newValue;
-				}
-
-				// try to create directory
-				File folder = new File(Environment.getExternalStorageDirectory() + pathName);
-				boolean success = true;
-				if (!folder.exists()) {
-					success = folder.mkdirs();
-				}
-				if (!success) {
-					Toast.makeText(getBaseContext(), R.string.error_create_folder + pathName, Toast.LENGTH_LONG).show();
-					return false;
-				}
-
-				// Set summary with the directory value
-				//preference.setSummary((String) pathName);
-
-				// Re-populate available catalogs
-				//initActiveWifiCatalogControl(pathName); 
-
-				return true;
-			}
-		});
-		return pref;*/
-
-
+    private void initCatalogFolderControl() {
         Preference button = (Preference) findPreference("data.dir");
         button.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-            private String m_chosenDir = "";
-            private boolean m_newFolderEnabled = true;
+            private String mChosenDir = "";
+            private boolean mNewFolderEnabled = true;
 
             @Override
             public boolean onPreferenceClick(Preference arg0) {
@@ -303,7 +281,7 @@ public class SettingsActivity extends PreferenceActivity {
                                 new DirectoryChooserDialog.ChosenDirectoryListener() {
                                     @Override
                                     public void onChosenDir(String chosenDir) {
-                                        m_chosenDir = chosenDir;
+                                        mChosenDir = chosenDir;
 
                                         SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(SettingsActivity.this);
                                         settings.edit().putString("data.dir", chosenDir).commit();
@@ -312,11 +290,11 @@ public class SettingsActivity extends PreferenceActivity {
                                     }
                                 });
                 // Toggle new folder button enabling
-                directoryChooserDialog.setNewFolderEnabled(m_newFolderEnabled);
-                // Load directory chooser dialog for initial 'm_chosenDir' directory.
+                directoryChooserDialog.setNewFolderEnabled(mNewFolderEnabled);
+                // Load directory chooser dialog for initial 'mChosenDir' directory.
                 // The registered callback will be called upon final directory selection.
-                directoryChooserDialog.chooseDirectory(m_chosenDir);
-                m_newFolderEnabled = !m_newFolderEnabled;
+                directoryChooserDialog.chooseDirectory(mChosenDir);
+                mNewFolderEnabled = !mNewFolderEnabled;
                 return true;
             }
         });
@@ -383,7 +361,7 @@ public class SettingsActivity extends PreferenceActivity {
 
                 String listValue = (String) newValue;
                 Log.d(TAG, "New operation mode :" + listValue);
-                if (listValue.equals(Preferences.OPERATION_MODE_OFFLINE) && getSelectedOfflineCatalog().equals(Preferences.WIFI_CATALOG_NONE)) {
+                if (listValue.equals(Preferences.OPERATION_MODE_OFFLINE) && getSelectedCatalog().equals(Preferences.WIFI_CATALOG_NONE)) {
                     AlertDialog.Builder builder = new AlertDialog.Builder(SettingsActivity.this);
                     builder.setMessage("Download offline wifi catalog now?\n(approx. 400MB)");
                     builder.setTitle("No offline catalog found");
@@ -414,7 +392,7 @@ public class SettingsActivity extends PreferenceActivity {
      *
      * @param absoluteFile absolute filename (including path)
      */
-    private void activateWifiCatalog(final String absoluteFile) {
+    private void activateCatalog(final String absoluteFile) {
 
         ListPreference lf = (ListPreference) findPreference(Preferences.KEY_WIFI_CATALOG_FILE);
         // get filename
@@ -450,6 +428,10 @@ public class SettingsActivity extends PreferenceActivity {
             dialog.show();
         }
 
+        String version = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
+        setCatalogVersion(version);
+        Preference pref = findPreference(Preferences.KEY_DOWNLOAD_WIFI_CATALOG);
+        pref.setSummary(getString(R.string.update_wifi_catalog_summary) + "\n\nLocal version: " + getCatalogVersion());
     }
 
     /**
