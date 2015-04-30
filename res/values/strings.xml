@@ -33,4 +33,6 @@
     <string name="crash_report_summary_on">Send crash reports</string>
 
     <string name="crash_reports_title">Crash reports</string>
+
+    <string name="version">Version</string>
 </resources>

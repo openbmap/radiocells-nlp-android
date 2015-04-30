@@ -26,7 +26,8 @@ public final class Preferences {
 	public static final String KEY_GPS_OSSETTINGS = "gps.ossettings";
 	public static final String KEY_GPS_LOGGING_INTERVAL = "gps.interval";
 	public static final String KEY_GPS_SAVE_COMPLETE_TRACK = "gps.save_track";
-	public static final String KEY_DATA_FOLDER = "data.dir";
+    public static final String KEY_VERSION_INFO = "version";
+    public static final String KEY_DATA_FOLDER = "data.dir";
 	public static final String KEY_OPERATION_MODE = "mode";
 
 	/**
@@ -99,7 +100,11 @@ public final class Preferences {
 	 * Filename catalog database
 	 */
 	public static final String	WIFI_CATALOG_FILE = "openbmap.sqlite";
-	
+
+    /**
+     * Version information (increase on new version)
+     */
+    public static final String VERSION = "0.1.3";
 	/**
 	 * Private dummy constructor
 	 */

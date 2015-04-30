@@ -106,6 +106,9 @@ public class SettingsActivity extends PreferenceActivity {
             AlertDialog dialog = builder.create();
             dialog.show();
         }
+
+        Preference pref = findPreference(Preferences.KEY_VERSION_INFO);
+        pref.setSummary(Preferences.VERSION);
     }
 
     private String getCatalogVersion() {

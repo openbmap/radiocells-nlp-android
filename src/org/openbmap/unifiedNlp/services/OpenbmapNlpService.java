@@ -170,7 +170,7 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
                                 if (scans != null) {
                                     // Generates a list of wifis from scan results
                                     for (ScanResult r : scans) {
-                                        if (r.BSSID != null) {
+                                        if ((r.BSSID != null) & !(r.SSID.endsWith("_nomap"))) {
                                             wifis.add(r.BSSID);
                                         }
                                     }

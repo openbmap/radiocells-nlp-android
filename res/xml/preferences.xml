@@ -23,7 +23,8 @@
             android:entryValues="@array/listvalues"
             android:key="mode"
             android:summary="@string/operation_mode_summary"
-            android:title="@string/operation_mode_title" />
+            android:title="@string/operation_mode_title">
+        </ListPreference>
     </PreferenceCategory>
     <PreferenceCategory android:title="Geolocation database" >
 
@@ -40,17 +41,11 @@
             android:title="@string/update_wifi_catalog_title" >
         </Preference>
 
-        <Preference android:title="@string/database_folder_title"
+        <Preference
+            android:title="@string/database_folder_title"
             android:key="data.dir"
-            android:summary="@string/database_folder_summary"/>
-
-        <!--<EditTextPreference
-            android:defaultValue="/org.openbmap.unifiednlp/"
-            android:dialogMessage="Enter folder"
-            android:key="data.dir"
-            android:summary="Choose folder for offline database"
-            android:title="Database folder" />
-        -->
+            android:summary="@string/database_folder_summary">
+        </Preference>
 
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/debug_title" >
@@ -61,4 +56,9 @@
             android:summaryOn="@string/crash_report_summary_on"
             android:title="@string/crash_reports_title" />
     </PreferenceCategory>
+    <Preference
+        android:key="version"
+        android:title="@string/version"
+        android:summary="-">
+    </Preference>
 </PreferenceScreen>
