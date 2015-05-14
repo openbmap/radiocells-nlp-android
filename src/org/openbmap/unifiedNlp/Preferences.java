@@ -17,6 +17,8 @@
 */
 package org.openbmap.unifiedNlp;
 
+import android.content.Context;
+
 /**
  * Stores settings keys and default values.
  * See preferences.xml for layout, strings-preferences.xml for text.
@@ -46,6 +48,11 @@ public final class Preferences {
     public static final String KEY_WIFI_CATALOG_VERSION = "data.ref_database_version";
 
 	/**
+	 * Broadcast debug messages?
+	 */
+	public static final String KEY_DEBUG_MESSAGES = "debug.messages";
+
+	/**
 	 * Openbmap user name
 	 */
 	//public static final String KEY_CREDENTIALS_USER = "credentials.user";
@@ -59,6 +66,8 @@ public final class Preferences {
 	 * Default values following ..
 	 */
 	
+	public static final boolean VAL_DEBUG_MESSAGES = false;
+
 	public static final String VAL_OPERATION_MODE = "offline";
 
     public static final String OPERATION_MODE_OFFLINE = "offline";
@@ -67,9 +76,11 @@ public final class Preferences {
 
     /**
 	 * Root folder for all additional data
+	 * Deprecated, use getExternalFilesDir(null).getAbsolutePath() instead
+	 * see https://github.com/wish7code/org.openbmap.unifiedNlpProvider/issues/10
 	 */
-	public static final String VAL_DATA_FOLDER = "/org.openbmap.unifiednlp";
-	
+	//public static final String VAL_DATA_FOLDER = "/org.openbmap.unifiednlp";
+
 	/**
 	 * Default reference database filename
 	 */

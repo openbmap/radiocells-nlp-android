@@ -43,22 +43,17 @@ public class DirectoryChooserDialog {
     private ChosenDirectoryListener mChosenDirectoryListener = null;
     private ArrayAdapter<String> mListAdapter = null;
 
-    //////////////////////////////////////////////////////
-    // Callback interface for selected directory
-    //////////////////////////////////////////////////////
+    /*
+     * Callback interface for selected directory
+     */
     public interface ChosenDirectoryListener {
         public void onChosenDir(String chosenDir);
     }
 
     public DirectoryChooserDialog(Context context, ChosenDirectoryListener chosenDirectoryListener) {
         mContext = context;
-        mSdcardDirectory = Environment.getExternalStorageDirectory().getAbsolutePath();
+        mSdcardDirectory = new File(Environment.getExternalStorageDirectory().getAbsolutePath()).getAbsolutePath();
         mChosenDirectoryListener = chosenDirectoryListener;
-
-        try {
-            mSdcardDirectory = new File(mSdcardDirectory).getCanonicalPath();
-        } catch (IOException ioe) {
-        }
     }
 
     ///////////////////////////////////////////////////////////////////////
@@ -73,32 +68,24 @@ public class DirectoryChooserDialog {
         return mIsNewFolderEnabled;
     }
 
-    ///////////////////////////////////////////////////////////////////////
-    // chooseDirectory() - load directory chooser dialog for initial
-    // default sdcard directory
-    ///////////////////////////////////////////////////////////////////////
-
+    /*
+     * chooseDirectory() - load directory chooser dialog for initial default sdcard directory
+     */
     public void chooseDirectory() {
         // Initial directory is sdcard directory
         chooseDirectory(mSdcardDirectory);
     }
 
-    ////////////////////////////////////////////////////////////////////////////////
-    // chooseDirectory(String dir) - load directory chooser dialog for initial
-    // input 'dir' directory
-    ////////////////////////////////////////////////////////////////////////////////
-
+    /*
+     * chooseDirectory(String dir) - load directory chooser dialog for initial input 'dir' directory
+     */
     public void chooseDirectory(String dir) {
         File dirFile = new File(dir);
         if (!dirFile.exists() || !dirFile.isDirectory()) {
             dir = mSdcardDirectory;
         }
 
-        try {
-            dir = new File(dir).getCanonicalPath();
-        } catch (IOException ioe) {
-            return;
-        }
+        dir = new File(dir).getAbsolutePath();
 
         mDir = dir;
         mSubdirs = getDirectories(dir);

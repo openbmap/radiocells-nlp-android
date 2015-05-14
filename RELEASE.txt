@@ -16,6 +16,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 History
 
+0.1.4
+   - moved data folder to default Android location (thanks @ agilob)
 0.1.3
     - Ignore _nomap wifis
     - added version info

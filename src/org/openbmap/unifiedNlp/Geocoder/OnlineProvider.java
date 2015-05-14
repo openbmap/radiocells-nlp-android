@@ -12,6 +12,7 @@ import org.openbmap.unifiedNlp.services.JSONParser;
 import android.content.Context;
 import android.location.Location;
 import android.os.AsyncTask;
+import android.os.Bundle;
 import android.util.Log;
 
 public class OnlineProvider extends AbstractProvider implements ILocationProvider {
@@ -22,6 +23,11 @@ public class OnlineProvider extends AbstractProvider implements ILocationProvide
 	 * Geolocation service
 	 */
 	private static final String REQUEST_URL = "http://www.radiocells.org/geolocation/geolocate";
+
+	/**
+	 * Query extra debug information from webservice
+	 */
+	private final boolean mDebug;
 
 	/**
 	 * Example wifi query
@@ -43,8 +49,12 @@ public class OnlineProvider extends AbstractProvider implements ILocationProvide
 	 */
 	private ILocationCallback mListener;
 
-	public OnlineProvider(final Context ctx, final ILocationCallback listener) {
+	private ArrayList<String> mWifiQuery;
+	private ArrayList<String> mCellQuery;
+
+	public OnlineProvider(final Context ctx, final ILocationCallback listener, boolean debug) {
 		this.mListener = listener;
+		mDebug = debug;
 	}
 
 	/**
@@ -60,6 +70,12 @@ public class OnlineProvider extends AbstractProvider implements ILocationProvide
 				if (params == null) {
 					throw new IllegalArgumentException("Wifi list was null");
 				}
+				mWifiQuery = (ArrayList<String>) params[0];
+				mCellQuery = new ArrayList<String>();
+				for (Cell temp : (List<Cell>)params[1]) {
+					mCellQuery.add(temp.toString());
+				}
+
 				return loadJSON(REQUEST_URL, (ArrayList<String>)params[0], (List<Cell>)params[1]);
 			} 
 
@@ -72,14 +88,22 @@ public class OnlineProvider extends AbstractProvider implements ILocationProvide
 
 				try {
 					Log.i(TAG, "JSON response: " +  jsonData.toString());
+					String source = jsonData.getString("source");
 					JSONObject location = jsonData.getJSONObject("location");
 					Double lat = location.getDouble("lat");
 					Double lon = location.getDouble("lng");
 					Long acc = jsonData.getLong("accuracy");
-					Location result = new Location("org.openbmap.nlp");
+					Location result = new Location(TAG);
 					result.setLatitude(lat);
 					result.setLongitude(lon);
 					result.setAccuracy(acc);
+					result.setTime(System.currentTimeMillis());
+
+					Bundle b = new Bundle();
+					b.putString("source", source);
+					b.putStringArrayList("bssids", mWifiQuery);
+					b.putStringArrayList("cells", mCellQuery);
+					result.setExtras(b);
 
 					if (plausibleLocationUpdate(result)){
 						setLastLocation(result);
@@ -110,6 +134,12 @@ public class OnlineProvider extends AbstractProvider implements ILocationProvide
 				try {
 					// add wifi objects
 					JSONArray jsonArray = new JSONArray();
+					if (mDebug) {
+						JSONObject object = new JSONObject();
+						object.put("debug", "1");
+						jsonArray.put(object);
+					}
+
 					for (String s : wifis) {
 						JSONObject object = new JSONObject();
 						object.put("macAddress", s);
@@ -136,7 +166,7 @@ public class OnlineProvider extends AbstractProvider implements ILocationProvide
 				} catch (JSONException e) {
 					e.printStackTrace();
 				}
-				Log.d(TAG, "Query param: " + root.toString());
+				Log.v(TAG, "Query param: " + root.toString());
 				return root;
 			}
 		}.execute(wifisList, cellsList);

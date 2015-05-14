@@ -6,4 +6,8 @@ public class Cell {
 	public int lac;
 	public int mcc;
 	public int mnc;
+
+	public String toString() {
+		return mcc + "|" + mnc + "|" + lac + "|" + cellId;
+	}
 }

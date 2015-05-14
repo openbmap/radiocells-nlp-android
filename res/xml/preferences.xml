@@ -55,6 +55,12 @@
             android:summaryOff="@string/crash_report_summary_off"
             android:summaryOn="@string/crash_report_summary_on"
             android:title="@string/crash_reports_title" />
+        <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="debug.messages"
+            android:summaryOff="Off"
+            android:summaryOn="On"
+            android:title="Activate debug messages" />
     </PreferenceCategory>
     <Preference
         android:key="version"

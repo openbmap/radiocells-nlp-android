@@ -15,4 +15,5 @@ public class UnifiedNlpApplication extends Application {
 		super.onCreate();
 		ACRA.init(this);
 	}
+
 }

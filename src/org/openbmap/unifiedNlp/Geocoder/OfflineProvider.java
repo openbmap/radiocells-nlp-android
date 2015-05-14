@@ -31,6 +31,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.location.Location;
 import android.os.AsyncTask;
+import android.os.Bundle;
 import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -55,8 +56,7 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
 		mListener = listener;
 		prefs = PreferenceManager.getDefaultSharedPreferences(ctx);
 		// Open catalog database
-		String path = Environment.getExternalStorageDirectory().getPath()
-				+ prefs.getString(Preferences.KEY_DATA_FOLDER, Preferences.VAL_DATA_FOLDER)
+		String path = prefs.getString(Preferences.KEY_DATA_FOLDER, ctx.getExternalFilesDir(null).getAbsolutePath())
 				+ File.separator + prefs.getString(Preferences.KEY_WIFI_CATALOG_FILE, Preferences.VAL_WIFI_CATALOG_FILE);
 		mCatalog = SQLiteDatabase.openDatabase(path, null, SQLiteDatabase.OPEN_READONLY);
 	}
@@ -100,10 +100,15 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
 
 				c.moveToFirst();
 				if (!c.isAfterLast()) {
-					Location result = new Location("org.openbmap.nlp");
+					Location result = new Location(TAG);
 					result.setLatitude(c.getDouble(0));
 					result.setLongitude(c.getDouble(1));
 					result.setAccuracy(30);
+					result.setTime(System.currentTimeMillis());
+					Bundle b = new Bundle();
+					b.putString("source", "wifis");
+					b.putStringArrayList("bssids", params[0]);
+					result.setExtras(b);
 					c.close();
 					return result;
 				}

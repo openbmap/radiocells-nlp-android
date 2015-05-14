@@ -79,7 +79,7 @@ public class SettingsActivity extends PreferenceActivity {
         }
 
         initCatalogDownloadControl();
-        initActiveWifiCatalogControl(PreferenceManager.getDefaultSharedPreferences(this).getString(Preferences.KEY_DATA_FOLDER, Preferences.VAL_DATA_FOLDER));
+        initActiveWifiCatalogControl(PreferenceManager.getDefaultSharedPreferences(this).getString(Preferences.KEY_DATA_FOLDER, this.getExternalFilesDir(null).getAbsolutePath()));
 
         initOperationMode();
 
@@ -163,8 +163,7 @@ public class SettingsActivity extends PreferenceActivity {
      */
     private void downloadCatalog() {
         // try to create directory
-        File folder = new File(Environment.getExternalStorageDirectory().getPath()
-                + PreferenceManager.getDefaultSharedPreferences(this).getString(Preferences.KEY_DATA_FOLDER, Preferences.VAL_DATA_FOLDER));
+        File folder = new File(PreferenceManager.getDefaultSharedPreferences(this).getString(Preferences.KEY_DATA_FOLDER, this.getExternalFilesDir(null).getAbsolutePath()));
 
         boolean folderAccessible = false;
         if (folder.exists() && folder.canWrite()) {
@@ -252,7 +251,7 @@ public class SettingsActivity extends PreferenceActivity {
         file = file.replace("file://", "");
 
         if (extension.equals(Preferences.WIFI_CATALOG_FILE_EXTENSION)) {
-            String catalogFolder = PreferenceManager.getDefaultSharedPreferences(this).getString(Preferences.KEY_DATA_FOLDER, Preferences.VAL_DATA_FOLDER);
+            String catalogFolder = PreferenceManager.getDefaultSharedPreferences(this).getString(Preferences.KEY_DATA_FOLDER, this.getExternalFilesDir(null).getAbsolutePath());
             if (file.indexOf(SettingsActivity.this.getExternalCacheDir().getPath()) > -1) {
                 // file has been downloaded to cache folder, so move..
                 file = moveToFolder(file, catalogFolder);
@@ -272,7 +271,8 @@ public class SettingsActivity extends PreferenceActivity {
     private void initCatalogFolderControl() {
         Preference button = (Preference) findPreference("data.dir");
         button.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-            private String mChosenDir = "";
+            private String mChosenDir = PreferenceManager.getDefaultSharedPreferences(SettingsActivity.this).getString(Preferences.KEY_DATA_FOLDER,
+                    SettingsActivity.this.getExternalFilesDir(null).getAbsolutePath());
             private boolean mNewFolderEnabled = true;
 
             @Override
@@ -280,8 +280,7 @@ public class SettingsActivity extends PreferenceActivity {
 
                 // Create DirectoryChooserDialog and register a callback
                 DirectoryChooserDialog directoryChooserDialog =
-                        new DirectoryChooserDialog(SettingsActivity.this,
-                                new DirectoryChooserDialog.ChosenDirectoryListener() {
+                        new DirectoryChooserDialog(SettingsActivity.this, new DirectoryChooserDialog.ChosenDirectoryListener() {
                                     @Override
                                     public void onChosenDir(String chosenDir) {
                                         mChosenDir = chosenDir;
@@ -315,8 +314,7 @@ public class SettingsActivity extends PreferenceActivity {
         String[] values;
 
         // Check for presence of database directory
-        File folder = new File(Environment.getExternalStorageDirectory().getPath() +
-                catalogFolder);
+        File folder = new File(catalogFolder);
 
         if (folder.exists() && folder.canRead()) {
             // List each map file
@@ -447,7 +445,7 @@ public class SettingsActivity extends PreferenceActivity {
     private String moveToFolder(String file, String folder) {
         // file path contains external cache dir, so we have to move..
         File source = new File(file);
-        File destination = new File(Environment.getExternalStorageDirectory() + folder + File.separator + source.getName());
+        File destination = new File(folder + File.separator + source.getName());
         Log.i(TAG, file + " stored in temp folder. Moving to " + destination.getAbsolutePath());
 
         try {

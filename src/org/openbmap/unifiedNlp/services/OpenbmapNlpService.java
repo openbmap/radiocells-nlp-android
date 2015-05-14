@@ -60,7 +60,14 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
 	 */
 	private boolean mOnlineMode;
 
-	/**
+    /**
+     * If true, scan results are broadcasted for diagnostic app
+     */
+    private boolean mDebug;
+
+    private Location last;
+
+    /**
 	 * Phone state listeners to receive cell updates
 	 */
 	private TelephonyManager mTelephonyManager;
@@ -83,7 +90,6 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
 	private long queryTime;
 
 	private WifiScanCallback mWifiScanResults;
-
 
 	/**
 	 * Receives location updates as well as wifi scan result updates
@@ -112,8 +118,11 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
 		wifiManager = (WifiManager) getSystemService(WIFI_SERVICE);
 		registerReceiver(mReceiver, new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
 		mTelephonyManager = (TelephonyManager) this.getSystemService(Context.TELEPHONY_SERVICE);
-		
-		Log.d(TAG, "Pref "+ PreferenceManager.getDefaultSharedPreferences(this).getString(Preferences.KEY_OPERATION_MODE, Preferences.VAL_OPERATION_MODE));
+
+        Log.d(TAG, "[Config] Debug Mode: " + PreferenceManager.getDefaultSharedPreferences(this).getBoolean(Preferences.KEY_DEBUG_MESSAGES, Preferences.VAL_DEBUG_MESSAGES));
+        mDebug = PreferenceManager.getDefaultSharedPreferences(this).getBoolean(Preferences.KEY_DEBUG_MESSAGES, Preferences.VAL_DEBUG_MESSAGES);
+
+		Log.d(TAG, "[Config] Operation Mode: "+ PreferenceManager.getDefaultSharedPreferences(this).getString(Preferences.KEY_OPERATION_MODE, Preferences.VAL_OPERATION_MODE));
 		mOnlineMode =  PreferenceManager.getDefaultSharedPreferences(this).getString(Preferences.KEY_OPERATION_MODE, Preferences.VAL_OPERATION_MODE).equals("online"); 		
 		running = true;
 	}
@@ -141,7 +150,7 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
 		if (mGeocoder == null) {
 			if (mOnlineMode) {
 				Log.i(TAG, "Using online geocoder");
-				mGeocoder = new OnlineProvider(this, this);
+				mGeocoder = new OnlineProvider(this, this, mDebug);
 			} else {
 				Log.i(TAG, "Using offline geocoder");
 				mGeocoder = new OfflineProvider(this, this);
@@ -188,7 +197,6 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
                                 }
 
                                 List<Cell> cells = new ArrayList<Cell>();
-
                                 String operator = mTelephonyManager.getNetworkOperator();
                                 int mnc;
                                 int mcc;
@@ -207,7 +215,7 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
                                     for (CellInfo c : cellsRawList) {
                                         Cell cell = new Cell();
                                         if (c instanceof CellInfoGsm) {
-                                            Log.d(TAG, "GSM cell found");
+                                            Log.v(TAG, "GSM cell found");
                                             cell.cellId = ((CellInfoGsm) c).getCellIdentity().getCid();
                                             cell.lac = ((CellInfoGsm) c).getCellIdentity().getLac();
                                             //cell.mcc = ((CellInfoGsm)c).getCellIdentity().getMcc();
@@ -222,7 +230,7 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
                                             object.put("mobileNetworkCode", ((CellInfoCdma)s).getCellIdentity().getMnc());*/
                                             Log.wtf(TAG, "Using of CDMA cells for NLP not yet implemented");
                                         } else if (c instanceof CellInfoLte) {
-                                            Log.d(TAG, "LTE cell found");
+                                            Log.v(TAG, "LTE cell found");
                                             cell.cellId = ((CellInfoLte) c).getCellIdentity().getCi();
                                             cell.lac = ((CellInfoLte) c).getCellIdentity().getTac();
                                             //cell.mcc = ((CellInfoLte)c).getCellIdentity().getMcc();
@@ -230,7 +238,7 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
                                             cell.mcc = mcc;
                                             cell.mnc = mnc;
                                         } else if (c instanceof CellInfoWcdma) {
-                                            Log.d(TAG, "CellInfoWcdma cell found");
+                                            Log.v(TAG, "CellInfoWcdma cell found");
                                             cell.cellId = ((CellInfoWcdma) c).getCellIdentity().getCid();
                                             cell.lac = ((CellInfoWcdma) c).getCellIdentity().getLac();
                                             //cell.mcc = ((CellInfoWcdma)c).getCellIdentity().getMcc();
@@ -264,7 +272,19 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
 
 	@Override
 	public Location onLocationReceived(Location location) {
+        if (mDebug) {
+            Log.d(TAG, "[UnifiedNlp Results]: " + location.getExtras().toString());
+
+            if (last != null) {
+                Log.d(TAG, "[UnifiedNlp Results]: Est. Speed " + Math.round(location.distanceTo(last)/(location.getTime()-last.getTime()/1000/60)) + " km/h");
+            }
+        } else {
+            Log.v(TAG, "Ignoring debug infos");
+            location.setExtras(null);
+        }
 		report(location);
+
+        last = location;
 		return location;
 	}
 }
