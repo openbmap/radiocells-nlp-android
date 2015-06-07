@@ -17,24 +17,17 @@
 */
 package org.openbmap.unifiedNlp;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.nio.channels.FileChannel;
-
 import android.app.AlertDialog;
-import android.content.DialogInterface;
 import android.app.DownloadManager;
 import android.app.DownloadManager.Query;
 import android.app.DownloadManager.Request;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.database.Cursor;
-import android.media.audiofx.BassBoost;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -45,13 +38,17 @@ import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.Preference.OnPreferenceClickListener;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
-
-import org.openbmap.unifiedNlp.utils.DirectoryChooserDialog;
-
 import android.util.Log;
 import android.widget.Toast;
 
+import org.openbmap.unifiedNlp.utils.DirectoryChooserDialog;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FilenameFilter;
+import java.io.IOException;
+import java.nio.channels.FileChannel;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -162,9 +159,17 @@ public class SettingsActivity extends PreferenceActivity {
      * Downloads wifi catalog
      */
     private void downloadCatalog() {
+        // clean up bad download location from versions < 0.1.4
+        File badFolder = new File(Environment.getExternalStorageDirectory().getPath() + File.separator + "org.openbmap.unifiednlp");
+        File redundant = new File(badFolder, "openbmap.sqlite");
+        if (badFolder.exists() && redundant.exists()) {
+            Log.d(TAG, "Deleting bad downloads from 0.1.3:" + redundant.getAbsolutePath() );
+            redundant.delete();
+            badFolder.delete();
+        }
+
         // try to create directory
         File folder = new File(PreferenceManager.getDefaultSharedPreferences(this).getString(Preferences.KEY_DATA_FOLDER, this.getExternalFilesDir(null).getAbsolutePath()));
-
         boolean folderAccessible = false;
         if (folder.exists() && folder.canWrite()) {
             Log.i(TAG, "Good, folder accessible: " + folder);
@@ -273,7 +278,8 @@ public class SettingsActivity extends PreferenceActivity {
         button.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             private String mChosenDir = PreferenceManager.getDefaultSharedPreferences(SettingsActivity.this).getString(Preferences.KEY_DATA_FOLDER,
                     SettingsActivity.this.getExternalFilesDir(null).getAbsolutePath());
-            private boolean mNewFolderEnabled = true;
+
+            private boolean mNewFolderEnabled = false;
 
             @Override
             public boolean onPreferenceClick(Preference arg0) {
@@ -300,7 +306,6 @@ public class SettingsActivity extends PreferenceActivity {
                 return true;
             }
         });
-
     }
 
     /**
@@ -432,7 +437,7 @@ public class SettingsActivity extends PreferenceActivity {
         String version = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
         setCatalogVersion(version);
         Preference pref = findPreference(Preferences.KEY_DOWNLOAD_WIFI_CATALOG);
-        pref.setSummary(getString(R.string.update_wifi_catalog_summary) + "\n\nLocal version: " + getCatalogVersion());
+        pref.setSummary(getString(R.string.update_wifi_catalog_summary) + "\n\n" + getString(R.string.local_version) + getCatalogVersion());
     }
 
     /**

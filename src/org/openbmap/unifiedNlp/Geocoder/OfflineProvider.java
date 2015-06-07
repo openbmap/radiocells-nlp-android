@@ -17,13 +17,6 @@
  */
 package org.openbmap.unifiedNlp.Geocoder;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-
-import org.openbmap.unifiedNlp.Preferences;
-import org.openbmap.unifiedNlp.services.Cell;
-
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -32,104 +25,210 @@ import android.database.sqlite.SQLiteDatabase;
 import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
+import org.openbmap.unifiedNlp.Preferences;
+import org.openbmap.unifiedNlp.services.Cell;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+
 public class OfflineProvider extends AbstractProvider implements ILocationProvider {
 
-	private static final String TAG = OfflineProvider.class.getName();
+    private static final String TAG = OfflineProvider.class.getName();
 
-	private ILocationCallback mListener;
+    // Default accuracy for wifi results (in meter)
+    public static final int DEFAULT_WIFI_ACCURACY = 30;
+    // Default accuracy for cell results (in meter)
+    public static final int DEFAULT_CELL_ACCURACY = 3000;
 
-	/**
-	 * Keeps the SharedPreferences.
-	 */
-	private SharedPreferences prefs = null;
+    private ILocationCallback mListener;
 
-	/**
-	 * Database containing well-known wifis from openbmap.org.
-	 */
-	private SQLiteDatabase mCatalog;
+    /**
+     * Keeps the SharedPreferences.
+     */
+    private SharedPreferences prefs = null;
 
-	public OfflineProvider(final Context ctx, final ILocationCallback listener) {
-		mListener = listener;
-		prefs = PreferenceManager.getDefaultSharedPreferences(ctx);
-		// Open catalog database
-		String path = prefs.getString(Preferences.KEY_DATA_FOLDER, ctx.getExternalFilesDir(null).getAbsolutePath())
-				+ File.separator + prefs.getString(Preferences.KEY_WIFI_CATALOG_FILE, Preferences.VAL_WIFI_CATALOG_FILE);
-		mCatalog = SQLiteDatabase.openDatabase(path, null, SQLiteDatabase.OPEN_READONLY);
-	}
+    /**
+     * Database containing well-known wifis from openbmap.org.
+     */
+    private SQLiteDatabase mCatalog;
 
-	@SuppressWarnings("unchecked")
-	@Override
-	public void getLocation(ArrayList<String> wifiList, List<Cell> cellsList) {
-		new AsyncTask<ArrayList<String>, Void, Location>() {
+    public OfflineProvider(final Context ctx, final ILocationCallback listener) {
+        mListener = listener;
+        prefs = PreferenceManager.getDefaultSharedPreferences(ctx);
+        // Open catalog database
+        String path = prefs.getString(Preferences.KEY_DATA_FOLDER, ctx.getExternalFilesDir(null).getAbsolutePath())
+                + File.separator + prefs.getString(Preferences.KEY_WIFI_CATALOG_FILE, Preferences.VAL_WIFI_CATALOG_FILE);
+        mCatalog = SQLiteDatabase.openDatabase(path, null, SQLiteDatabase.OPEN_READONLY);
+    }
 
-			@SuppressLint("DefaultLocale")
-			@Override
-			protected Location doInBackground(ArrayList<String>... params) {
-				if (params == null) {
-					throw new IllegalArgumentException("Wifi list was null");
-				}
+    @SuppressWarnings("unchecked")
+    @Override
+    public void getLocation(final ArrayList<String> wifiList, final List<Cell> cellsList) {
+        LocationQueryParams params = new LocationQueryParams(wifiList, cellsList);
 
-				if (prefs.getString(Preferences.KEY_WIFI_CATALOG_FILE, Preferences.WIFI_CATALOG_NONE).equals(Preferences.WIFI_CATALOG_NONE)) {
-					throw new IllegalArgumentException("No catalog database was specified");
-				}
+        new AsyncTask<LocationQueryParams, Void, Location>() {
+            private int EMPTY_WIFIS_QUERY = -1;
+            private int EMPTY_CELLS_QUERY = -2;
+            private int WIFIS_NOT_FOUND = -101;
+            private int CELLS_NOT_FOUND = -102;
+            private int CELLS_DATABASE_NA = -999;
+            private int WIFIS_MATCH = 201;
+            private int CELLS_MATCH = 202;
 
-				String whereClause = "";
-				String[] whereArgs = params[0].toArray(new String[0]);
-				
-				if (whereArgs.length < 1) {
-					Log.w(TAG, "Query contained no bssids, skipping update");
-					return null;
-				}
-				
-				for (String k: params[0]) {
-					if (whereClause.length() > 1 ) { whereClause += " OR ";}
-					whereClause += " bssid = ?";
-				}
-				for (int index = 0; index < whereArgs.length; index++){
-					whereArgs[index] = whereArgs[index].replace(":", "").toUpperCase() ;
-					//Log.i(TAG, "Sanitzed where "+ whereArgs[index]);
-				}
-				final String sql = "SELECT AVG(latitude), AVG(longitude) FROM wifi_zone WHERE " + whereClause;
-				//Log.d(TAG, sql);
+            private int state;
 
-				Cursor c = mCatalog.rawQuery(sql, whereArgs);
+            @SuppressLint("DefaultLocale")
+            @Override
+            protected Location doInBackground(LocationQueryParams... params) {
+                if (params == null) {
+                    throw new IllegalArgumentException("Wifi list was null");
+                }
 
-				c.moveToFirst();
-				if (!c.isAfterLast()) {
-					Location result = new Location(TAG);
-					result.setLatitude(c.getDouble(0));
-					result.setLongitude(c.getDouble(1));
-					result.setAccuracy(30);
-					result.setTime(System.currentTimeMillis());
-					Bundle b = new Bundle();
-					b.putString("source", "wifis");
-					b.putStringArrayList("bssids", params[0]);
-					result.setExtras(b);
-					c.close();
-					return result;
-				}
-				c.close();
-				return null;
-			} 
+                if (prefs.getString(Preferences.KEY_WIFI_CATALOG_FILE, Preferences.WIFI_CATALOG_NONE).equals(Preferences.WIFI_CATALOG_NONE)) {
+                    throw new IllegalArgumentException("No catalog database was specified");
+                }
 
-			@Override
-			protected void onPostExecute(Location result) {
-				if (result == null) {
-					Log.e(TAG, "Location was null");
-					return;
-				}
-				Log.d(TAG, "Location received " +  result.toString());
+                ArrayList<String> wifiList = ((LocationQueryParams) params[0]).wifiList;
+                String[] wifiQueryArgs = wifiList.toArray(new String[0]);
 
-				if (plausibleLocationUpdate(result)){
-					setLastLocation(result);
-					setLastFix(System.currentTimeMillis());
-					mListener.onLocationReceived(result);
-				}
-			}
-		}.execute(wifiList);
-	}
+                if (wifiQueryArgs.length < 1) {
+                    Log.w(TAG, "Query contained no bssids, skipping update");
+                    state = EMPTY_WIFIS_QUERY;
+                }
+
+                if (state != EMPTY_WIFIS_QUERY) {
+                    Log.d(TAG, "Trying wifi mode");
+                    String whereClause = "";
+                    for (String k : wifiList) {
+                        if (whereClause.length() > 1) {
+                            whereClause += " OR ";
+                        }
+                        whereClause += " bssid = ?";
+                    }
+                    for (int index = 0; index < wifiQueryArgs.length; index++) {
+                        wifiQueryArgs[index] = wifiQueryArgs[index].replace(":", "").toUpperCase();
+                    }
+                    final String wifiSql = "SELECT AVG(latitude), AVG(longitude) FROM wifi_zone WHERE " + whereClause;
+                    //Log.d(TAG, sql);
+
+                    Cursor c = mCatalog.rawQuery(wifiSql, wifiQueryArgs);
+                    c.moveToFirst();
+                    if (!c.isAfterLast()) {
+                        Location result = new Location(TAG);
+                        result.setLatitude(c.getDouble(0));
+                        result.setLongitude(c.getDouble(1));
+                        result.setAccuracy(DEFAULT_WIFI_ACCURACY);
+                        result.setTime(System.currentTimeMillis());
+                        Bundle b = new Bundle();
+                        b.putString("source", "wifis");
+                        b.putStringArrayList("bssids", ((LocationQueryParams) params[0]).wifiList);
+                        result.setExtras(b);
+                        c.close();
+                        state = WIFIS_MATCH;
+                        return result;
+                    } else {
+                        state = WIFIS_NOT_FOUND;
+                        Log.i(TAG, "No known wifis found");
+                    }
+                    c.close();
+                }
+                // no wifi found, so try cells
+                if (state == EMPTY_WIFIS_QUERY || state == WIFIS_NOT_FOUND ) {
+                    Log.d(TAG, "Trying cell mode");
+                    if (!haveCellTables())
+                    {
+                        Log.w(TAG, "Cell tables not available. Check your database");
+                        state = CELLS_DATABASE_NA;
+                        return null;
+                    }
+
+
+                    if (cellsList.size() == 0) {
+                        Log.w(TAG, "Query contained no cell infos, skipping update");
+                        state = EMPTY_CELLS_QUERY;
+                        return null;
+                    }
+                    //  "SELECT 'cid', 'mcc', 'mnc', 'area', 'latitude', 'longitude', 'source', 'technology', 'measurements', 'last_updated', 'created_at' FROM 'cell_zone'
+                    // WHERE cid = 155763490 and area = 40376 and mcc = 262 and mnc = 3
+                    Log.d(TAG, "Using " + cellsList.get(0).toString());
+                    final String cellSql = "SELECT AVG(latitude), AVG(longitude) FROM cell_zone WHERE cid = ? AND mcc = ? AND mnc = ? AND area = ? and technology = ?";
+                    Cursor c = mCatalog.rawQuery(cellSql, new String[]{
+                            String.valueOf(((Cell) cellsList.get(0)).cellId),
+                            String.valueOf(((Cell) cellsList.get(0)).mcc),
+                            String.valueOf(((Cell) cellsList.get(0)).mnc),
+                            String.valueOf(((Cell) cellsList.get(0)).area),
+                            String.valueOf(((Cell) cellsList.get(0)).technology)
+                    });
+                    c.moveToFirst();
+                    if (!c.isAfterLast()) {
+                        Location result = new Location(TAG);
+                        result.setLatitude(c.getDouble(0));
+                        result.setLongitude(c.getDouble(1));
+                        result.setAccuracy(DEFAULT_CELL_ACCURACY);
+                        result.setTime(System.currentTimeMillis());
+                        Bundle b = new Bundle();
+                        b.putString("source", "cells");
+                        result.setExtras(b);
+                        c.close();
+                        state = CELLS_MATCH;
+                        return result;
+                    } else {
+                        state = CELLS_NOT_FOUND;
+                        Log.i(TAG, "No known cells found");
+                    }
+                }
+                return null;
+            }
+
+            /**
+             * Check whether cell zone table exists
+             */
+            private boolean haveCellTables() {
+                final String sql = "SELECT count(name) FROM sqlite_master WHERE type='table' AND name='cell_zone'";
+                final Cursor c = mCatalog.rawQuery(sql, null);
+                c.moveToFirst();
+                if (!c.isAfterLast()) {
+                    if (c.getLong(0) == 0) {
+                        c.close();
+                        return false;
+                    }
+                }
+                c.close();
+                return true;
+            }
+
+            @Override
+            protected void onPostExecute(Location result) {
+                if (result == null) {
+                    Log.w(TAG, "Location was null");
+                    return;
+                }
+                Log.d(TAG, "Location received " + result.toString());
+
+                if (plausibleLocationUpdate(result)) {
+                    setLastLocation(result);
+                    setLastFix(System.currentTimeMillis());
+                    mListener.onLocationReceived(result);
+                }
+            }
+        }
+
+                .
+
+                        execute(params);
+    }
+
+    private static class LocationQueryParams {
+        ArrayList<String> wifiList;
+        List<Cell> cellsList;
+
+        LocationQueryParams(ArrayList<String> wifiList, List<Cell> cellsList) {
+            this.wifiList = wifiList;
+            this.cellsList = cellsList;
+        }
+    }
 }

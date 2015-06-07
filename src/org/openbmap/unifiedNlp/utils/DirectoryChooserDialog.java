@@ -3,13 +3,6 @@ package org.openbmap.unifiedNlp.utils;
  * Gregory Shpitalnik
  * http://www.codeproject.com/Articles/547636/Android-Ready-to-use-simple-directory-chooser-dial?msg=4923192#xx4923192xx
  */
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -29,7 +22,11 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import org.openbmap.unifiedNlp.R;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 public class DirectoryChooserDialog {
     private boolean mIsNewFolderEnabled = true;
@@ -92,8 +89,15 @@ public class DirectoryChooserDialog {
 
         class DirectoryOnClickListener implements DialogInterface.OnClickListener {
             public void onClick(DialogInterface dialog, int item) {
-                // Navigate into the sub-directory
-                mDir += "/" + ((AlertDialog) dialog).getListView().getAdapter().getItem(item);
+                // handle folder up clicks
+                if (((AlertDialog) dialog).getListView().getAdapter().getItem(item).equals("..")) {
+                    // handle '..' (directory up) clicks
+                    mDir = mDir.substring(0, mDir.lastIndexOf("/"));
+                }
+                else {
+                    // otherwise descend into sub-directory
+                    mDir += "/" + ((AlertDialog) dialog).getListView().getAdapter().getItem(item);
+                }
                 updateDirectory();
             }
         }

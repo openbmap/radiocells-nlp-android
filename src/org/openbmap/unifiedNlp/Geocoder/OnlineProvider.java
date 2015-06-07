@@ -1,7 +1,27 @@
+/*
+	Radiobeacon - Openbmap Unified Network Location Provider
+    Copyright (C) 2013  wish7
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as
+    published by the Free Software Foundation, either version 3 of the
+    License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
 package org.openbmap.unifiedNlp.Geocoder;
 
-import java.util.ArrayList;
-import java.util.List;
+import android.content.Context;
+import android.location.Location;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -9,11 +29,8 @@ import org.json.JSONObject;
 import org.openbmap.unifiedNlp.services.Cell;
 import org.openbmap.unifiedNlp.services.JSONParser;
 
-import android.content.Context;
-import android.location.Location;
-import android.os.AsyncTask;
-import android.os.Bundle;
-import android.util.Log;
+import java.util.ArrayList;
+import java.util.List;
 
 public class OnlineProvider extends AbstractProvider implements ILocationProvider {
 
@@ -155,7 +172,7 @@ public class OnlineProvider extends AbstractProvider implements ILocationProvide
 					for (Cell s : cells) {
 						JSONObject object = new JSONObject();
 						object.put("cellId", s.cellId);
-						object.put("locationAreaCode",  s.lac);
+						object.put("locationAreaCode",  s.area);
 						object.put("mobileCountryCode", s.mcc);
 						object.put("mobileNetworkCode", s.mnc);
 						jsonArray.put(object);

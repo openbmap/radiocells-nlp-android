@@ -35,4 +35,5 @@
     <string name="crash_reports_title">Crash reports</string>
 
     <string name="version">Openbmap UnifiedNLP Provider</string>
+    <string name="local_version">"Local version: "</string>
 </resources>

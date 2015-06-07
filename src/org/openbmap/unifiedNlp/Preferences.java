@@ -17,8 +17,6 @@
 */
 package org.openbmap.unifiedNlp;
 
-import android.content.Context;
-
 /**
  * Stores settings keys and default values.
  * See preferences.xml for layout, strings-preferences.xml for text.
@@ -105,7 +103,7 @@ public final class Preferences {
 	/**
 	 * URL, where wifi catalog with openbmap's preprocessed wifi positions can be downloaded
 	 */
-	public static final String	WIFI_CATALOG_DOWNLOAD_URL = "http://www.radiocells.org/static/openbmap.sqlite";
+	public static final String	WIFI_CATALOG_DOWNLOAD_URL = "http://radiocells.org/openbmap/static/cells-wifis.sqlite";
 	
 	/**
 	 * Filename catalog database
@@ -115,7 +113,7 @@ public final class Preferences {
     /**
      * Version information (increase on new version)
      */
-    public static final String VERSION = "0.1.3";
+    public static final String VERSION = "0.1.4";
 	/**
 	 * Private dummy constructor
 	 */

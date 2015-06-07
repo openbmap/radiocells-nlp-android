@@ -17,16 +17,6 @@
  */
 package org.openbmap.unifiedNlp.services;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.microg.nlp.api.LocationBackendService;
-import org.openbmap.unifiedNlp.Preferences;
-import org.openbmap.unifiedNlp.Geocoder.ILocationCallback;
-import org.openbmap.unifiedNlp.Geocoder.ILocationProvider;
-import org.openbmap.unifiedNlp.Geocoder.OfflineProvider;
-import org.openbmap.unifiedNlp.Geocoder.OnlineProvider;
-
 import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -45,6 +35,19 @@ import android.telephony.CellInfoWcdma;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.util.Log;
+
+import org.microg.nlp.api.LocationBackendService;
+import org.openbmap.unifiedNlp.Geocoder.ILocationCallback;
+import org.openbmap.unifiedNlp.Geocoder.ILocationProvider;
+import org.openbmap.unifiedNlp.Geocoder.OfflineProvider;
+import org.openbmap.unifiedNlp.Geocoder.OnlineProvider;
+import org.openbmap.unifiedNlp.Preferences;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @SuppressLint("NewApi")
 public class OpenbmapNlpService extends LocationBackendService implements ILocationCallback {
@@ -217,11 +220,12 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
                                         if (c instanceof CellInfoGsm) {
                                             Log.v(TAG, "GSM cell found");
                                             cell.cellId = ((CellInfoGsm) c).getCellIdentity().getCid();
-                                            cell.lac = ((CellInfoGsm) c).getCellIdentity().getLac();
+                                            cell.area = ((CellInfoGsm) c).getCellIdentity().getLac();
                                             //cell.mcc = ((CellInfoGsm)c).getCellIdentity().getMcc();
                                             //cell.mnc = ((CellInfoGsm)c).getCellIdentity().getMnc();
                                             cell.mcc = mcc;
                                             cell.mnc = mnc;
+                                            cell.technology = TECHNOLOGY_MAP().get(mTelephonyManager.getNetworkType());
                                         } else if (c instanceof CellInfoCdma) {
                                             /*
                                             object.put("cellId", ((CellInfoCdma)s).getCellIdentity().getBasestationId());
@@ -232,19 +236,21 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
                                         } else if (c instanceof CellInfoLte) {
                                             Log.v(TAG, "LTE cell found");
                                             cell.cellId = ((CellInfoLte) c).getCellIdentity().getCi();
-                                            cell.lac = ((CellInfoLte) c).getCellIdentity().getTac();
+                                            cell.area = ((CellInfoLte) c).getCellIdentity().getTac();
                                             //cell.mcc = ((CellInfoLte)c).getCellIdentity().getMcc();
                                             //cell.mnc = ((CellInfoLte)c).getCellIdentity().getMnc();
                                             cell.mcc = mcc;
                                             cell.mnc = mnc;
+                                            cell.technology = TECHNOLOGY_MAP().get(mTelephonyManager.getNetworkType());
                                         } else if (c instanceof CellInfoWcdma) {
                                             Log.v(TAG, "CellInfoWcdma cell found");
                                             cell.cellId = ((CellInfoWcdma) c).getCellIdentity().getCid();
-                                            cell.lac = ((CellInfoWcdma) c).getCellIdentity().getLac();
+                                            cell.area = ((CellInfoWcdma) c).getCellIdentity().getLac();
                                             //cell.mcc = ((CellInfoWcdma)c).getCellIdentity().getMcc();
                                             //cell.mnc = ((CellInfoWcdma)c).getCellIdentity().getMnc();
                                             cell.mcc = mcc;
                                             cell.mnc = mnc;
+                                            cell.technology = TECHNOLOGY_MAP().get(mTelephonyManager.getNetworkType());
                                         }
                                         cells.add(cell);
                                     }
@@ -287,4 +293,38 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
         last = location;
 		return location;
 	}
+
+    @SuppressLint("InlinedApi")
+    public static Map<Integer, String> TECHNOLOGY_MAP() {
+        final Map<Integer, String> result = new HashMap<Integer, String>();
+        result.put(TelephonyManager.NETWORK_TYPE_UNKNOWN, "NA");
+        // GPRS shall be mapped to "GSM"
+        result.put(TelephonyManager.NETWORK_TYPE_GPRS, "GSM");
+        result.put(TelephonyManager.NETWORK_TYPE_EDGE, "EDGE");
+        result.put(TelephonyManager.NETWORK_TYPE_UMTS, "UMTS");
+        result.put(TelephonyManager.NETWORK_TYPE_CDMA, "CDMA");
+        result.put(TelephonyManager.NETWORK_TYPE_EVDO_0, "EDVO_0");
+        result.put(TelephonyManager.NETWORK_TYPE_EVDO_A, "EDVO_A");
+        result.put(TelephonyManager.NETWORK_TYPE_1xRTT, "1xRTT");
+
+        result.put(TelephonyManager.NETWORK_TYPE_HSDPA, "HSDPA");
+        result.put(TelephonyManager.NETWORK_TYPE_HSUPA, "HSUPA");
+        result.put(TelephonyManager.NETWORK_TYPE_HSPA, "HSPA");
+        result.put(TelephonyManager.NETWORK_TYPE_IDEN, "IDEN");
+
+        // add new network types not available in all revisions
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {
+            result.put(TelephonyManager.NETWORK_TYPE_EVDO_B, "EDV0_B");
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+            result.put(TelephonyManager.NETWORK_TYPE_LTE, "LTE");
+            result.put(TelephonyManager.NETWORK_TYPE_EHRPD, "eHRPD");
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
+            result.put(TelephonyManager.NETWORK_TYPE_HSPAP, "HSPA+");
+        }
+
+        return Collections.unmodifiableMap(result);
+
+    }
 }

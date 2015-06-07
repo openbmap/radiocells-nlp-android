@@ -18,6 +18,9 @@ History
 
 0.1.4
    - moved data folder to default Android location (thanks @ agilob)
+   - added support for offline cells geolocation (beta)
+     Be sure to update the offline database in settings!!!!!
+
 0.1.3
     - Ignore _nomap wifis
     - added version info
