@@ -101,9 +101,9 @@ public final class Preferences {
 	public static final String WIFI_CATALOG_FILE_EXTENSION = ".sqlite";
 	
 	/**
-	 * URL, where wifi catalog with openbmap's preprocessed wifi positions can be downloaded
+	 * URL, where wifi/cell catalog with openbmap's preprocessed wifi positions can be downloaded
 	 */
-	public static final String	WIFI_CATALOG_DOWNLOAD_URL = "http://radiocells.org/openbmap/static/cells-wifis.sqlite";
+	public static final String	WIFI_CATALOG_DOWNLOAD_URL = "http://radiocells.org/openbmap/static/openbmap.sqlite";
 	
 	/**
 	 * Filename catalog database
@@ -113,7 +113,7 @@ public final class Preferences {
     /**
      * Version information (increase on new version)
      */
-    public static final String VERSION = "0.1.4";
+    public static final String VERSION = "0.1.5";
 	/**
 	 * Private dummy constructor
 	 */

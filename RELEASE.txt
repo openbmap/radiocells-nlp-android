@@ -16,6 +16,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 History
 
+0.1.5
+   - added support for cell-only geolocation (beta)
+   
 0.1.4
    - moved data folder to default Android location (thanks @ agilob)
    - added support for offline cells geolocation (beta)

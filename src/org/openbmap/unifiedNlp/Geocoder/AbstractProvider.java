@@ -68,6 +68,7 @@ public abstract class AbstractProvider implements ILocationProvider {
 		}
 
 		if (newLoc.getLatitude() == 0 && newLoc.getLongitude() == 0) {
+			Log.wtf(TAG, "WTF, lat=0, lon=0? Welcome to the gulf of Guinea!");
 			return false;
 		}
 

@@ -43,11 +43,13 @@ import android.widget.Toast;
 
 import org.openbmap.unifiedNlp.utils.DirectoryChooserDialog;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.channels.FileChannel;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -96,7 +98,7 @@ public class SettingsActivity extends PreferenceActivity {
                 public void onClick(DialogInterface dialog, int id) {
                     Preference pref = findPreference(Preferences.KEY_OPERATION_MODE);
                     pref.getEditor().putString(Preferences.KEY_OPERATION_MODE, Preferences.OPERATION_MODE_ONLINE).apply();
-                    Toast.makeText(SettingsActivity.this, "Using online mode!\nYou can download offline database any times later", Toast.LENGTH_LONG).show();
+                    Toast.makeText(SettingsActivity.this, getString(R.string.online_mode), Toast.LENGTH_LONG).show();
                 }
             });
 
@@ -105,7 +107,7 @@ public class SettingsActivity extends PreferenceActivity {
         }
 
         Preference pref = findPreference(Preferences.KEY_VERSION_INFO);
-        pref.setSummary(Preferences.VERSION);
+        pref.setSummary(Preferences.VERSION + "(" + readBuildInfo() + ")");
     }
 
     private String getCatalogVersion() {
@@ -123,6 +125,29 @@ public class SettingsActivity extends PreferenceActivity {
     private String getSelectedOperationMode() {
         return PreferenceManager.getDefaultSharedPreferences(this).getString(Preferences.KEY_OPERATION_MODE, Preferences.OPERATION_MODE_OFFLINE);
     }
+
+    private final String readBuildInfo() {
+        final InputStream buildInStream = getResources().openRawResource(R.raw.build);
+        final ByteArrayOutputStream buildOutStream = new ByteArrayOutputStream();
+
+        int i;
+
+        try {
+            i = buildInStream.read();
+            while (i != -1) {
+                buildOutStream.write(i);
+                i = buildInStream.read();
+            }
+
+            buildInStream.close();
+        } catch (final IOException e) {
+            e.printStackTrace();
+        }
+
+        return buildOutStream.toString();
+        // use buildOutStream.toString() to get the data
+    }
+
 
     @Override
     protected final void onDestroy() {
@@ -287,16 +312,16 @@ public class SettingsActivity extends PreferenceActivity {
                 // Create DirectoryChooserDialog and register a callback
                 DirectoryChooserDialog directoryChooserDialog =
                         new DirectoryChooserDialog(SettingsActivity.this, new DirectoryChooserDialog.ChosenDirectoryListener() {
-                                    @Override
-                                    public void onChosenDir(String chosenDir) {
-                                        mChosenDir = chosenDir;
+                            @Override
+                            public void onChosenDir(String chosenDir) {
+                                mChosenDir = chosenDir;
 
-                                        SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(SettingsActivity.this);
-                                        settings.edit().putString("data.dir", chosenDir).commit();
+                                SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(SettingsActivity.this);
+                                settings.edit().putString("data.dir", chosenDir).commit();
 
-                                        Toast.makeText(SettingsActivity.this, chosenDir, Toast.LENGTH_LONG).show();
-                                    }
-                                });
+                                Toast.makeText(SettingsActivity.this, chosenDir, Toast.LENGTH_LONG).show();
+                            }
+                        });
                 // Toggle new folder button enabling
                 directoryChooserDialog.setNewFolderEnabled(mNewFolderEnabled);
                 // Load directory chooser dialog for initial 'mChosenDir' directory.
@@ -497,5 +522,4 @@ public class SettingsActivity extends PreferenceActivity {
             }
         }
     }
-
 }

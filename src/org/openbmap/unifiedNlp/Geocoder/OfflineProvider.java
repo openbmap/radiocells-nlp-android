@@ -22,6 +22,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteException;
 import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -96,7 +97,7 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                 String[] wifiQueryArgs = wifiList.toArray(new String[0]);
 
                 if (wifiQueryArgs.length < 1) {
-                    Log.w(TAG, "Query contained no bssids, skipping update");
+                    Log.i(TAG, "Query contained no bssids");
                     state = EMPTY_WIFIS_QUERY;
                 }
 
@@ -152,33 +153,41 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                         state = EMPTY_CELLS_QUERY;
                         return null;
                     }
-                    //  "SELECT 'cid', 'mcc', 'mnc', 'area', 'latitude', 'longitude', 'source', 'technology', 'measurements', 'last_updated', 'created_at' FROM 'cell_zone'
-                    // WHERE cid = 155763490 and area = 40376 and mcc = 262 and mnc = 3
+
                     Log.d(TAG, "Using " + cellsList.get(0).toString());
-                    final String cellSql = "SELECT AVG(latitude), AVG(longitude) FROM cell_zone WHERE cid = ? AND mcc = ? AND mnc = ? AND area = ? and technology = ?";
-                    Cursor c = mCatalog.rawQuery(cellSql, new String[]{
-                            String.valueOf(((Cell) cellsList.get(0)).cellId),
-                            String.valueOf(((Cell) cellsList.get(0)).mcc),
-                            String.valueOf(((Cell) cellsList.get(0)).mnc),
-                            String.valueOf(((Cell) cellsList.get(0)).area),
-                            String.valueOf(((Cell) cellsList.get(0)).technology)
-                    });
-                    c.moveToFirst();
-                    if (!c.isAfterLast()) {
-                        Location result = new Location(TAG);
-                        result.setLatitude(c.getDouble(0));
-                        result.setLongitude(c.getDouble(1));
-                        result.setAccuracy(DEFAULT_CELL_ACCURACY);
-                        result.setTime(System.currentTimeMillis());
-                        Bundle b = new Bundle();
-                        b.putString("source", "cells");
-                        result.setExtras(b);
-                        c.close();
-                        state = CELLS_MATCH;
-                        return result;
-                    } else {
-                        state = CELLS_NOT_FOUND;
-                        Log.i(TAG, "No known cells found");
+                    // Ignore the cell technology for the time being, using cell technology causes problems when cell supports different protocols, e.g.
+                    // UMTS and HSUPA and HSUPA+
+                    // final String cellSql = "SELECT AVG(latitude), AVG(longitude) FROM cell_zone WHERE cid = ? AND mcc = ? AND mnc = ? AND area = ? and technology = ?";
+                    final String cellSql = "SELECT AVG(latitude), AVG(longitude) FROM cell_zone WHERE cid = ? AND mcc = ? AND mnc = ? AND area = ?";
+                    try {
+                        Cursor c = mCatalog.rawQuery(cellSql, new String[]{
+                                String.valueOf(((Cell) cellsList.get(0)).cellId),
+                                String.valueOf(((Cell) cellsList.get(0)).mcc),
+                                String.valueOf(((Cell) cellsList.get(0)).mnc),
+                                String.valueOf(((Cell) cellsList.get(0)).area)
+                                /*,String.valueOf(((Cell) cellsList.get(0)).technology)*/
+                        });
+
+                        c.moveToFirst();
+                        if (!c.isAfterLast()) {
+                            Location result = new Location(TAG);
+                            result.setLatitude(c.getDouble(0));
+                            result.setLongitude(c.getDouble(1));
+                            result.setAccuracy(DEFAULT_CELL_ACCURACY);
+                            result.setTime(System.currentTimeMillis());
+                            Bundle b = new Bundle();
+                            b.putString("source", "cells");
+                            result.setExtras(b);
+                            c.close();
+                            state = CELLS_MATCH;
+                            return result;
+                        } else {
+                            state = CELLS_NOT_FOUND;
+                            Log.i(TAG, "No known cells found");
+                        }
+                    } catch (SQLiteException e) {
+                        Log.e(TAG, "SQLiteException! Update your database!");
+                        return null;
                     }
                 }
                 return null;
@@ -215,11 +224,7 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                     mListener.onLocationReceived(result);
                 }
             }
-        }
-
-                .
-
-                        execute(params);
+        }.execute(params);
     }
 
     private static class LocationQueryParams {

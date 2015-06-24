@@ -36,4 +36,5 @@
 
     <string name="version">Openbmap UnifiedNLP Provider</string>
     <string name="local_version">"Local version: "</string>
+    <string name="online_mode">Using online mode!\nYou can download offline database any times later</string>
 </resources>
