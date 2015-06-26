@@ -110,10 +110,6 @@ public final class Preferences {
 	 */
 	public static final String	WIFI_CATALOG_FILE = "openbmap.sqlite";
 
-    /**
-     * Version information (increase on new version)
-     */
-    public static final String VERSION = "0.1.5";
 	/**
 	 * Private dummy constructor
 	 */

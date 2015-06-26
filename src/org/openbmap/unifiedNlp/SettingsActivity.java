@@ -27,6 +27,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
@@ -107,7 +108,15 @@ public class SettingsActivity extends PreferenceActivity {
         }
 
         Preference pref = findPreference(Preferences.KEY_VERSION_INFO);
-        pref.setSummary(Preferences.VERSION + "(" + readBuildInfo() + ")");
+
+        String version = "n/a";
+        try {
+            version = getPackageManager().getPackageInfo(this.getPackageName(), 0).versionName;
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        pref.setSummary(version + " (" + readBuildInfo() + ")");
     }
 
     private String getCatalogVersion() {
