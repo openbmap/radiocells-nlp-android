@@ -6,3 +6,4 @@
 /.gradle
 /*.iml
 /gradle
+/res/raw/build.txt
