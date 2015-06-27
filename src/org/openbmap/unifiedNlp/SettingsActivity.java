@@ -175,7 +175,7 @@ public class SettingsActivity extends PreferenceActivity {
         pref.setOnPreferenceClickListener(new OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(final Preference preference) {
-                Log.v(TAG, "Downloading wifi catalog");
+                Log.v(TAG, "Downloading offline catalog");
 
                 Toast.makeText(SettingsActivity.this, R.string.download_started, Toast.LENGTH_LONG).show();
 
@@ -403,18 +403,18 @@ public class SettingsActivity extends PreferenceActivity {
                 Log.d(TAG, "New operation mode :" + listValue);
                 if (listValue.equals(Preferences.OPERATION_MODE_OFFLINE) && getSelectedCatalog().equals(Preferences.WIFI_CATALOG_NONE)) {
                     AlertDialog.Builder builder = new AlertDialog.Builder(SettingsActivity.this);
-                    builder.setMessage("Download offline wifi catalog now?\n(approx. 400MB)");
-                    builder.setTitle("No offline catalog found");
+                    builder.setMessage(getString(R.string.question_download_offline_catalog));
+                    builder.setTitle(getString(R.string.Offline_catalog_n_a));
                     // Add the buttons
                     builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int id) {
                             downloadCatalog();
-                            Toast.makeText(SettingsActivity.this, "Downloading, please wait...", Toast.LENGTH_LONG).show();
+                            Toast.makeText(SettingsActivity.this, getString(R.string.downloading), Toast.LENGTH_LONG).show();
                         }
                     });
                     builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int id) {
-                            Toast.makeText(SettingsActivity.this, "Be warned!\nOffline geolocation won't work without offline catalog", Toast.LENGTH_LONG).show();
+                            Toast.makeText(SettingsActivity.this, getString(R.string.warning_offline_catalog_missing), Toast.LENGTH_LONG).show();
                         }
                     });
 
@@ -448,14 +448,14 @@ public class SettingsActivity extends PreferenceActivity {
 
         if (getSelectedOperationMode().equals(Preferences.OPERATION_MODE_ONLINE)) {
             AlertDialog.Builder builder = new AlertDialog.Builder(SettingsActivity.this);
-            builder.setMessage("Activate offline mode now?");
-            builder.setTitle("Download completed");
+            builder.setMessage(getString(R.string.question_activate_offline_mode));
+            builder.setTitle(getString(R.string.download_completed));
             // Add the buttons
             builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int id) {
                     ListPreference pref = (ListPreference) findPreference(Preferences.KEY_OPERATION_MODE);
                     pref.setValue(Preferences.OPERATION_MODE_OFFLINE);
-                    Toast.makeText(SettingsActivity.this, "Using offline mode!", Toast.LENGTH_LONG).show();
+                    Toast.makeText(SettingsActivity.this, getString(R.string.using_offline_mode), Toast.LENGTH_LONG).show();
                 }
             });
             builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
