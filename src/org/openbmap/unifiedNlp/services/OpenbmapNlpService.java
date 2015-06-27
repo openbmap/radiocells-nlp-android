@@ -51,13 +51,11 @@ import java.util.Map;
 
 @SuppressLint("NewApi")
 public class OpenbmapNlpService extends LocationBackendService implements ILocationCallback {
-    private static final String TAG = OpenbmapNlpService.class.getName();
-
     /**
      * Minimum interval between two queries
      */
     protected static final long REFRESH_INTERVAL = 2000;
-
+    private static final String TAG = OpenbmapNlpService.class.getName();
     /**
      * If true, online geolocation service is used
      */
@@ -115,6 +113,40 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
         }
     };
 
+    @SuppressLint("InlinedApi")
+    public static Map<Integer, String> TECHNOLOGY_MAP() {
+        final Map<Integer, String> result = new HashMap<Integer, String>();
+        result.put(TelephonyManager.NETWORK_TYPE_UNKNOWN, "NA");
+        // GPRS shall be mapped to "GSM"
+        result.put(TelephonyManager.NETWORK_TYPE_GPRS, "GSM");
+        result.put(TelephonyManager.NETWORK_TYPE_EDGE, "EDGE");
+        result.put(TelephonyManager.NETWORK_TYPE_UMTS, "UMTS");
+        result.put(TelephonyManager.NETWORK_TYPE_CDMA, "CDMA");
+        result.put(TelephonyManager.NETWORK_TYPE_EVDO_0, "EDVO_0");
+        result.put(TelephonyManager.NETWORK_TYPE_EVDO_A, "EDVO_A");
+        result.put(TelephonyManager.NETWORK_TYPE_1xRTT, "1xRTT");
+
+        result.put(TelephonyManager.NETWORK_TYPE_HSDPA, "HSDPA");
+        result.put(TelephonyManager.NETWORK_TYPE_HSUPA, "HSUPA");
+        result.put(TelephonyManager.NETWORK_TYPE_HSPA, "HSPA");
+        result.put(TelephonyManager.NETWORK_TYPE_IDEN, "IDEN");
+
+        // add new network types not available in all revisions
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {
+            result.put(TelephonyManager.NETWORK_TYPE_EVDO_B, "EDV0_B");
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+            result.put(TelephonyManager.NETWORK_TYPE_LTE, "LTE");
+            result.put(TelephonyManager.NETWORK_TYPE_EHRPD, "eHRPD");
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
+            result.put(TelephonyManager.NETWORK_TYPE_HSPAP, "HSPA+");
+        }
+
+        return Collections.unmodifiableMap(result);
+
+    }
+
     @Override
     protected void onOpen() {
         Log.i(TAG, "Opening " + TAG);
@@ -160,7 +192,7 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
             }
         }
 
-        if (wifiSupported()) {
+        if (wifiSupported() && isWifisSourceSelected()) {
             //Log.i(TAG, "Scanning wifis");
             scanning = wifiManager.startScan();
 
@@ -193,7 +225,13 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
                             if (System.currentTimeMillis() - queryTime > REFRESH_INTERVAL) {
                                 Log.d(TAG, "Scanning wifis & cells");
                                 queryTime = System.currentTimeMillis();
-                                List<Cell> cells = getCells();
+
+                                List<Cell> cells = new ArrayList<Cell>() ;
+                                // if in combined mode also query cell information, otherwise pass empty list
+                                if (isCellsSourceSelected()) {
+                                    cells = getCells();
+                                }
+
                                 if (mGeocoder != null) {
                                     mGeocoder.getLocation(wifis, cells);
                                 } else {
@@ -207,7 +245,7 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
                     }
                 };
             }
-        } else {
+        } else if (isCellsSourceSelected()) {
             Log.d(TAG, "Scanning cells only");
             if (System.currentTimeMillis() - queryTime > REFRESH_INTERVAL) {
                 Log.d(TAG, "Scanning wifis & cells");
@@ -221,9 +259,29 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
             } else {
                 Log.v(TAG, "Too frequent requests.. Skipping geolocation update..");
             }
+        } else {
+            Log.e(TAG, "Neigther cells nor wifis as source selected? Com'on..");
         }
 
         return null;
+    }
+
+    /**
+     * Checks whether user has selected wifis as geolocation source in settings
+     * @return true if source wifis or combined has been chosen
+     */
+    private boolean isWifisSourceSelected() {
+        final String source = PreferenceManager.getDefaultSharedPreferences(this).getString(Preferences.KEY_SOURCE, Preferences.VAL_SOURCE);
+        return (source.equals(Preferences.SOURCE_WIFIS)) || (source.equals(Preferences.SOURCE_COMBINED));
+    }
+
+    /**
+     * Checks whether user has selected wifis as geolocation source in settings
+     * @return true if source cells or combined has been chosen
+     */
+    private boolean isCellsSourceSelected() {
+        final String source = PreferenceManager.getDefaultSharedPreferences(this).getString(Preferences.KEY_SOURCE, Preferences.VAL_SOURCE);
+        return (source.equals(Preferences.SOURCE_CELLS)) || (source.equals(Preferences.SOURCE_COMBINED));
     }
 
     private List<Cell> getCells() {
@@ -294,10 +352,11 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
         return cells;
     }
 
-    public boolean wifiSupported(){
+    public boolean wifiSupported() {
         return ((wifiManager != null) && (wifiManager.isWifiEnabled() || ((Build.VERSION.SDK_INT >= 18) &&
                 wifiManager.isScanAlwaysAvailable())));
     }
+
     @Override
     public Location onLocationReceived(Location location) {
         if (mDebug) {
@@ -314,39 +373,5 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
 
         last = location;
         return location;
-    }
-
-    @SuppressLint("InlinedApi")
-    public static Map<Integer, String> TECHNOLOGY_MAP() {
-        final Map<Integer, String> result = new HashMap<Integer, String>();
-        result.put(TelephonyManager.NETWORK_TYPE_UNKNOWN, "NA");
-        // GPRS shall be mapped to "GSM"
-        result.put(TelephonyManager.NETWORK_TYPE_GPRS, "GSM");
-        result.put(TelephonyManager.NETWORK_TYPE_EDGE, "EDGE");
-        result.put(TelephonyManager.NETWORK_TYPE_UMTS, "UMTS");
-        result.put(TelephonyManager.NETWORK_TYPE_CDMA, "CDMA");
-        result.put(TelephonyManager.NETWORK_TYPE_EVDO_0, "EDVO_0");
-        result.put(TelephonyManager.NETWORK_TYPE_EVDO_A, "EDVO_A");
-        result.put(TelephonyManager.NETWORK_TYPE_1xRTT, "1xRTT");
-
-        result.put(TelephonyManager.NETWORK_TYPE_HSDPA, "HSDPA");
-        result.put(TelephonyManager.NETWORK_TYPE_HSUPA, "HSUPA");
-        result.put(TelephonyManager.NETWORK_TYPE_HSPA, "HSPA");
-        result.put(TelephonyManager.NETWORK_TYPE_IDEN, "IDEN");
-
-        // add new network types not available in all revisions
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {
-            result.put(TelephonyManager.NETWORK_TYPE_EVDO_B, "EDV0_B");
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-            result.put(TelephonyManager.NETWORK_TYPE_LTE, "LTE");
-            result.put(TelephonyManager.NETWORK_TYPE_EHRPD, "eHRPD");
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
-            result.put(TelephonyManager.NETWORK_TYPE_HSPAP, "HSPA+");
-        }
-
-        return Collections.unmodifiableMap(result);
-
     }
 }

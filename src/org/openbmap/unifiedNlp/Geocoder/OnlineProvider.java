@@ -34,158 +34,158 @@ import java.util.List;
 
 public class OnlineProvider extends AbstractProvider implements ILocationProvider {
 
-	private static final String TAG = OnlineProvider.class.getName();
+    private static final String TAG = OnlineProvider.class.getName();
 
-	/**
-	 * Geolocation service
-	 */
-	private static final String REQUEST_URL = "http://www.radiocells.org/geolocation/geolocate";
+    /**
+     * Geolocation service
+     */
+    private static final String REQUEST_URL = "http://www.radiocells.org/geolocation/geolocate";
 
-	/**
-	 * Query extra debug information from webservice
-	 */
-	private final boolean mDebug;
+    /**
+     * Query extra debug information from webservice
+     */
+    private final boolean mDebug;
 
-	/**
-	 * Example wifi query
-	 */
-	// {"wifiAccessPoints":[{"macAddress":"000000000000","signalStrength":-54}]}
+    /**
+     * Example wifi query
+     */
+    // {"wifiAccessPoints":[{"macAddress":"000000000000","signalStrength":-54}]}
 
-	/**
-	 * Example cell query
-	 */
-	// {"cellTowers": [{"cellId": 21532831, "locationAreaCode": 2862, "mobileCountryCode": 214, "mobileNetworkCode": 7}]}
+    /**
+     * Example cell query
+     */
+    // {"cellTowers": [{"cellId": 21532831, "locationAreaCode": 2862, "mobileCountryCode": 214, "mobileNetworkCode": 7}]}
 
-	/**
-	 * Example reply
-	 */
-	// {"accuracy":30,"location":{"lng":10.088244781346,"lat":52.567062375353}}
+    /**
+     * Example reply
+     */
+    // {"accuracy":30,"location":{"lng":10.088244781346,"lat":52.567062375353}}
 
-	/**
-	 * Callback function on results available
-	 */
-	private ILocationCallback mListener;
+    /**
+     * Callback function on results available
+     */
+    private ILocationCallback mListener;
 
-	private ArrayList<String> mWifiQuery;
-	private ArrayList<String> mCellQuery;
+    private ArrayList<String> mWifiQuery;
+    private ArrayList<String> mCellQuery;
 
-	public OnlineProvider(final Context ctx, final ILocationCallback listener, boolean debug) {
-		this.mListener = listener;
-		mDebug = debug;
-	}
+    public OnlineProvider(final Context ctx, final ILocationCallback listener, boolean debug) {
+        this.mListener = listener;
+        mDebug = debug;
+    }
 
-	/**
-	 * Queries location for list of wifis
-	 */
-	@SuppressWarnings("unchecked")
-	@Override
-	public void getLocation(ArrayList<String> wifisList, List<Cell> cellsList) {
-		new AsyncTask<Object, Void, JSONObject>() {
+    /**
+     * Queries location for list of wifis
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    public void getLocation(ArrayList<String> wifisList, List<Cell> cellsList) {
+        new AsyncTask<Object, Void, JSONObject>() {
 
-			@Override
-			protected JSONObject doInBackground(Object... params) {
-				if (params == null) {
-					throw new IllegalArgumentException("Wifi list was null");
-				}
-				mWifiQuery = (ArrayList<String>) params[0];
-				mCellQuery = new ArrayList<String>();
-				for (Cell temp : (List<Cell>)params[1]) {
-					mCellQuery.add(temp.toString());
-				}
+            @Override
+            protected JSONObject doInBackground(Object... params) {
+                if (params == null) {
+                    throw new IllegalArgumentException("Wifi list was null");
+                }
+                mWifiQuery = (ArrayList<String>) params[0];
+                mCellQuery = new ArrayList<String>();
+                for (Cell temp : (List<Cell>) params[1]) {
+                    mCellQuery.add(temp.toString());
+                }
 
-				return loadJSON(REQUEST_URL, (ArrayList<String>)params[0], (List<Cell>)params[1]);
-			} 
+                return loadJSON(REQUEST_URL, (ArrayList<String>) params[0], (List<Cell>) params[1]);
+            }
 
-			@Override
-			protected void onPostExecute(JSONObject jsonData) {
-				if (jsonData == null) {
-					Log.e(TAG, "JSON data was null");
-					return;
-				}
+            @Override
+            protected void onPostExecute(JSONObject jsonData) {
+                if (jsonData == null) {
+                    Log.e(TAG, "JSON data was null");
+                    return;
+                }
 
-				try {
-					Log.i(TAG, "JSON response: " +  jsonData.toString());
-					String source = jsonData.getString("source");
-					JSONObject location = jsonData.getJSONObject("location");
-					Double lat = location.getDouble("lat");
-					Double lon = location.getDouble("lng");
-					Long acc = jsonData.getLong("accuracy");
-					Location result = new Location(TAG);
-					result.setLatitude(lat);
-					result.setLongitude(lon);
-					result.setAccuracy(acc);
-					result.setTime(System.currentTimeMillis());
+                try {
+                    Log.i(TAG, "JSON response: " + jsonData.toString());
+                    String source = jsonData.getString("source");
+                    JSONObject location = jsonData.getJSONObject("location");
+                    Double lat = location.getDouble("lat");
+                    Double lon = location.getDouble("lng");
+                    Long acc = jsonData.getLong("accuracy");
+                    Location result = new Location(TAG);
+                    result.setLatitude(lat);
+                    result.setLongitude(lon);
+                    result.setAccuracy(acc);
+                    result.setTime(System.currentTimeMillis());
 
-					Bundle b = new Bundle();
-					b.putString("source", source);
-					b.putStringArrayList("bssids", mWifiQuery);
-					b.putStringArrayList("cells", mCellQuery);
-					result.setExtras(b);
+                    Bundle b = new Bundle();
+                    b.putString("source", source);
+                    b.putStringArrayList("bssids", mWifiQuery);
+                    b.putStringArrayList("cells", mCellQuery);
+                    result.setExtras(b);
 
-					if (plausibleLocationUpdate(result)){
-						setLastLocation(result);
-						setLastFix(System.currentTimeMillis());
-						mListener.onLocationReceived(result);
-					}
-				} catch (JSONException e) {
-					Log.e(TAG, "Error parsing JSON:" + e.getMessage());
-				}
-			}
+                    if (plausibleLocationUpdate(result)) {
+                        setLastLocation(result);
+                        setLastFix(System.currentTimeMillis());
+                        mListener.onLocationReceived(result);
+                    }
+                } catch (JSONException e) {
+                    Log.e(TAG, "Error parsing JSON:" + e.getMessage());
+                }
+            }
 
-			public JSONObject loadJSON(String url, ArrayList<String> wifiParams, List<Cell> cellParams) {
-				// Creating JSON Parser instance
-				JSONParser jParser = new JSONParser();
-				JSONObject params = buildParams(wifiParams, cellParams);
-				JSONObject reply = jParser.getJSONFromUrl(url, params);
-				return reply;
-			}
+            public JSONObject loadJSON(String url, ArrayList<String> wifiParams, List<Cell> cellParams) {
+                // Creating JSON Parser instance
+                JSONParser jParser = new JSONParser();
+                JSONObject params = buildParams(wifiParams, cellParams);
+                JSONObject reply = jParser.getJSONFromUrl(url, params);
+                return reply;
+            }
 
-			/**
-			 * Builds a JSON array with cell and wifi query
-			 * @param wifis ArrayList containing bssids
-			 * @param cells 
-			 * @return
-			 */
-			public JSONObject buildParams(ArrayList<String> wifis, List<Cell> cells) {
-				JSONObject root = new JSONObject();
-				try {
-					// add wifi objects
-					JSONArray jsonArray = new JSONArray();
-					if (mDebug) {
-						JSONObject object = new JSONObject();
-						object.put("debug", "1");
-						jsonArray.put(object);
-					}
+            /**
+             * Builds a JSON array with cell and wifi query
+             * @param wifis ArrayList containing bssids
+             * @param cells
+             * @return
+             */
+            public JSONObject buildParams(ArrayList<String> wifis, List<Cell> cells) {
+                JSONObject root = new JSONObject();
+                try {
+                    // add wifi objects
+                    JSONArray jsonArray = new JSONArray();
+                    if (mDebug) {
+                        JSONObject object = new JSONObject();
+                        object.put("debug", "1");
+                        jsonArray.put(object);
+                    }
 
-					for (String s : wifis) {
-						JSONObject object = new JSONObject();
-						object.put("macAddress", s);
-						object.put("signalStrength", "-54");
-						jsonArray.put(object);
-					}
-					if (jsonArray.length() > 0) {
-						root.put("wifiAccessPoints", jsonArray);
-					}
+                    for (String s : wifis) {
+                        JSONObject object = new JSONObject();
+                        object.put("macAddress", s);
+                        object.put("signalStrength", "-54");
+                        jsonArray.put(object);
+                    }
+                    if (jsonArray.length() > 0) {
+                        root.put("wifiAccessPoints", jsonArray);
+                    }
 
-					// add cell objects
-					jsonArray = new JSONArray();
-					for (Cell s : cells) {
-						JSONObject object = new JSONObject();
-						object.put("cellId", s.cellId);
-						object.put("locationAreaCode",  s.area);
-						object.put("mobileCountryCode", s.mcc);
-						object.put("mobileNetworkCode", s.mnc);
-						jsonArray.put(object);
-					}
-					if (jsonArray.length() > 0) {
-						root.put("cellTowers", jsonArray);
-					}
-				} catch (JSONException e) {
-					e.printStackTrace();
-				}
-				Log.v(TAG, "Query param: " + root.toString());
-				return root;
-			}
-		}.execute(wifisList, cellsList);
-	}
+                    // add cell objects
+                    jsonArray = new JSONArray();
+                    for (Cell s : cells) {
+                        JSONObject object = new JSONObject();
+                        object.put("cellId", s.cellId);
+                        object.put("locationAreaCode", s.area);
+                        object.put("mobileCountryCode", s.mcc);
+                        object.put("mobileNetworkCode", s.mnc);
+                        jsonArray.put(object);
+                    }
+                    if (jsonArray.length() > 0) {
+                        root.put("cellTowers", jsonArray);
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+                Log.v(TAG, "Query param: " + root.toString());
+                return root;
+            }
+        }.execute(wifisList, cellsList);
+    }
 }

@@ -2,8 +2,6 @@
 
     <string name="app_name">org.openbmap.unifiedNlpProvider</string>
 
-    <string name="download_started">Downloading..</string>
-
     <string name="error_saving_file">Error saving file</string>
 
     <string name="error_create_folder">Couldn\'t create folder</string>
@@ -26,7 +24,7 @@
 
     <string name="database_folder_summary">Choose folder for offline database</string>
 
-    <string name="debug_title">Debug</string>
+    <string name="debug_category_title">Debug</string>
 
     <string name="crash_report_summary_off">Don\'t send crash reports</string>
 
@@ -37,11 +35,20 @@
     <string name="version">Openbmap UnifiedNLP Provider</string>
     <string name="local_version">"Local version: "</string>
     <string name="online_mode">Using online mode!\nYou can download offline catalog any times later</string>
-    <string name="Offline_catalog_n_a">No offline catalog found</string>
-    <string name="question_download_offline_catalog">Download offline catalog now?\n(approx. 400MB)</string>
-    <string name="downloading">Downloading, please wait...</string>
-    <string name="warning_offline_catalog_missing">Be warned!\nOffline geolocation won\'t work without offline catalog</string>
-    <string name="question_activate_offline_mode">Activate offline mode now?</string>
+    <string name="offline_catalog_n_a">No offline catalog found</string>
+    <string name="question_download_catalog">Download offline catalog now?\n(approx. 400MB)</string>
+    <string name="download_started">Downloading..</string>
     <string name="download_completed">Download completed</string>
+    <string name="warning_catalog_missing">Be warned!\nOffline geolocation won\'t work without offline catalog</string>
+    <string name="question_activate_offline_mode">Activate offline mode now?</string>
     <string name="using_offline_mode">Using offline mode!</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="database_category_title">Geolocation database</string>
+    <string name="off">Off</string>
+    <string name="on">On</string>
+    <string name="debug_title">Activate debug messages</string>
+    <string name="operation_mode_category">Operation mode</string>
+    <string name="source_summary">Select which data is used for geolocation\n(Wifis and Cells, Wifis only, Cells only)</string>
+    <string name="source_title">Use cells/wifis?</string>
 </resources>

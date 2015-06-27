@@ -3,6 +3,7 @@ package org.openbmap.unifiedNlp.utils;
  * Gregory Shpitalnik
  * http://www.codeproject.com/Articles/547636/Android-Ready-to-use-simple-directory-chooser-dial?msg=4923192#xx4923192xx
  */
+
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -40,17 +41,14 @@ public class DirectoryChooserDialog {
     private ChosenDirectoryListener mChosenDirectoryListener = null;
     private ArrayAdapter<String> mListAdapter = null;
 
-    /*
-     * Callback interface for selected directory
-     */
-    public interface ChosenDirectoryListener {
-        public void onChosenDir(String chosenDir);
-    }
-
     public DirectoryChooserDialog(Context context, ChosenDirectoryListener chosenDirectoryListener) {
         mContext = context;
         mSdcardDirectory = new File(Environment.getExternalStorageDirectory().getAbsolutePath()).getAbsolutePath();
         mChosenDirectoryListener = chosenDirectoryListener;
+    }
+
+    public boolean getNewFolderEnabled() {
+        return mIsNewFolderEnabled;
     }
 
     ///////////////////////////////////////////////////////////////////////
@@ -59,10 +57,6 @@ public class DirectoryChooserDialog {
 
     public void setNewFolderEnabled(boolean isNewFolderEnabled) {
         mIsNewFolderEnabled = isNewFolderEnabled;
-    }
-
-    public boolean getNewFolderEnabled() {
-        return mIsNewFolderEnabled;
     }
 
     /*
@@ -93,8 +87,7 @@ public class DirectoryChooserDialog {
                 if (((AlertDialog) dialog).getListView().getAdapter().getItem(item).equals("..")) {
                     // handle '..' (directory up) clicks
                     mDir = mDir.substring(0, mDir.lastIndexOf("/"));
-                }
-                else {
+                } else {
                     // otherwise descend into sub-directory
                     mDir += "/" + ((AlertDialog) dialog).getListView().getAdapter().getItem(item);
                 }
@@ -274,5 +267,12 @@ public class DirectoryChooserDialog {
                 return v;
             }
         };
+    }
+
+    /*
+     * Callback interface for selected directory
+     */
+    public interface ChosenDirectoryListener {
+        public void onChosenDir(String chosenDir);
     }
 }

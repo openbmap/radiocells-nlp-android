@@ -1,54 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
-
-    <!--
-    <PreferenceCategory android:title="Credentials" >
-        <EditTextPreference
-            android:dialogTitle="Enter Openbmap user"
-            android:key="credentials.user"
-            android:summary="Openbmap user name"
-            android:title="User" />
-        <EditTextPreference
-            android:dialogTitle="Enter Openbmap password"
-            android:key="credentials.password"
-            android:password="true"
-            android:summary="Openbmap Password"
-            android:title="Password" />
-    </PreferenceCategory>
-    -->
-    <PreferenceCategory android:title="Operation mode" >
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory android:title="@string/operation_mode_category">
         <ListPreference
             android:defaultValue="online"
-            android:entries="@array/listentries"
-            android:entryValues="@array/listvalues"
+            android:entries="@array/operation_mode_entries"
+            android:entryValues="@array/operation_mode_values"
             android:key="mode"
             android:summary="@string/operation_mode_summary"
-            android:title="@string/operation_mode_title">
-        </ListPreference>
+            android:title="@string/operation_mode_title"></ListPreference>
     </PreferenceCategory>
-    <PreferenceCategory android:title="Geolocation database" >
-
+        <ListPreference
+            android:defaultValue="combined"
+            android:entries="@array/source_entries"
+            android:entryValues="@array/source_values"
+            android:key="source"
+            android:summary="@string/source_summary"
+            android:title="@string/source_title"></ListPreference>
+    <PreferenceCategory android:title="@string/database_category_title">
         <ListPreference
             android:defaultValue="none"
             android:key="data.ref_database"
             android:summary="@string/wifi_catalog_summary"
-            android:title="@string/wifi_catalog_title" >
-        </ListPreference>
+            android:title="@string/wifi_catalog_title"></ListPreference>
 
         <Preference
             android:key="data.download_wifi_catalog"
             android:summary="@string/update_wifi_catalog_summary"
-            android:title="@string/update_wifi_catalog_title" >
-        </Preference>
+            android:title="@string/update_wifi_catalog_title"></Preference>
 
         <Preference
-            android:title="@string/database_folder_title"
             android:key="data.dir"
-            android:summary="@string/database_folder_summary">
-        </Preference>
+            android:summary="@string/database_folder_summary"
+            android:title="@string/database_folder_title"></Preference>
 
     </PreferenceCategory>
-    <PreferenceCategory android:title="@string/debug_title" >
+    <PreferenceCategory android:title="@string/debug_category_title">
         <CheckBoxPreference
             android:defaultValue="false"
             android:key="acra.enable"
@@ -58,13 +44,12 @@
         <CheckBoxPreference
             android:defaultValue="false"
             android:key="debug.messages"
-            android:summaryOff="Off"
-            android:summaryOn="On"
-            android:title="Activate debug messages" />
+            android:summaryOff="@string/off"
+            android:summaryOn="@string/on"
+            android:title="@string/debug_title" />
     </PreferenceCategory>
     <Preference
         android:key="version"
-        android:title="@string/version"
-        android:summary="-">
-    </Preference>
+        android:summary="-"
+        android:title="@string/version"></Preference>
 </PreferenceScreen>

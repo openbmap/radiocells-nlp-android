@@ -16,11 +16,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 package org.openbmap.unifiedNlp.services;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
+
+import android.util.Log;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -31,43 +28,49 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.util.Log;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 
 public class JSONParser {
     static final String TAG = JSONParser.class.getSimpleName();
 
-	static InputStream is = null;
-	static JSONObject jObj = null;
-	static String json = "";
-	// constructor
-	public JSONParser() {
-	}
-	
-	/**
-	 * Sends a http post request
-	 * @param url
-	 * @param params 
-	 * @return
-	 */
-	public JSONObject getJSONFromUrl(String url, JSONObject params) {
-		// Making HTTP request
-		try {
-			
-			DefaultHttpClient httpClient = new DefaultHttpClient();
-			HttpPost httpPost = new HttpPost(url);
-			 //passes the results to a string builder/entity
-		    StringEntity se = new StringEntity(params.toString());
+    static InputStream is = null;
+    static JSONObject jObj = null;
+    static String json = "";
 
-		    //sets the post request as the resulting string
-		    httpPost.setEntity(se);
-		    //sets a request header so the page receving the request
-		    //will know what to do with it
-		    httpPost.setHeader("Accept", "application/json");
-		    httpPost.setHeader("Content-type", "application/json");
-		    httpPost.setHeader("User-Agent", "Openbmap NLP/0.1");
-			HttpResponse httpResponse = httpClient.execute(httpPost);
-			HttpEntity httpEntity = httpResponse.getEntity();
-			is = httpEntity.getContent();
+    // constructor
+    public JSONParser() {
+    }
+
+    /**
+     * Sends a http post request
+     *
+     * @param url
+     * @param params
+     * @return
+     */
+    public JSONObject getJSONFromUrl(String url, JSONObject params) {
+        // Making HTTP request
+        try {
+
+            DefaultHttpClient httpClient = new DefaultHttpClient();
+            HttpPost httpPost = new HttpPost(url);
+            //passes the results to a string builder/entity
+            StringEntity se = new StringEntity(params.toString());
+
+            //sets the post request as the resulting string
+            httpPost.setEntity(se);
+            //sets a request header so the page receving the request
+            //will know what to do with it
+            httpPost.setHeader("Accept", "application/json");
+            httpPost.setHeader("Content-type", "application/json");
+            httpPost.setHeader("User-Agent", "Openbmap NLP/0.1");
+            HttpResponse httpResponse = httpClient.execute(httpPost);
+            HttpEntity httpEntity = httpResponse.getEntity();
+            is = httpEntity.getContent();
 
             try {
                 BufferedReader reader = new BufferedReader(new InputStreamReader(is, "iso-8859-1"), 8);
@@ -88,21 +91,21 @@ public class JSONParser {
                 Log.e(TAG, "Error closing http entity");
             }
 
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-		} catch (ClientProtocolException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        } catch (ClientProtocolException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
-		// try parse the string to a JSON object
-		try {
-			jObj = new JSONObject(json);
-		} catch (JSONException e) {
-			Log.e("JSON Parser", "Error parsing data " + e.toString());
-		}
-		// return JSON String
-		return jObj;
-	}
+        // try parse the string to a JSON object
+        try {
+            jObj = new JSONObject(json);
+        } catch (JSONException e) {
+            Log.e("JSON Parser", "Error parsing data " + e.toString());
+        }
+        // return JSON String
+        return jObj;
+    }
 }

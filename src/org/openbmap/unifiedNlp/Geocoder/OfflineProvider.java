@@ -38,13 +38,11 @@ import java.util.List;
 
 public class OfflineProvider extends AbstractProvider implements ILocationProvider {
 
-    private static final String TAG = OfflineProvider.class.getName();
-
     // Default accuracy for wifi results (in meter)
     public static final int DEFAULT_WIFI_ACCURACY = 30;
     // Default accuracy for cell results (in meter)
     public static final int DEFAULT_CELL_ACCURACY = 3000;
-
+    private static final String TAG = OfflineProvider.class.getName();
     private ILocationCallback mListener;
 
     /**
@@ -62,7 +60,7 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
         prefs = PreferenceManager.getDefaultSharedPreferences(ctx);
         // Open catalog database
         String path = prefs.getString(Preferences.KEY_DATA_FOLDER, ctx.getExternalFilesDir(null).getAbsolutePath())
-                + File.separator + prefs.getString(Preferences.KEY_WIFI_CATALOG_FILE, Preferences.VAL_WIFI_CATALOG_FILE);
+                + File.separator + prefs.getString(Preferences.KEY_OFFLINE_CATALOG_FILE, Preferences.VAL_CATALOG_FILE);
         mCatalog = SQLiteDatabase.openDatabase(path, null, SQLiteDatabase.OPEN_READONLY);
     }
 
@@ -89,7 +87,7 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                     throw new IllegalArgumentException("Wifi list was null");
                 }
 
-                if (prefs.getString(Preferences.KEY_WIFI_CATALOG_FILE, Preferences.WIFI_CATALOG_NONE).equals(Preferences.WIFI_CATALOG_NONE)) {
+                if (prefs.getString(Preferences.KEY_OFFLINE_CATALOG_FILE, Preferences.CATALOG_NONE).equals(Preferences.CATALOG_NONE)) {
                     throw new IllegalArgumentException("No catalog database was specified");
                 }
 
@@ -138,10 +136,9 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                     c.close();
                 }
                 // no wifi found, so try cells
-                if (state == EMPTY_WIFIS_QUERY || state == WIFIS_NOT_FOUND ) {
+                if (state == EMPTY_WIFIS_QUERY || state == WIFIS_NOT_FOUND) {
                     Log.d(TAG, "Trying cell mode");
-                    if (!haveCellTables())
-                    {
+                    if (!haveCellTables()) {
                         Log.w(TAG, "Cell tables not available. Check your database");
                         state = CELLS_DATABASE_NA;
                         return null;

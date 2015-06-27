@@ -2,7 +2,7 @@
     package="org.openbmap.unifiedNlp"
     android:sharedUserId="org.openbmap"
     android:versionCode="8"
-    android:versionName="0.1.6" >
+    android:versionName="0.1.6">
 
     <uses-sdk
         android:minSdkVersion="16"
@@ -20,18 +20,17 @@
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
-        android:theme="@style/AppTheme" >
+        android:theme="@style/AppTheme">
         <activity
             android:name="org.openbmap.unifiedNlp.SettingsActivity"
             android:exported="true"
-            android:label="Preferences" >
-        </activity>
+            android:label="Preferences"></activity>
 
         <service
             android:name="org.openbmap.unifiedNlp.services.OpenbmapNlpService"
             android:exported="true"
             android:label="Openbmap Unified Network Location Provider Backend"
-            android:permission="android.permission.ACCESS_COARSE_LOCATION" >
+            android:permission="android.permission.ACCESS_COARSE_LOCATION">
             <intent-filter>
                 <action android:name="org.microg.nlp.LOCATION_BACKEND" />
             </intent-filter>
