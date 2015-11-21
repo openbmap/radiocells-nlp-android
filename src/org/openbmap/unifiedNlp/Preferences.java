@@ -114,6 +114,11 @@ public final class Preferences {
     public static final String CATALOG_VERSION_NONE = "not yet downloaded";
 
     /**
+     * Dummy response, if server doesn't provide version info
+     */
+    public static final String SERVER_CATALOG_VERSION_NONE = "unknown";
+
+    /**
      * File extension for wifi catalog
      */
     public static final String CATALOG_FILE_EXTENSION = ".sqlite";

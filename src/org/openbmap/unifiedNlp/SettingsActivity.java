@@ -33,6 +33,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.StrictMode;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.Preference.OnPreferenceChangeListener;
@@ -42,14 +43,23 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Toast;
 
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.params.BasicHttpParams;
+import org.json.JSONObject;
 import org.openbmap.unifiedNlp.utils.DirectoryChooserDialog;
 import org.openbmap.unifiedNlp.utils.FileHelpers;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -59,6 +69,7 @@ import java.util.Date;
 public class SettingsActivity extends PreferenceActivity {
 
     private static final String TAG = SettingsActivity.class.getSimpleName();
+    public static final String VERSION_CHECK_URL = "http://radiocells.org/default/database_version.json";
 
     private DownloadManager mDownloadManager;
 
@@ -142,6 +153,60 @@ public class SettingsActivity extends PreferenceActivity {
         super.onDestroy();
     }
 
+    private String getServerVersion(){
+        Log.i(TAG, "Checking server version");
+        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+        StrictMode.setThreadPolicy(policy);
+
+        DefaultHttpClient httpclient = new DefaultHttpClient(new BasicHttpParams());
+        HttpPost httppost = new HttpPost(VERSION_CHECK_URL);
+        httppost.setHeader("Content-type", "application/json");
+
+        InputStream inputStream = null;
+        String result = null;
+        try {
+            HttpResponse response = httpclient.execute(httppost);
+            HttpEntity entity = response.getEntity();
+
+            inputStream = entity.getContent();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"), 8);
+            StringBuilder sb = new StringBuilder();
+
+            String line = null;
+            while ((line = reader.readLine()) != null)
+            {
+                sb.append(line + "\n");
+            }
+            JSONObject jObj = new JSONObject(sb.toString());
+            return jObj.getString("version");
+        } catch (Exception e) {
+            Log.e(TAG, "Error getting server version");
+        } finally {
+            try{
+                if (inputStream != null) {inputStream.close();}
+            } catch (Exception squish) {
+                return Preferences.SERVER_CATALOG_VERSION_NONE;
+            }
+        }
+        return Preferences.SERVER_CATALOG_VERSION_NONE;
+    }
+    private boolean newVersionAvailable(String current){
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            Date currentDate = sdf.parse(current);
+            Date versionDate = sdf.parse(getServerVersion());
+            if (versionDate != null && currentDate != null && versionDate.after(currentDate)) {
+                Log.i(TAG, "Newer version available");
+                return  true;
+            } else {
+                Log.d(TAG, String.format("Already have the latest version ({0}) installed", current));
+                return false;
+            }
+        } catch  (ParseException e) {
+            Log.e(TAG, "Error parsing version");
+            return false;
+        }
+    }
     /**
      * Initializes wifi catalog source preference
      */
@@ -152,14 +217,17 @@ public class SettingsActivity extends PreferenceActivity {
             @Override
             public boolean onPreferenceClick(final Preference preference) {
                 Log.v(TAG, "Downloading offline catalog");
+                if (getCatalogVersion().equals(Preferences.CATALOG_VERSION_NONE) || newVersionAvailable(getCatalogVersion())) {
+                    Toast.makeText(SettingsActivity.this, R.string.download_started, Toast.LENGTH_LONG).show();
 
-                Toast.makeText(SettingsActivity.this, R.string.download_started, Toast.LENGTH_LONG).show();
+                    setCatalogVersion(Preferences.CATALOG_VERSION_NONE);
+                    Preference pref = findPreference(Preferences.KEY_DOWNLOAD_OFFLINE_CATALOG);
+                    pref.setSummary(getString(R.string.update_wifi_catalog_summary) + "\n\n" + getString(R.string.locale_version) + getCatalogVersion());
 
-                setCatalogVersion(Preferences.CATALOG_VERSION_NONE);
-                Preference pref = findPreference(Preferences.KEY_DOWNLOAD_OFFLINE_CATALOG);
-                pref.setSummary(getString(R.string.update_wifi_catalog_summary) + "\n\nLocal version: " + getCatalogVersion());
-
-                downloadCatalog();
+                    downloadCatalog();
+                } else {
+                    Toast.makeText(SettingsActivity.this, R.string.up_to_date_database, Toast.LENGTH_LONG).show();
+                }
                 return true;
             }
         });

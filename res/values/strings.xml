@@ -37,7 +37,7 @@
     <string name="online_mode">Using online mode!\nYou can download offline catalog any times later</string>
     <string name="offline_catalog_n_a">No offline catalog found</string>
     <string name="question_download_catalog">Download offline catalog now?\n(approx. 400MB)</string>
-    <string name="download_started">Downloading..</string>
+    <string name="download_started">New catalog available! Downloading..</string>
     <string name="download_completed">Download completed</string>
     <string name="warning_catalog_missing">Be warned!\nOffline geolocation won\'t work without offline catalog</string>
     <string name="question_activate_offline_mode">Activate offline mode now?</string>
@@ -51,4 +51,6 @@
     <string name="operation_mode_category">Operation mode</string>
     <string name="source_summary">Select which data is used for geolocation\n(Wifis and Cells, Wifis only, Cells only)</string>
     <string name="source_title">Use cells/wifis?</string>
+    <string name="up_to_date_database">Latest version already installed</string>
+    <string name="locale_version">"Local version: "</string>
 </resources>
