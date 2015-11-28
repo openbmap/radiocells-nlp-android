@@ -144,7 +144,6 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                         return null;
                     }
 
-
                     if (cellsList.size() == 0) {
                         Log.w(TAG, "Query contained no cell infos, skipping update");
                         state = EMPTY_CELLS_QUERY;
@@ -213,7 +212,7 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                     Log.w(TAG, "Location was null");
                     return;
                 }
-                Log.d(TAG, "Location received " + result.toString());
+                Log.d(TAG, "Broadcasting location" + result.toString());
 
                 if (plausibleLocationUpdate(result)) {
                     setLastLocation(result);

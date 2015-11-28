@@ -25,6 +25,7 @@ import android.content.IntentFilter;
 import android.location.Location;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
+import android.net.wifi.WifiManager.WifiLock;
 import android.os.Build;
 import android.preference.PreferenceManager;
 import android.telephony.CellInfo;
@@ -74,6 +75,8 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
     private TelephonyManager mTelephonyManager;
     private PhoneStateListener mPhoneListener;
 
+    WifiLock mWifiLock;
+
     /**
      * Wifi listeners to receive wifi updates
      */
@@ -99,7 +102,6 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
 
         @Override
         public void onReceive(final Context context, final Intent intent) {
-            //Log.d(TAG, "Received intent " + intent.getAction());
             // handling wifi scan results
             if (WifiManager.SCAN_RESULTS_AVAILABLE_ACTION.equals(intent.getAction())) {
                 //Log.d(TAG, "Wifi manager signals wifi scan results.");
@@ -151,6 +153,12 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
     protected void onOpen() {
         Log.i(TAG, "Opening " + TAG);
         wifiManager = (WifiManager) getSystemService(WIFI_SERVICE);
+
+        mWifiLock = wifiManager.createWifiLock(WifiManager.WIFI_MODE_SCAN_ONLY, "SCAN_LOCK");
+        if(!mWifiLock.isHeld()){
+            mWifiLock.acquire();
+        }
+
         registerReceiver(mReceiver, new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
         mTelephonyManager = (TelephonyManager) this.getSystemService(Context.TELEPHONY_SERVICE);
 
@@ -165,13 +173,14 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
     @Override
     protected void onClose() {
         running = false;
+        if (mWifiLock != null) {
+            if (mWifiLock.isHeld()) {
+                mWifiLock.release();
+                mWifiLock = null;
+            }
+        }
+
         unregisterReceiver(mReceiver);
-        /*
-        if (thread != null) {
-			thread.interrupt();
-			thread = null;
-		}
-		 */
         wifiManager = null;
     }
 
@@ -192,14 +201,15 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
             }
         }
 
-        if (wifiSupported() && isWifisSourceSelected()) {
+        if (isWifiSupported() && isWifisSourceSelected()) {
             //Log.i(TAG, "Scanning wifis");
             scanning = wifiManager.startScan();
 
             /**
              * Processes scan results and sends query to geocoding service
-             */if (this.mWifiScanResults == null) {
-                this.mWifiScanResults = new WifiScanCallback() {
+             */
+            if (mWifiScanResults == null) {
+                mWifiScanResults = new WifiScanCallback() {
 
                     public void onWifiResultsAvailable() {
                         //Log.d(TAG, "Wifi results are available now.");
@@ -222,7 +232,7 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
                                 Log.e(TAG, "WifiManager.getScanResults returned null");
                             }
 
-                            if (System.currentTimeMillis() - queryTime > REFRESH_INTERVAL) {
+                            if (System.currentTimeMillis() - queryTime > REFRESH_INTERVAL || queryTime == 0) {
                                 Log.d(TAG, "Scanning wifis & cells");
                                 queryTime = System.currentTimeMillis();
 
@@ -247,7 +257,7 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
             }
         } else if (isCellsSourceSelected()) {
             Log.d(TAG, "Scanning cells only");
-            if (System.currentTimeMillis() - queryTime > REFRESH_INTERVAL) {
+            if (System.currentTimeMillis() - queryTime > REFRESH_INTERVAL || queryTime == 0) {
                 Log.d(TAG, "Scanning wifis & cells");
                 queryTime = System.currentTimeMillis();
                 List<Cell> cells = getCells();
@@ -352,7 +362,7 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
         return cells;
     }
 
-    public boolean wifiSupported() {
+    public boolean isWifiSupported() {
         return ((wifiManager != null) && (wifiManager.isWifiEnabled() || ((Build.VERSION.SDK_INT >= 18) &&
                 wifiManager.isScanAlwaysAvailable())));
     }
