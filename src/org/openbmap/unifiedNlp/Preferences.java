@@ -129,9 +129,15 @@ public final class Preferences {
     public static final String CATALOG_DOWNLOAD_URL = "http://radiocells.org/openbmap/static/openbmap.sqlite";
 
     /**
+     * URL to check for newer catalog files
+     */
+    public static final String CATALOG_VERSION_URL = "http://radiocells.org/default/database_version.json";
+
+    /**
      * Filename catalog database
      */
     public static final String CATALOG_FILE = "openbmap.sqlite";
+
 
     /**
      * Private dummy constructor

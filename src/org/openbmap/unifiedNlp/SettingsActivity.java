@@ -69,7 +69,6 @@ import java.util.Date;
 public class SettingsActivity extends PreferenceActivity {
 
     private static final String TAG = SettingsActivity.class.getSimpleName();
-    public static final String VERSION_CHECK_URL = "http://radiocells.org/default/database_version.json";
 
     private DownloadManager mDownloadManager;
 
@@ -159,7 +158,7 @@ public class SettingsActivity extends PreferenceActivity {
         StrictMode.setThreadPolicy(policy);
 
         DefaultHttpClient httpclient = new DefaultHttpClient(new BasicHttpParams());
-        HttpPost httppost = new HttpPost(VERSION_CHECK_URL);
+        HttpPost httppost = new HttpPost(Preferences.CATALOG_VERSION_URL);
         httppost.setHeader("Content-type", "application/json");
 
         InputStream inputStream = null;
@@ -190,16 +189,22 @@ public class SettingsActivity extends PreferenceActivity {
         }
         return Preferences.SERVER_CATALOG_VERSION_NONE;
     }
-    private boolean newVersionAvailable(String current){
+
+    /**
+     * Compares local and server wifi catalog versions
+     * @param local
+     * @return true, if server has a newer version
+     */
+    private boolean isNewerVersionAvailable(String local){
         try {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-            Date currentDate = sdf.parse(current);
+            Date currentDate = sdf.parse(local);
             Date versionDate = sdf.parse(getServerVersion());
             if (versionDate != null && currentDate != null && versionDate.after(currentDate)) {
                 Log.i(TAG, "Newer version available");
                 return  true;
             } else {
-                Log.d(TAG, String.format("Already have the latest version ({0}) installed", current));
+                Log.d(TAG, String.format("Already have the latest version ({0}) installed", local));
                 return false;
             }
         } catch  (ParseException e) {
@@ -207,6 +212,7 @@ public class SettingsActivity extends PreferenceActivity {
             return false;
         }
     }
+
     /**
      * Initializes wifi catalog source preference
      */
@@ -217,7 +223,7 @@ public class SettingsActivity extends PreferenceActivity {
             @Override
             public boolean onPreferenceClick(final Preference preference) {
                 Log.v(TAG, "Downloading offline catalog");
-                if (getCatalogVersion().equals(Preferences.CATALOG_VERSION_NONE) || newVersionAvailable(getCatalogVersion())) {
+                if (getCatalogVersion().equals(Preferences.CATALOG_VERSION_NONE) || isNewerVersionAvailable(getCatalogVersion())) {
                     Toast.makeText(SettingsActivity.this, R.string.download_started, Toast.LENGTH_LONG).show();
 
                     setCatalogVersion(Preferences.CATALOG_VERSION_NONE);
