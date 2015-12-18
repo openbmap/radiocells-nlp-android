@@ -47,17 +47,17 @@ public class OnlineProvider extends AbstractProvider implements ILocationProvide
     private final boolean mDebug;
 
     /**
-     * Example wifi query
+     * Example wifi query JSON
      */
     // {"wifiAccessPoints":[{"macAddress":"000000000000","signalStrength":-54}]}
 
     /**
-     * Example cell query
+     * Example cell query JSON
      */
     // {"cellTowers": [{"cellId": 21532831, "locationAreaCode": 2862, "mobileCountryCode": 214, "mobileNetworkCode": 7}]}
 
     /**
-     * Example reply
+     * Example JSON reply
      */
     // {"accuracy":30,"location":{"lng":10.088244781346,"lat":52.567062375353}}
 

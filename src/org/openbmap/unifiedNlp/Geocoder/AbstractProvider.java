@@ -35,7 +35,6 @@ public abstract class AbstractProvider implements ILocationProvider {
 
     /**
      * Returns last location update
-     *
      * @return
      */
     public Location getLastLocation() {
@@ -61,24 +60,30 @@ public abstract class AbstractProvider implements ILocationProvider {
     }
 
     /**
-     * Returns false if estimated speed is above 300 km/h
-     *
-     * @param newLoc
-     * @return
+     * Checks whether location is plausible.
+     * Location is considered unplausible if estimated speed is above 300 km/h
+     * or location is null
+     * @param location Location to test
+     * @return true if location seems plausible
      */
-    public boolean plausibleLocationUpdate(Location newLoc) {
+    public boolean plausibleLocationUpdate(Location location) {
+
+        if (location == null) {
+            return false;
+        }
+
         if (mLastLocation == null) {
             return true;
         }
 
-        if (newLoc.getLatitude() == 0 && newLoc.getLongitude() == 0) {
+        if (location.getLatitude() == 0 && location.getLongitude() == 0) {
             Log.wtf(TAG, "WTF, lat=0, lon=0? Welcome to the gulf of Guinea!");
             return false;
         }
 
         // on recent signal, check for reasonable speed
         if (System.currentTimeMillis() - mLastFix < 10000) {
-            Float kmAway = newLoc.distanceTo(mLastLocation) / 1000.0f;
+            Float kmAway = location.distanceTo(mLastLocation) / 1000.0f;
             Float speed = kmAway / ((System.currentTimeMillis() - mLastFix) / 1000);
 
             if (speed >= 300.0) {
@@ -89,7 +94,5 @@ public abstract class AbstractProvider implements ILocationProvider {
             Log.v(TAG, "Can't validate location update, last signal too old");
             return true;
         }
-
-
     }
 }

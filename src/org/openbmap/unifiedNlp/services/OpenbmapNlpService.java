@@ -369,6 +369,11 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
 
     @Override
     public Location onLocationReceived(Location location) {
+        if (location == null) {
+            Log.i(TAG, "Location was null, ignoring");
+            return null;
+        }
+
         if (mDebug) {
             Log.d(TAG, "[UnifiedNlp Results]: " + location.getExtras().toString());
 

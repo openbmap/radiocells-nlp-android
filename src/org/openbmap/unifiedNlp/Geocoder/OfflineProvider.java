@@ -180,6 +180,7 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                         } else {
                             state = CELLS_NOT_FOUND;
                             Log.i(TAG, "No known cells found");
+                            return null;
                         }
                     } catch (SQLiteException e) {
                         Log.e(TAG, "SQLiteException! Update your database!");
@@ -212,9 +213,9 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                     Log.w(TAG, "Location was null");
                     return;
                 }
-                Log.d(TAG, "Broadcasting location" + result.toString());
 
                 if (plausibleLocationUpdate(result)) {
+                    Log.d(TAG, "Broadcasting location" + result.toString());
                     setLastLocation(result);
                     setLastFix(System.currentTimeMillis());
                     mListener.onLocationReceived(result);
