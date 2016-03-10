@@ -215,22 +215,13 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
                         //Log.d(TAG, "Wifi results are available now.");
 
                         if (scanning) {
+                        	// TODO pass wifi signal strength to geocoder
                             //Log.i(TAG, "Wifi scan results arrived..");
                             List<ScanResult> scans = wifiManager.getScanResults();
-                            ArrayList<String> wifis = new ArrayList<String>();
-
-                            if (scans != null) {
-                                // Generates a list of wifis from scan results
-                                for (ScanResult r : scans) {
-                                    if ((r.BSSID != null) & !(r.SSID.endsWith("_nomap"))) {
-                                        wifis.add(r.BSSID);
-                                    }
-                                }
-                                Log.i(TAG, "Using " + wifis.size() + " wifis for geolocation");
-                            } else {
+                            
+                            if (scans == null)
                                 // @see http://code.google.com/p/android/issues/detail?id=19078
-                                Log.e(TAG, "WifiManager.getScanResults returned null");
-                            }
+                            	Log.e(TAG, "WifiManager.getScanResults returned null");
 
                             if (System.currentTimeMillis() - queryTime > REFRESH_INTERVAL || queryTime == 0) {
                                 Log.d(TAG, "Scanning wifis & cells");
@@ -243,7 +234,7 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
                                 }
 
                                 if (mGeocoder != null) {
-                                    mGeocoder.getLocation(wifis, cells);
+                                    mGeocoder.getLocation(scans, cells);
                                 } else {
                                     Log.e(TAG, "Geocoder is null!");
                                 }
@@ -262,7 +253,7 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
                 queryTime = System.currentTimeMillis();
                 List<Cell> cells = getCells();
                 if (mGeocoder != null) {
-                    mGeocoder.getLocation(new ArrayList<String>(), cells);
+                    mGeocoder.getLocation(null, cells);
                 } else {
                     Log.e(TAG, "Geocoder is null!");
                 }

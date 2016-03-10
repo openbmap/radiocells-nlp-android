@@ -19,6 +19,7 @@ package org.openbmap.unifiedNlp.Geocoder;
 
 import android.content.Context;
 import android.location.Location;
+import android.net.wifi.ScanResult;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
@@ -79,7 +80,20 @@ public class OnlineProvider extends AbstractProvider implements ILocationProvide
      */
     @SuppressWarnings("unchecked")
     @Override
-    public void getLocation(ArrayList<String> wifisList, List<Cell> cellsList) {
+    public void getLocation(List<ScanResult> wifisList, List<Cell> cellsList) {
+        ArrayList<String> wifis = new ArrayList<String>();
+
+        if (wifisList != null) {
+            // Generates a list of wifis from scan results
+            for (ScanResult r : wifisList) {
+                if ((r.BSSID != null) & !(r.SSID.endsWith("_nomap"))) {
+                    wifis.add(r.BSSID);
+                }
+            }
+            Log.i(TAG, "Using " + wifis.size() + " wifis for geolocation");
+        } else
+            Log.i(TAG, "No wifis supplied for geolocation");
+        
         new AsyncTask<Object, Void, JSONObject>() {
 
             @Override
@@ -186,6 +200,6 @@ public class OnlineProvider extends AbstractProvider implements ILocationProvide
                 Log.v(TAG, "Query param: " + root.toString());
                 return root;
             }
-        }.execute(wifisList, cellsList);
+        }.execute(wifis, cellsList);
     }
 }

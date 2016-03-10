@@ -24,6 +24,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.location.Location;
+import android.net.wifi.ScanResult;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -67,7 +68,7 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
 
     @SuppressWarnings("unchecked")
     @Override
-    public void getLocation(final ArrayList<String> wifiList, final List<Cell> cellsList) {
+    public void getLocation(final List<ScanResult> wifiList, final List<Cell> cellsList) {
         LocationQueryParams params = new LocationQueryParams(wifiList, cellsList);
 
         new AsyncTask<LocationQueryParams, Void, Location>() {
@@ -92,8 +93,30 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                     throw new IllegalArgumentException("No catalog database was specified");
                 }
 
-                ArrayList<String> wifiList = ((LocationQueryParams) params[0]).wifiList;
-                String[] wifiQueryArgs = wifiList.toArray(new String[0]);
+                List<ScanResult> wifiListRaw = ((LocationQueryParams) params[0]).wifiList;
+                HashMap<String, ScanResult> wifiList = new HashMap<String, ScanResult>();
+
+                if (wifiListRaw != null) {
+                	// Generates a list of wifis from scan results
+                	for (ScanResult r : wifiListRaw) {
+                		/*
+                		 * Any filtering of scan results can be done here. Examples include:
+                		 * empty or bogus BSSIDs, SSIDs with "_nomap" suffix, blacklisted wifis
+                		 */
+                		if (r.BSSID == null)
+                			Log.w(TAG, "skipping wifi with empty BSSID");
+                		else if (r.SSID.endsWith("_nomap")) {
+                			// BSSID with _nomap suffix, user does not want it to be mapped or used for geolocation
+                		} else
+                			// wifi is OK to use for geolocation, add it to list
+                			wifiList.put(r.BSSID.replace(":", "").toUpperCase(), r);
+                	}
+                	Log.i(TAG, "Using " + wifiList.size() + " wifis for geolocation");
+                } else
+                	Log.i(TAG, "No wifis supplied for geolocation");
+
+
+                String[] wifiQueryArgs = wifiList.keySet().toArray(new String[0]);
                 HashMap<String, Location> wifiLocations = new HashMap<String, Location>();
                 Location result = null;
 
@@ -105,14 +128,11 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                 if (state != EMPTY_WIFIS_QUERY) {
                     Log.d(TAG, "Trying wifi mode");
                     String whereClause = "";
-                    for (String k : wifiList) {
+                    for (String k : wifiQueryArgs) {
                         if (whereClause.length() > 1) {
                             whereClause += " OR ";
                         }
                         whereClause += " bssid = ?";
-                    }
-                    for (int index = 0; index < wifiQueryArgs.length; index++) {
-                        wifiQueryArgs[index] = wifiQueryArgs[index].replace(":", "").toUpperCase();
                     }
                     final String wifiSql = "SELECT latitude, longitude, bssid FROM wifi_zone WHERE " + whereClause;
                     //Log.d(TAG, sql);
@@ -149,7 +169,7 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                     	result.setAccuracy(DEFAULT_WIFI_ACCURACY);
                         Bundle b = new Bundle();
                         b.putString("source", "wifis");
-                        b.putStringArrayList("bssids", ((LocationQueryParams) params[0]).wifiList);
+                        b.putStringArray("bssids", wifiQueryArgs);
                         result.setExtras(b);
                         state = WIFIS_MATCH;
                         return result;
@@ -216,7 +236,7 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                     	result.setAccuracy((float) Math.sqrt(result.getAccuracy()));
                         Bundle b = new Bundle();
                         b.putString("source", "wifis");
-                        b.putStringArrayList("bssids", ((LocationQueryParams) params[0]).wifiList);
+                        b.putStringArray("bssids", wifiQueryArgs);
                         result.setExtras(b);
                         state = WIFIS_MATCH;
                         return result;
@@ -312,10 +332,10 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
     }
 
     private static class LocationQueryParams {
-        ArrayList<String> wifiList;
+    	List<ScanResult> wifiList;
         List<Cell> cellsList;
 
-        LocationQueryParams(ArrayList<String> wifiList, List<Cell> cellsList) {
+        LocationQueryParams(List<ScanResult> wifiList, List<Cell> cellsList) {
             this.wifiList = wifiList;
             this.cellsList = cellsList;
         }
