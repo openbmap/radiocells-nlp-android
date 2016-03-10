@@ -32,10 +32,13 @@ import android.os.Bundle;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.util.Log;
+
 import org.openbmap.unifiedNlp.Preferences;
 import org.openbmap.unifiedNlp.services.Cell;
+
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -172,7 +175,7 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                     	result.setAccuracy(DEFAULT_WIFI_ACCURACY);
                         Bundle b = new Bundle();
                         b.putString("source", "wifis");
-                        b.putStringArray("bssids", wifiQueryArgs);
+                        b.putStringArrayList("bssids", new ArrayList<String>(Arrays.asList(wifiQueryArgs)));
                         result.setExtras(b);
                         state = WIFIS_MATCH;
                         return result;
@@ -249,7 +252,7 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                     	result.setAccuracy((float) Math.sqrt(result.getAccuracy()));
                         Bundle b = new Bundle();
                         b.putString("source", "wifis");
-                        b.putStringArray("bssids", wifiQueryArgs);
+                        b.putStringArrayList("bssids", new ArrayList<String>(Arrays.asList(wifiQueryArgs)));
                         result.setExtras(b);
                         state = WIFIS_MATCH;
                         return result;
