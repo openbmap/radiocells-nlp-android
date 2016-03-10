@@ -152,19 +152,14 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                     }
                     c.close();
                     
-                    /*
-                     * Building a HashMap and then converting it to an array may seem inefficient at
-                     * first, but the HashMap will be needed if we want to factor in signal strengths
-                     * at a later point.
-                     */
-                    Location[] locations = wifiLocations.values().toArray(new Location[0]);
+                    String[] wifiResults = wifiLocations.keySet().toArray(new String[0]);
                     
-                    if (locations.length == 0) {
+                    if (wifiResults.length == 0) {
                         state = WIFIS_NOT_FOUND;
                         Log.i(TAG, "No known wifis found");
-                    } else if (locations.length == 1) {
+                    } else if (wifiResults.length == 1) {
                     	// We have just one location, pass it
-                    	result = (Location) locations[0];
+                    	result = wifiLocations.get(wifiResults[0]);
                     	// FIXME DEFAULT_WIFI_ACCURACY is way too optimistic IMHO
                     	result.setAccuracy(DEFAULT_WIFI_ACCURACY);
                         Bundle b = new Bundle();
@@ -197,14 +192,14 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                     	 * signal strength and is relatively easy to add, while accuracy of transmitter
                     	 * positions requires an additional column in the wifi catalog.
                     	 */
-                    	for (int i = 0; i < locations.length; i++) {
+                    	for (int i = 0; i < wifiResults.length; i++) {
                     		// TODO evaluate distance from cells as well
-                    		for (int j = i + 1; j < locations.length; j++) {
+                    		for (int j = i + 1; j < wifiResults.length; j++) {
                     			float[] distResults = new float[1];
-                    			Location.distanceBetween(locations[i].getLatitude(),
-                    					locations[i].getLongitude(),
-                    					locations[j].getLatitude(),
-                    					locations[j].getLongitude(),
+                    			Location.distanceBetween(wifiLocations.get(wifiResults[i]).getLatitude(),
+                    					wifiLocations.get(wifiResults[i]).getLongitude(),
+                    					wifiLocations.get(wifiResults[j]).getLatitude(),
+                    					wifiLocations.get(wifiResults[j]).getLongitude(),
                     					distResults);
                     			/*
                     			 * TODO instead of using raw distance, subtract the distance between the
@@ -216,18 +211,18 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                     			distResults[0] *= distResults[0];
 
                     			// add to the penalty count for the locations of both wifis
-                    			locations[i].setAccuracy(locations[i].getAccuracy() + distResults[0]);
-                    			locations[j].setAccuracy(locations[j].getAccuracy() + distResults[0]);
+                    			wifiLocations.get(wifiResults[i]).setAccuracy(wifiLocations.get(wifiResults[i]).getAccuracy() + distResults[0]);
+                    			wifiLocations.get(wifiResults[j]).setAccuracy(wifiLocations.get(wifiResults[j]).getAccuracy() + distResults[0]);
                     		}
-                    		locations[i].setAccuracy(locations[i].getAccuracy() / (locations.length - 1));
+                    		wifiLocations.get(wifiResults[i]).setAccuracy(wifiLocations.get(wifiResults[i]).getAccuracy() / (wifiResults.length - 1));
                     		// TODO add square of distance from transmitter (additional source of error)
                     		
                     		if (i == 0)
-                    			result = locations[i];
+                    			result = wifiLocations.get(wifiResults[i]);
                     		else {
-                    			float k = result.getAccuracy() / (result.getAccuracy() + ((Location) locations[i]).getAccuracy());
-                    			result.setLatitude((1 - k) * result.getLatitude() + k * ((Location) locations[i]).getLatitude());
-                    			result.setLongitude((1 - k) * result.getLongitude() + k * ((Location) locations[i]).getLongitude());
+                    			float k = result.getAccuracy() / (result.getAccuracy() + wifiLocations.get(wifiResults[i]).getAccuracy());
+                    			result.setLatitude((1 - k) * result.getLatitude() + k * wifiLocations.get(wifiResults[i]).getLatitude());
+                    			result.setLongitude((1 - k) * result.getLongitude() + k * wifiLocations.get(wifiResults[i]).getLongitude());
                     			result.setAccuracy((1 - k) * result.getAccuracy());
                     		}
                     	}
@@ -329,6 +324,26 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                 }
             }
         }.execute(params);
+    }
+    
+    /**
+     * @brief Obtains a wifi receiver's maximum distance from the transmitter based on signal strength.
+     * 
+     * Distance is calculated based on the assumption that the signal level is -100 dBm at a distance of
+     * 2000 m, and that the signal level will increase by 6 dBm as the distance is halved. This model
+     * does not consider additional signal degradation caused by obstacles, thus real distances will
+     * almost always be lower than the result of this function. This "worst-case" approach is
+     * intentional.
+     * 
+     * @param rxlev Received signal strength (RSSI) in dBm
+     * 
+     * @return Upper boundary for the distance between transmitter and receiver in meters
+     */
+    private static float getWifiRxDist(int rxlev) {
+    	final int refRxlev = -100;
+    	final float refDist = 2000.0f;
+    	float factor = (float) Math.pow(2, 6 / (refRxlev - rxlev));
+    	return refDist * factor;
     }
 
     private static class LocationQueryParams {
