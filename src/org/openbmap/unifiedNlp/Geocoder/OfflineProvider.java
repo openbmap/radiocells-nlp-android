@@ -34,6 +34,7 @@ import org.openbmap.unifiedNlp.services.Cell;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class OfflineProvider extends AbstractProvider implements ILocationProvider {
@@ -93,6 +94,8 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
 
                 ArrayList<String> wifiList = ((LocationQueryParams) params[0]).wifiList;
                 String[] wifiQueryArgs = wifiList.toArray(new String[0]);
+                HashMap<String, Location> wifiLocations = new HashMap<String, Location>();
+                Location result = null;
 
                 if (wifiQueryArgs.length < 1) {
                     Log.i(TAG, "Query contained no bssids");
@@ -111,29 +114,113 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                     for (int index = 0; index < wifiQueryArgs.length; index++) {
                         wifiQueryArgs[index] = wifiQueryArgs[index].replace(":", "").toUpperCase();
                     }
-                    final String wifiSql = "SELECT AVG(latitude), AVG(longitude) FROM wifi_zone WHERE " + whereClause;
+                    final String wifiSql = "SELECT latitude, longitude, bssid FROM wifi_zone WHERE " + whereClause;
                     //Log.d(TAG, sql);
 
                     Cursor c = mCatalog.rawQuery(wifiSql, wifiQueryArgs);
-                    c.moveToFirst();
-                    if (!c.isAfterLast()) {
-                        Location result = new Location(TAG);
-                        result.setLatitude(c.getDouble(0));
-                        result.setLongitude(c.getDouble(1));
-                        result.setAccuracy(DEFAULT_WIFI_ACCURACY);
-                        result.setTime(System.currentTimeMillis());
+                    for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
+                        Location location = new Location(TAG);
+                        location.setLatitude(c.getDouble(0));
+                        location.setLongitude(c.getDouble(1));
+                        location.setAccuracy(0);
+                        location.setTime(System.currentTimeMillis());
+                        Bundle b = new Bundle();
+                        b.putString("source", "wifis");
+                        b.putString("bssid", c.getString(2));
+                        location.setExtras(b);
+                        wifiLocations.put(c.getString(2), location);
+                    }
+                    c.close();
+                    
+                    /*
+                     * Building a HashMap and then converting it to an array may seem inefficient at
+                     * first, but the HashMap will be needed if we want to factor in signal strengths
+                     * at a later point.
+                     */
+                    Location[] locations = wifiLocations.values().toArray(new Location[0]);
+                    
+                    if (locations.length == 0) {
+                        state = WIFIS_NOT_FOUND;
+                        Log.i(TAG, "No known wifis found");
+                    } else if (locations.length == 1) {
+                    	// We have just one location, pass it
+                    	result = (Location) locations[0];
+                    	// FIXME DEFAULT_WIFI_ACCURACY is way too optimistic IMHO
+                    	result.setAccuracy(DEFAULT_WIFI_ACCURACY);
                         Bundle b = new Bundle();
                         b.putString("source", "wifis");
                         b.putStringArrayList("bssids", ((LocationQueryParams) params[0]).wifiList);
                         result.setExtras(b);
-                        c.close();
                         state = WIFIS_MATCH;
                         return result;
                     } else {
-                        state = WIFIS_NOT_FOUND;
-                        Log.i(TAG, "No known wifis found");
+                    	/*
+                    	 * Penalize outliers (which may be happen if a wifi has moved and the database
+                    	 * still has the old location, or a mix of old and new location): Walk through
+                    	 * the array, calculating distances between each possible pair of locations and
+                    	 * store their mean square of that distance. This is the presumed variance (i.e.
+                    	 * standard deviation, or accuracy, squared).
+                    	 * 
+                    	 * Note that we're "abusing" the accuracy field for variance (and interim values
+                    	 * to calculate variance) until we've fused the individual locations into a
+                    	 * final location. Only at that point will the true accuracy be set for that
+                    	 * location.
+                    	 * 
+                    	 * Locations are fused using a simplified Kálmán filter: since accuracy (and
+                    	 * thus variance) is a scalar value, we're applying a one-dimensional Kálmán
+                    	 * filter to latitude and longitude independently. This may not be 100%
+                    	 * mathematically correct - improvements welcome. 
+                    	 * 
+                    	 * TODO for now we are considering neither our own distance from the
+                    	 * transmitter, nor the accuracy of the transmitter positions themselves (as we
+                    	 * don't have these values). Distance from transmitter can be inferred from
+                    	 * signal strength and is relatively easy to add, while accuracy of transmitter
+                    	 * positions requires an additional column in the wifi catalog.
+                    	 */
+                    	for (int i = 0; i < locations.length; i++) {
+                    		// TODO evaluate distance from cells as well
+                    		for (int j = i + 1; j < locations.length; j++) {
+                    			float[] distResults = new float[1];
+                    			Location.distanceBetween(locations[i].getLatitude(),
+                    					locations[i].getLongitude(),
+                    					locations[j].getLatitude(),
+                    					locations[j].getLongitude(),
+                    					distResults);
+                    			/*
+                    			 * TODO instead of using raw distance, subtract the distance between the
+                    			 * device and each transmitter from it (if device-transmitter distance
+                    			 * is not known, assume a typical value). If the result is negative,
+                    			 * assume zero instead.
+                    			 */
+                    			// take the square of the distance
+                    			distResults[0] *= distResults[0];
+
+                    			// add to the penalty count for the locations of both wifis
+                    			locations[i].setAccuracy(locations[i].getAccuracy() + distResults[0]);
+                    			locations[j].setAccuracy(locations[j].getAccuracy() + distResults[0]);
+                    		}
+                    		locations[i].setAccuracy(locations[i].getAccuracy() / (locations.length - 1));
+                    		// TODO add square of distance from transmitter (additional source of error)
+                    		
+                    		if (i == 0)
+                    			result = locations[i];
+                    		else {
+                    			float k = result.getAccuracy() / (result.getAccuracy() + ((Location) locations[i]).getAccuracy());
+                    			result.setLatitude((1 - k) * result.getLatitude() + k * ((Location) locations[i]).getLatitude());
+                    			result.setLongitude((1 - k) * result.getLongitude() + k * ((Location) locations[i]).getLongitude());
+                    			result.setAccuracy((1 - k) * result.getAccuracy());
+                    		}
+                    	}
+                    	
+                    	// finally, set actual accuracy (square root of the interim value)
+                    	result.setAccuracy((float) Math.sqrt(result.getAccuracy()));
+                        Bundle b = new Bundle();
+                        b.putString("source", "wifis");
+                        b.putStringArrayList("bssids", ((LocationQueryParams) params[0]).wifiList);
+                        result.setExtras(b);
+                        state = WIFIS_MATCH;
+                        return result;
                     }
-                    c.close();
                 }
                 // no wifi found, so try cells
                 if (state == EMPTY_WIFIS_QUERY || state == WIFIS_NOT_FOUND) {
@@ -166,7 +253,7 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
 
                         c.moveToFirst();
                         if (!c.isAfterLast()) {
-                            Location result = new Location(TAG);
+                            result = new Location(TAG);
                             result.setLatitude(c.getDouble(0));
                             result.setLongitude(c.getDouble(1));
                             result.setAccuracy(DEFAULT_CELL_ACCURACY);
