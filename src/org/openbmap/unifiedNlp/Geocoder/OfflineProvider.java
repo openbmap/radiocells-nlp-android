@@ -18,6 +18,7 @@
 package org.openbmap.unifiedNlp.Geocoder;
 
 import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -26,13 +27,13 @@ import android.database.sqlite.SQLiteException;
 import android.location.Location;
 import android.net.wifi.ScanResult;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.util.Log;
-
 import org.openbmap.unifiedNlp.Preferences;
 import org.openbmap.unifiedNlp.services.Cell;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -82,7 +83,8 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
 
             private int state;
 
-            @SuppressLint("DefaultLocale")
+            @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
+			@SuppressLint("DefaultLocale")
             @Override
             protected Location doInBackground(LocationQueryParams... params) {
                 if (params == null) {
@@ -108,6 +110,12 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                 		else if (r.SSID.endsWith("_nomap")) {
                 			// BSSID with _nomap suffix, user does not want it to be mapped or used for geolocation
                 		} else
+                			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+                				// determine age (elapsedRealtime is in milliseconds, timestamp is in microseconds)
+                				long age = SystemClock.elapsedRealtime() - (r.timestamp / 1000);
+                				if (age >= 5000)
+                					Log.w(TAG, String.format("wifi %s is stale (%d ms), using it anyway", r.BSSID, age));
+                			}
                 			// wifi is OK to use for geolocation, add it to list
                 			wifiList.put(r.BSSID.replace(":", "").toUpperCase(), r);
                 	}
