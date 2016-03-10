@@ -76,13 +76,15 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
         LocationQueryParams params = new LocationQueryParams(wifiList, cellsList);
 
         new AsyncTask<LocationQueryParams, Void, Location>() {
-            private int EMPTY_WIFIS_QUERY = -1;
-            private int EMPTY_CELLS_QUERY = -2;
-            private int WIFIS_NOT_FOUND = -101;
-            private int CELLS_NOT_FOUND = -102;
-            private int CELLS_DATABASE_NA = -999;
-            private int WIFIS_MATCH = 201;
-            private int CELLS_MATCH = 202;
+        	private static final int WIFIS_MASK = 0x0f;        // mask for wifi flags
+        	private static final int CELLS_MASK = 0xf0;        // mask for cell flags
+            private static final int EMPTY_WIFIS_QUERY = 0x01; // no wifis were passed
+            private static final int EMPTY_CELLS_QUERY = 0x10; // no cells were passed
+            private static final int WIFIS_NOT_FOUND = 0x02;   // none of the wifis in the list was found in the database
+            private static final int CELLS_NOT_FOUND = 0x20;   // none of the cells in the list was found in the database
+            private static final int WIFIS_MATCH = 0x04;       // matching wifis were found
+            private static final int CELLS_MATCH = 0x40;       // matching cells were found
+            private static final int CELLS_DATABASE_NA = 0x80; // the database contains no cell data
 
             private int state;
 
@@ -131,12 +133,13 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                 HashMap<String, Location> wifiLocations = new HashMap<String, Location>();
                 Location result = null;
 
+                state &= ~WIFIS_MASK & ~CELLS_MASK;
                 if (wifiQueryArgs.length < 1) {
                     Log.i(TAG, "Query contained no bssids");
-                    state = EMPTY_WIFIS_QUERY;
+                    state |= EMPTY_WIFIS_QUERY;
                 }
 
-                if (state != EMPTY_WIFIS_QUERY) {
+                if ((state & EMPTY_WIFIS_QUERY) == 0) {
                     Log.d(TAG, "Trying wifi mode");
                     String whereClause = "";
                     for (String k : wifiQueryArgs) {
@@ -166,7 +169,7 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                     String[] wifiResults = wifiLocations.keySet().toArray(new String[0]);
                     
                     if (wifiResults.length == 0) {
-                        state = WIFIS_NOT_FOUND;
+                        state |= WIFIS_NOT_FOUND;
                         Log.i(TAG, "No known wifis found");
                     } else if (wifiResults.length == 1) {
                     	// We have just one location, pass it
@@ -177,7 +180,7 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                         b.putString("source", "wifis");
                         b.putStringArrayList("bssids", new ArrayList<String>(Arrays.asList(wifiQueryArgs)));
                         result.setExtras(b);
-                        state = WIFIS_MATCH;
+                        state |= WIFIS_MATCH;
                         return result;
                     } else {
                     	/*
@@ -254,22 +257,23 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                         b.putString("source", "wifis");
                         b.putStringArrayList("bssids", new ArrayList<String>(Arrays.asList(wifiQueryArgs)));
                         result.setExtras(b);
-                        state = WIFIS_MATCH;
+                        state |= WIFIS_MATCH;
                         return result;
                     }
                 }
+                
                 // no wifi found, so try cells
-                if (state == EMPTY_WIFIS_QUERY || state == WIFIS_NOT_FOUND) {
+                if ((state & (EMPTY_WIFIS_QUERY | WIFIS_NOT_FOUND)) != 0) {
                     Log.d(TAG, "Trying cell mode");
                     if (!haveCellTables()) {
                         Log.w(TAG, "Cell tables not available. Check your database");
-                        state = CELLS_DATABASE_NA;
+                        state |= CELLS_DATABASE_NA;
                         return null;
                     }
 
                     if (cellsList.size() == 0) {
                         Log.w(TAG, "Query contained no cell infos, skipping update");
-                        state = EMPTY_CELLS_QUERY;
+                        state |= EMPTY_CELLS_QUERY;
                         return null;
                     }
 
@@ -298,10 +302,10 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                             b.putString("source", "cells");
                             result.setExtras(b);
                             c.close();
-                            state = CELLS_MATCH;
+                            state |= CELLS_MATCH;
                             return result;
                         } else {
-                            state = CELLS_NOT_FOUND;
+                            state |= CELLS_NOT_FOUND;
                             Log.i(TAG, "No known cells found");
                             return null;
                         }
