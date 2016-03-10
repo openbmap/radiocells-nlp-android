@@ -193,6 +193,7 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                     	 * positions requires an additional column in the wifi catalog.
                     	 */
                     	for (int i = 0; i < wifiResults.length; i++) {
+                    		float rxdist = getWifiRxDist(wifiList.get(wifiResults[i]).level);
                     		// TODO evaluate distance from cells as well
                     		for (int j = i + 1; j < wifiResults.length; j++) {
                     			float[] distResults = new float[1];
@@ -207,16 +208,25 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                     			 * is not known, assume a typical value). If the result is negative,
                     			 * assume zero instead.
                     			 */
-                    			// take the square of the distance
-                    			distResults[0] *= distResults[0];
+                    			// subtract distance between device and each transmitter to get "disagreement"
+                    			distResults[0] -= rxdist + getWifiRxDist(wifiList.get(wifiResults[j]).level);
+                    			
+                    			// apply penalty only if disagreement is greater than zero
+                    			if (distResults[0] > 0) {
+                    				// take the square of the distance
+                    				distResults[0] *= distResults[0];
 
-                    			// add to the penalty count for the locations of both wifis
-                    			wifiLocations.get(wifiResults[i]).setAccuracy(wifiLocations.get(wifiResults[i]).getAccuracy() + distResults[0]);
-                    			wifiLocations.get(wifiResults[j]).setAccuracy(wifiLocations.get(wifiResults[j]).getAccuracy() + distResults[0]);
+                    				// add to the penalty count for the locations of both wifis
+                    				wifiLocations.get(wifiResults[i]).setAccuracy(wifiLocations.get(wifiResults[i]).getAccuracy() + distResults[0]);
+                    				wifiLocations.get(wifiResults[j]).setAccuracy(wifiLocations.get(wifiResults[j]).getAccuracy() + distResults[0]);
+                    			}
                     		}
                     		wifiLocations.get(wifiResults[i]).setAccuracy(wifiLocations.get(wifiResults[i]).getAccuracy() / (wifiResults.length - 1));
-                    		// TODO add square of distance from transmitter (additional source of error)
-                    		
+                    		// correct distance from transmitter to a realistic value
+                    		rxdist /= 10;
+                    		// add square of distance from transmitter (additional source of error)
+                      		wifiLocations.get(wifiResults[i]).setAccuracy(wifiLocations.get(wifiResults[i]).getAccuracy() + rxdist * rxdist);
+                      	                    		
                     		if (i == 0)
                     			result = wifiLocations.get(wifiResults[i]);
                     		else {
@@ -330,10 +340,10 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
      * @brief Obtains a wifi receiver's maximum distance from the transmitter based on signal strength.
      * 
      * Distance is calculated based on the assumption that the signal level is -100 dBm at a distance of
-     * 2000 m, and that the signal level will increase by 6 dBm as the distance is halved. This model
+     * 1000 m, and that the signal level will increase by 6 dBm as the distance is halved. This model
      * does not consider additional signal degradation caused by obstacles, thus real distances will
      * almost always be lower than the result of this function. This "worst-case" approach is
-     * intentional.
+     * intentional and consumers should apply any corrections they deem appropriate.
      * 
      * @param rxlev Received signal strength (RSSI) in dBm
      * 
@@ -341,7 +351,7 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
      */
     private static float getWifiRxDist(int rxlev) {
     	final int refRxlev = -100;
-    	final float refDist = 2000.0f;
+    	final float refDist = 1000.0f;
     	float factor = (float) Math.pow(2, 6 / (refRxlev - rxlev));
     	return refDist * factor;
     }
