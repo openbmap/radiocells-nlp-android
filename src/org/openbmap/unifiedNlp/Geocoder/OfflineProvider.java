@@ -102,6 +102,9 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
 
                 List<ScanResult> wifiListRaw = ((LocationQueryParams) params[0]).wifiList;
                 HashMap<String, ScanResult> wifiList = new HashMap<String, ScanResult>();
+                HashMap<String, Location> locations = new HashMap<String, Location>();
+                String[] resultIds = new String[0];
+                Location result = null;
 
                 if (wifiListRaw != null) {
                 	// Generates a list of wifis from scan results
@@ -130,64 +133,133 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
 
 
                 String[] wifiQueryArgs = wifiList.keySet().toArray(new String[0]);
-                HashMap<String, Location> wifiLocations = new HashMap<String, Location>();
-                Location result = null;
 
                 state &= ~WIFIS_MASK & ~CELLS_MASK;
                 if (wifiQueryArgs.length < 1) {
                     Log.i(TAG, "Query contained no bssids");
                     state |= EMPTY_WIFIS_QUERY;
                 }
+                
+                if (cellsList.size() == 0) {
+                    Log.w(TAG, "Query contained no cell infos");
+                    state |= EMPTY_CELLS_QUERY;
+                }
 
-                if ((state & EMPTY_WIFIS_QUERY) == 0) {
-                    Log.d(TAG, "Trying wifi mode");
-                    String whereClause = "";
-                    for (String k : wifiQueryArgs) {
-                        if (whereClause.length() > 1) {
-                            whereClause += " OR ";
-                        }
-                        whereClause += " bssid = ?";
-                    }
-                    final String wifiSql = "SELECT latitude, longitude, bssid FROM wifi_zone WHERE " + whereClause;
-                    //Log.d(TAG, sql);
+                if ((state & (EMPTY_WIFIS_QUERY | EMPTY_CELLS_QUERY)) == 0) {
+                	Cursor c;
+                	
+                	if ((state & EMPTY_WIFIS_QUERY) == 0) {
+                		Log.d(TAG, "Looking up wifis");
+                		String whereClause = "";
+                		for (String k : wifiQueryArgs) {
+                			if (whereClause.length() > 1) {
+                				whereClause += " OR ";
+                			}
+                			whereClause += " bssid = ?";
+                		}
+                		final String wifiSql = "SELECT latitude, longitude, bssid FROM wifi_zone WHERE " + whereClause;
+                		//Log.d(TAG, sql);
 
-                    Cursor c = mCatalog.rawQuery(wifiSql, wifiQueryArgs);
-                    for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
-                        Location location = new Location(TAG);
-                        location.setLatitude(c.getDouble(0));
-                        location.setLongitude(c.getDouble(1));
-                        location.setAccuracy(0);
-                        location.setTime(System.currentTimeMillis());
-                        Bundle b = new Bundle();
-                        b.putString("source", "wifis");
-                        b.putString("bssid", c.getString(2));
-                        location.setExtras(b);
-                        wifiLocations.put(c.getString(2), location);
-                    }
-                    c.close();
+                		c = mCatalog.rawQuery(wifiSql, wifiQueryArgs);
+                		for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
+                			Location location = new Location(TAG);
+                			location.setLatitude(c.getDouble(0));
+                			location.setLongitude(c.getDouble(1));
+                			location.setAccuracy(0);
+                			location.setTime(System.currentTimeMillis());
+                			Bundle b = new Bundle();
+                			b.putString("source", "wifis");
+                			b.putString("bssid", c.getString(2));
+                			location.setExtras(b);
+                			locations.put(c.getString(2), location);
+                			state |= WIFIS_MATCH;
+                		}
+                		c.close();
+
+                		if ((state & WIFIS_MATCH) != WIFIS_MATCH) {
+                			state |= WIFIS_NOT_FOUND;
+                			Log.i(TAG, "No known wifis found");
+                		}
+                	}
                     
-                    String[] wifiResults = wifiLocations.keySet().toArray(new String[0]);
+                	if ((state & EMPTY_CELLS_QUERY) == 0) {
+                		Log.d(TAG, "Looking up cells");
+                		if (!haveCellTables()) {
+                			Log.w(TAG, "Cell tables not available. Check your database");
+                			state |= CELLS_DATABASE_NA;
+                		}
+
+                		// TODO use multiple cells for lookup if we have complete data
+                		Log.d(TAG, "Using " + cellsList.get(0).toString());
+                		// Ignore the cell technology for the time being, using cell technology causes problems when cell supports different protocols, e.g.
+                		// UMTS and HSUPA and HSUPA+
+                		// final String cellSql = "SELECT AVG(latitude), AVG(longitude) FROM cell_zone WHERE cid = ? AND mcc = ? AND mnc = ? AND area = ? and technology = ?";
+                		final String cellSql = "SELECT AVG(latitude), AVG(longitude), mcc, mnc, area, cid FROM cell_zone WHERE cid = ? AND mcc = ? AND mnc = ? AND area = ? GROUP BY mcc, mnc, area, cid";
+                		try {
+                			c = mCatalog.rawQuery(cellSql, new String[]{
+                					String.valueOf(((Cell) cellsList.get(0)).cellId),
+                					String.valueOf(((Cell) cellsList.get(0)).mcc),
+                					String.valueOf(((Cell) cellsList.get(0)).mnc),
+                					String.valueOf(((Cell) cellsList.get(0)).area)
+                					/*,String.valueOf(((Cell) cellsList.get(0)).technology)*/
+                			});
+
+                			for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
+                				Location location = new Location(TAG);
+                				location.setLatitude(c.getDouble(0));
+                				location.setLongitude(c.getDouble(1));
+                				location.setAccuracy(0); // or DEFAULT_CELL_ACCURACY?
+                				location.setTime(System.currentTimeMillis());
+                				Bundle b = new Bundle();
+                				b.putString("source", "cells");
+                				//b.putString("bssid", c.getString(2)); // TODO put cell ID
+                				location.setExtras(b);
+                				locations.put(c.getInt(2) + "|" + c.getInt(3) + "|" + c.getInt(4) + "|" + c.getInt(5), location);
+                				state |= CELLS_MATCH;
+                			}
+                			c.close();
+
+                			if ((state & CELLS_MATCH) != CELLS_MATCH) {
+                				state |= CELLS_NOT_FOUND;
+                				Log.i(TAG, "No known cells found");
+                			}
+                		} catch (SQLiteException e) {
+                			Log.e(TAG, "SQLiteException! Update your database!");
+                			state |= CELLS_DATABASE_NA;
+                		}
+                	}
                     
-                    if (wifiResults.length == 0) {
-                        state |= WIFIS_NOT_FOUND;
-                        Log.i(TAG, "No known wifis found");
-                    } else if (wifiResults.length == 1) {
+            		resultIds = locations.keySet().toArray(new String[0]);
+            		
+                    if (resultIds.length == 0) {
+                        return null;
+                    } else if (resultIds.length == 1) {
                     	// We have just one location, pass it
-                    	result = wifiLocations.get(wifiResults[0]);
-                    	result.setAccuracy(getWifiRxDist(wifiList.get(wifiResults[0]).level) / 10);
+                    	result = locations.get(resultIds[0]);
+                    	if (resultIds[0].contains("|"))
+                    		// the only result is a cell, assume default
+                    		result.setAccuracy(DEFAULT_CELL_ACCURACY);
+                    	else
+                    		// the only result is a wifi, estimate accuracy based on RSSI
+                    		result.setAccuracy(getWifiRxDist(wifiList.get(resultIds[0]).level) / 10);
                         Bundle b = new Bundle();
                         b.putString("source", "wifis");
                         b.putStringArrayList("bssids", new ArrayList<String>(Arrays.asList(wifiQueryArgs)));
                         result.setExtras(b);
-                        state |= WIFIS_MATCH;
                         return result;
                     } else {
                     	/*
-                    	 * Penalize outliers (which may be happen if a wifi has moved and the database
-                    	 * still has the old location, or a mix of old and new location): Walk through
-                    	 * the array, calculating distances between each possible pair of locations and
-                    	 * store their mean square of that distance. This is the presumed variance (i.e.
+                    	 * Penalize outliers (which may be happen if a transmitter has moved and the
+                    	 * database still has the old location, or a mix of old and new location): Walk
+                    	 * through the array, calculating distances between each possible pair of
+                    	 * locations, subtracting the presumed distance from the receiver, and storing
+                    	 * the mean square of any positive distance. This is the presumed variance (i.e.
                     	 * standard deviation, or accuracy, squared).
+                    	 * 
+                    	 * This process does not distinguish between cells and wifis, other than by
+                    	 * determining ranges and distances in a different way. This is intentional, as
+                    	 * even cell towers can move (or may just have an inaccurate position in the
+                    	 * database).
                     	 * 
                     	 * Note that we're "abusing" the accuracy field for variance (and interim values
                     	 * to calculate variance) until we've fused the individual locations into a
@@ -199,121 +271,81 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                     	 * filter to latitude and longitude independently. This may not be 100%
                     	 * mathematically correct - improvements welcome. 
                     	 * 
-                    	 * TODO for now we are considering neither our own distance from the
-                    	 * transmitter, nor the accuracy of the transmitter positions themselves (as we
-                    	 * don't have these values). Distance from transmitter can be inferred from
-                    	 * signal strength and is relatively easy to add, while accuracy of transmitter
-                    	 * positions requires an additional column in the wifi catalog.
+                    	 * For now we are not considering the accuracy of the transmitter positions
+                    	 * themselves, as we don't have these values (this would require an additional
+                    	 * column in the wifi catalog).
                     	 */
-                    	for (int i = 0; i < wifiResults.length; i++) {
-                    		float rxdist = getWifiRxDist(wifiList.get(wifiResults[i]).level);
-                    		// TODO evaluate distance from cells as well
-                    		for (int j = i + 1; j < wifiResults.length; j++) {
+                    	for (int i = 0; i < resultIds.length; i++) {
+                    		float rxdist =
+                    				(resultIds[i].contains("|")) ?
+                    						DEFAULT_CELL_ACCURACY * 10 :
+                    							getWifiRxDist(wifiList.get(resultIds[i]).level) ;
+                    		for (int j = i + 1; j < resultIds.length; j++) {
                     			float[] distResults = new float[1];
-                    			Location.distanceBetween(wifiLocations.get(wifiResults[i]).getLatitude(),
-                    					wifiLocations.get(wifiResults[i]).getLongitude(),
-                    					wifiLocations.get(wifiResults[j]).getLatitude(),
-                    					wifiLocations.get(wifiResults[j]).getLongitude(),
+                    			Location.distanceBetween(locations.get(resultIds[i]).getLatitude(),
+                    					locations.get(resultIds[i]).getLongitude(),
+                    					locations.get(resultIds[j]).getLatitude(),
+                    					locations.get(resultIds[j]).getLongitude(),
                     					distResults);
-                    			/*
-                    			 * TODO instead of using raw distance, subtract the distance between the
-                    			 * device and each transmitter from it (if device-transmitter distance
-                    			 * is not known, assume a typical value). If the result is negative,
-                    			 * assume zero instead.
-                    			 */
+                    			
                     			// subtract distance between device and each transmitter to get "disagreement"
-                    			distResults[0] -= rxdist + getWifiRxDist(wifiList.get(wifiResults[j]).level);
+                    			if (resultIds[j].contains("|"))
+                    				distResults[0] -= rxdist + DEFAULT_CELL_ACCURACY * 10;
+                    			else
+                    				distResults[0] -= rxdist + getWifiRxDist(wifiList.get(resultIds[j]).level);
                     			
                     			// apply penalty only if disagreement is greater than zero
                     			if (distResults[0] > 0) {
                     				// take the square of the distance
                     				distResults[0] *= distResults[0];
 
-                    				// add to the penalty count for the locations of both wifis
-                    				wifiLocations.get(wifiResults[i]).setAccuracy(wifiLocations.get(wifiResults[i]).getAccuracy() + distResults[0]);
-                    				wifiLocations.get(wifiResults[j]).setAccuracy(wifiLocations.get(wifiResults[j]).getAccuracy() + distResults[0]);
+                    				// add to the penalty count for both locations
+                    				locations.get(resultIds[i]).setAccuracy(locations.get(resultIds[i]).getAccuracy() + distResults[0]);
+                    				locations.get(resultIds[j]).setAccuracy(locations.get(resultIds[j]).getAccuracy() + distResults[0]);
                     			}
                     		}
-                    		wifiLocations.get(wifiResults[i]).setAccuracy(wifiLocations.get(wifiResults[i]).getAccuracy() / (wifiResults.length - 1));
+                    		locations.get(resultIds[i]).setAccuracy(locations.get(resultIds[i]).getAccuracy() / (resultIds.length - 1));
                     		// correct distance from transmitter to a realistic value
                     		rxdist /= 10;
                     		// add square of distance from transmitter (additional source of error)
-                      		wifiLocations.get(wifiResults[i]).setAccuracy(wifiLocations.get(wifiResults[i]).getAccuracy() + rxdist * rxdist);
+                      		locations.get(resultIds[i]).setAccuracy(locations.get(resultIds[i]).getAccuracy() + rxdist * rxdist);
                       	                    		
                     		if (i == 0)
-                    			result = wifiLocations.get(wifiResults[i]);
+                    			result = locations.get(resultIds[i]);
                     		else {
-                    			float k = result.getAccuracy() / (result.getAccuracy() + wifiLocations.get(wifiResults[i]).getAccuracy());
-                    			result.setLatitude((1 - k) * result.getLatitude() + k * wifiLocations.get(wifiResults[i]).getLatitude());
-                    			result.setLongitude((1 - k) * result.getLongitude() + k * wifiLocations.get(wifiResults[i]).getLongitude());
+                    			float k = result.getAccuracy() / (result.getAccuracy() + locations.get(resultIds[i]).getAccuracy());
+                    			result.setLatitude((1 - k) * result.getLatitude() + k * locations.get(resultIds[i]).getLatitude());
+                    			result.setLongitude((1 - k) * result.getLongitude() + k * locations.get(resultIds[i]).getLongitude());
                     			result.setAccuracy((1 - k) * result.getAccuracy());
                     		}
                     	}
                     	
                     	// finally, set actual accuracy (square root of the interim value)
                     	result.setAccuracy((float) Math.sqrt(result.getAccuracy()));
+                    	
+                    	// FIXME what do we want to reflect in results? transmitters we tried to look up, or only those which returned a location?
                         Bundle b = new Bundle();
-                        b.putString("source", "wifis");
-                        b.putStringArrayList("bssids", new ArrayList<String>(Arrays.asList(wifiQueryArgs)));
+                        if ((state & (WIFIS_MATCH | CELLS_MATCH)) == (WIFIS_MATCH | CELLS_MATCH))
+                        	b.putString("source", "cells; wifis");
+                        else if ((state & WIFIS_MATCH) != 0)
+                        	b.putString("source", "wifis");
+                        else if ((state & CELLS_MATCH) != 0)
+                        	b.putString("source", "cells");
+                        if ((state & WIFIS_MATCH) != 0)
+                        	b.putStringArrayList("bssids", new ArrayList<String>(Arrays.asList(wifiQueryArgs)));
+                        if ((state & CELLS_MATCH) != 0)
+                        	// TODO make this a StringArrayList when using multiple cells
+                        	//b.putStringArrayList("cells", new ArrayList<String>(Arrays.asList(...)));
+                        	b.putString("cell", ((Cell) cellsList.get(0)).mcc
+                        			+ "|" + ((Cell) cellsList.get(0)).mnc
+                        			+ "|" + ((Cell) cellsList.get(0)).area
+                        			+ "|" + ((Cell) cellsList.get(0)).cellId);
                         result.setExtras(b);
-                        state |= WIFIS_MATCH;
                         return result;
                     }
+                } else {
+                	return null;
                 }
-                
-                // no wifi found, so try cells
-                if ((state & (EMPTY_WIFIS_QUERY | WIFIS_NOT_FOUND)) != 0) {
-                    Log.d(TAG, "Trying cell mode");
-                    if (!haveCellTables()) {
-                        Log.w(TAG, "Cell tables not available. Check your database");
-                        state |= CELLS_DATABASE_NA;
-                        return null;
-                    }
-
-                    if (cellsList.size() == 0) {
-                        Log.w(TAG, "Query contained no cell infos, skipping update");
-                        state |= EMPTY_CELLS_QUERY;
-                        return null;
-                    }
-
-                    Log.d(TAG, "Using " + cellsList.get(0).toString());
-                    // Ignore the cell technology for the time being, using cell technology causes problems when cell supports different protocols, e.g.
-                    // UMTS and HSUPA and HSUPA+
-                    // final String cellSql = "SELECT AVG(latitude), AVG(longitude) FROM cell_zone WHERE cid = ? AND mcc = ? AND mnc = ? AND area = ? and technology = ?";
-                    final String cellSql = "SELECT AVG(latitude), AVG(longitude) FROM cell_zone WHERE cid = ? AND mcc = ? AND mnc = ? AND area = ?";
-                    try {
-                        Cursor c = mCatalog.rawQuery(cellSql, new String[]{
-                                String.valueOf(((Cell) cellsList.get(0)).cellId),
-                                String.valueOf(((Cell) cellsList.get(0)).mcc),
-                                String.valueOf(((Cell) cellsList.get(0)).mnc),
-                                String.valueOf(((Cell) cellsList.get(0)).area)
-                                /*,String.valueOf(((Cell) cellsList.get(0)).technology)*/
-                        });
-
-                        c.moveToFirst();
-                        if (!c.isAfterLast()) {
-                            result = new Location(TAG);
-                            result.setLatitude(c.getDouble(0));
-                            result.setLongitude(c.getDouble(1));
-                            result.setAccuracy(DEFAULT_CELL_ACCURACY);
-                            result.setTime(System.currentTimeMillis());
-                            Bundle b = new Bundle();
-                            b.putString("source", "cells");
-                            result.setExtras(b);
-                            c.close();
-                            state |= CELLS_MATCH;
-                            return result;
-                        } else {
-                            state |= CELLS_NOT_FOUND;
-                            Log.i(TAG, "No known cells found");
-                            return null;
-                        }
-                    } catch (SQLiteException e) {
-                        Log.e(TAG, "SQLiteException! Update your database!");
-                        return null;
-                    }
-                }
-                return null;
             }
 
             /**
