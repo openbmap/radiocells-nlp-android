@@ -174,8 +174,7 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                     } else if (wifiResults.length == 1) {
                     	// We have just one location, pass it
                     	result = wifiLocations.get(wifiResults[0]);
-                    	// FIXME DEFAULT_WIFI_ACCURACY is way too optimistic IMHO
-                    	result.setAccuracy(DEFAULT_WIFI_ACCURACY);
+                    	result.setAccuracy(getWifiRxDist(wifiList.get(wifiResults[0]).level) / 10);
                         Bundle b = new Bundle();
                         b.putString("source", "wifis");
                         b.putStringArrayList("bssids", new ArrayList<String>(Arrays.asList(wifiQueryArgs)));
