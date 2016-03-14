@@ -121,7 +121,7 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                 			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
                 				// determine age (elapsedRealtime is in milliseconds, timestamp is in microseconds)
                 				long age = SystemClock.elapsedRealtime() - (r.timestamp / 1000);
-                				if (age >= 5000)
+                				if (age >= 2000)
                 					Log.w(TAG, String.format("wifi %s is stale (%d ms), using it anyway", r.BSSID, age));
                 			}
                 			// wifi is OK to use for geolocation, add it to list
