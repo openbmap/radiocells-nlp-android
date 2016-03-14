@@ -276,12 +276,28 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                     	 * column in the wifi catalog).
                     	 */
                     	for (int i = 0; i < resultIds.length; i++) {
+                  			// for now, assume static speed (20 m/s = 72 km/h)
+                    		// TODO get a better speed estimate
+                  			final float speed = 20.0f;
+                  			
+                    		// RSSI-based distance
                     		float rxdist =
                     				(resultIds[i].contains("|")) ?
                     						DEFAULT_CELL_ACCURACY * 10 :
                     							getWifiRxDist(wifiList.get(resultIds[i]).level) ;
+                    		
+                			// distance penalty for stale wifis (supported only on Jellybean MR1 and higher)
+                    		// for cells this value is always zero (cell scans are always current)
+                    		float ageBasedDist = 0.0f;
+                    		// penalize stale entries (wifis only, supported only on Jellybean MR1 and higher)
+                      		if ((Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) && !resultIds[i].contains("|")) {
+                				// elapsedRealtime is in milliseconds, timestamp is in microseconds
+                				ageBasedDist = (SystemClock.elapsedRealtime() - (wifiList.get(resultIds[i]).timestamp / 1000)) * speed;
+                			}
+
                     		for (int j = i + 1; j < resultIds.length; j++) {
                     			float[] distResults = new float[1];
+                    			float jAgeBasedDist = 0.0f;
                     			Location.distanceBetween(locations.get(resultIds[i]).getLatitude(),
                     					locations.get(resultIds[i]).getLongitude(),
                     					locations.get(resultIds[j]).getLatitude(),
@@ -291,8 +307,17 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                     			// subtract distance between device and each transmitter to get "disagreement"
                     			if (resultIds[j].contains("|"))
                     				distResults[0] -= rxdist + DEFAULT_CELL_ACCURACY * 10;
-                    			else
+                    			else {
                     				distResults[0] -= rxdist + getWifiRxDist(wifiList.get(resultIds[j]).level);
+                              		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1)
+                        				jAgeBasedDist = (SystemClock.elapsedRealtime() - (wifiList.get(resultIds[j]).timestamp / 1000)) * speed;
+                    			}
+                    			
+                    			/*
+                    			 * Consider the distance traveled between the two locations. This avoids
+                    			 * penalizing two locations that differ in time.
+                    			 */
+                    			distResults[0] -= Math.abs(ageBasedDist - jAgeBasedDist);
                     			
                     			// apply penalty only if disagreement is greater than zero
                     			if (distResults[0] > 0) {
@@ -307,9 +332,10 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                     		locations.get(resultIds[i]).setAccuracy(locations.get(resultIds[i]).getAccuracy() / (resultIds.length - 1));
                     		// correct distance from transmitter to a realistic value
                     		rxdist /= 10;
-                    		// add square of distance from transmitter (additional source of error)
-                      		locations.get(resultIds[i]).setAccuracy(locations.get(resultIds[i]).getAccuracy() + rxdist * rxdist);
-                      	                    		
+                    		
+                    		// add additional error sources: RSSI-based (distance from transmitter) and age-based (distance traveled since)
+                      		locations.get(resultIds[i]).setAccuracy(locations.get(resultIds[i]).getAccuracy() + rxdist * rxdist + ageBasedDist * ageBasedDist);
+                      		
                     		if (i == 0)
                     			result = locations.get(resultIds[i]);
                     		else {
