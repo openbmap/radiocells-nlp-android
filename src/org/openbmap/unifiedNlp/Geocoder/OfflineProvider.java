@@ -122,11 +122,12 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                 			Log.w(TAG, "skipping wifi with empty BSSID");
                 		else if (r.SSID.endsWith("_nomap")) {
                 			// BSSID with _nomap suffix, user does not want it to be mapped or used for geolocation
-                		} else
+                		} else {
                 			if (age >= 2000)
                 				Log.w(TAG, String.format("wifi %s is stale (%d ms), using it anyway", r.BSSID, age));
                 			// wifi is OK to use for geolocation, add it to list
                 			wifiList.put(r.BSSID.replace(":", "").toUpperCase(), r);
+                		}
                 	}
                 	Log.i(TAG, "Using " + wifiList.size() + " wifis for geolocation");
                 } else
