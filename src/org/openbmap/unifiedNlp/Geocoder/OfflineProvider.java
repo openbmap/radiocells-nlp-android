@@ -294,7 +294,7 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                     		// penalize stale entries (wifis only, supported only on Jellybean MR1 and higher)
                       		if ((Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) && !resultIds[i].contains("|")) {
                 				// elapsedRealtime is in milliseconds, timestamp is in microseconds
-                				ageBasedDist = (now - (wifiList.get(resultIds[i]).timestamp / 1000)) * speed;
+                				ageBasedDist = (now - (wifiList.get(resultIds[i]).timestamp / 1000)) * speed / 1000;
                 			}
 
                     		for (int j = i + 1; j < resultIds.length; j++) {
@@ -312,7 +312,7 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                     			else {
                     				distResults[0] -= rxdist + getWifiRxDist(wifiList.get(resultIds[j]).level);
                               		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1)
-                        				jAgeBasedDist = (now - (wifiList.get(resultIds[j]).timestamp / 1000)) * speed;
+                        				jAgeBasedDist = (now - (wifiList.get(resultIds[j]).timestamp / 1000)) * speed / 1000;
                     			}
                     			
                     			/*
