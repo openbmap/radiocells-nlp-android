@@ -92,6 +92,7 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
 			@SuppressLint("DefaultLocale")
             @Override
             protected Location doInBackground(LocationQueryParams... params) {
+            	long now = SystemClock.elapsedRealtime();
                 if (params == null) {
                     throw new IllegalArgumentException("Wifi list was null");
                 }
@@ -120,7 +121,7 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                 		} else
                 			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
                 				// determine age (elapsedRealtime is in milliseconds, timestamp is in microseconds)
-                				long age = SystemClock.elapsedRealtime() - (r.timestamp / 1000);
+                				long age = now - (r.timestamp / 1000);
                 				if (age >= 2000)
                 					Log.w(TAG, String.format("wifi %s is stale (%d ms), using it anyway", r.BSSID, age));
                 			}
@@ -292,7 +293,7 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                     		// penalize stale entries (wifis only, supported only on Jellybean MR1 and higher)
                       		if ((Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) && !resultIds[i].contains("|")) {
                 				// elapsedRealtime is in milliseconds, timestamp is in microseconds
-                				ageBasedDist = (SystemClock.elapsedRealtime() - (wifiList.get(resultIds[i]).timestamp / 1000)) * speed;
+                				ageBasedDist = (now - (wifiList.get(resultIds[i]).timestamp / 1000)) * speed;
                 			}
 
                     		for (int j = i + 1; j < resultIds.length; j++) {
@@ -310,7 +311,7 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                     			else {
                     				distResults[0] -= rxdist + getWifiRxDist(wifiList.get(resultIds[j]).level);
                               		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1)
-                        				jAgeBasedDist = (SystemClock.elapsedRealtime() - (wifiList.get(resultIds[j]).timestamp / 1000)) * speed;
+                        				jAgeBasedDist = (now - (wifiList.get(resultIds[j]).timestamp / 1000)) * speed;
                     			}
                     			
                     			/*
