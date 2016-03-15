@@ -214,7 +214,7 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                 				location.setTime(System.currentTimeMillis());
                 				Bundle b = new Bundle();
                 				b.putString("source", "cells");
-                				//b.putString("bssid", c.getString(2)); // TODO put cell ID
+                				b.putString("cell", c.getInt(2) + "|" + c.getInt(3) + "|" + c.getInt(4) + "|" + c.getInt(5));
                 				location.setExtras(b);
                 				locations.put(c.getInt(2) + "|" + c.getInt(3) + "|" + c.getInt(4) + "|" + c.getInt(5), location);
                 				state |= CELLS_MATCH;
