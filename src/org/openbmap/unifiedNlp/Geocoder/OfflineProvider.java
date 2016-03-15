@@ -110,6 +110,10 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                 if (wifiListRaw != null) {
                 	// Generates a list of wifis from scan results
                 	for (ScanResult r : wifiListRaw) {
+                		long age = 0;
+            			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1)
+            				// determine age (elapsedRealtime is in milliseconds, timestamp is in microseconds)
+            				age = now - (r.timestamp / 1000);
                 		/*
                 		 * Any filtering of scan results can be done here. Examples include:
                 		 * empty or bogus BSSIDs, SSIDs with "_nomap" suffix, blacklisted wifis
@@ -119,12 +123,8 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                 		else if (r.SSID.endsWith("_nomap")) {
                 			// BSSID with _nomap suffix, user does not want it to be mapped or used for geolocation
                 		} else
-                			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-                				// determine age (elapsedRealtime is in milliseconds, timestamp is in microseconds)
-                				long age = now - (r.timestamp / 1000);
-                				if (age >= 2000)
-                					Log.w(TAG, String.format("wifi %s is stale (%d ms), using it anyway", r.BSSID, age));
-                			}
+                			if (age >= 2000)
+                				Log.w(TAG, String.format("wifi %s is stale (%d ms), using it anyway", r.BSSID, age));
                 			// wifi is OK to use for geolocation, add it to list
                 			wifiList.put(r.BSSID.replace(":", "").toUpperCase(), r);
                 	}
