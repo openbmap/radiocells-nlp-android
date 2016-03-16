@@ -352,7 +352,7 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                     		}
                     		locations.get(resultIds[i]).setAccuracy(locations.get(resultIds[i]).getAccuracy() / (resultIds.length - 1));
                     		// correct distance from transmitter to a realistic value
-                    		rxdist /= 10;
+                    		rxdist /= 7;
                     		
             				Log.v(TAG, String.format("%s: disagreement = %.5f, rxdist = %.5f, age = %d ms, ageBasedDist = %.5f", resultIds[i], Math.sqrt(locations.get(resultIds[i]).getAccuracy()), rxdist, now - (wifiList.get(resultIds[i]).timestamp / 1000), ageBasedDist));
                       		
