@@ -102,9 +102,12 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                 }
 
                 List<ScanResult> wifiListRaw = ((LocationQueryParams) params[0]).wifiList;
+                List<Cell> cellsListRaw = ((LocationQueryParams) params[0]).cellsList;
                 HashMap<String, ScanResult> wifiList = new HashMap<String, ScanResult>();
+                List<Cell> cellsList = new ArrayList<Cell>();
                 HashMap<String, Location> locations = new HashMap<String, Location>();
                 String[] resultIds = new String[0];
+        		ArrayList<String> cellResults = new ArrayList<String>();
                 Location result = null;
 
                 if (wifiListRaw != null) {
@@ -133,8 +136,18 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                 } else
                 	Log.i(TAG, "No wifis supplied for geolocation");
 
-
                 String[] wifiQueryArgs = wifiList.keySet().toArray(new String[0]);
+                
+                if (cellsListRaw != null) {
+                	for (Cell r : cellsListRaw) {
+                		Log.d(TAG, "Evaluating " + r.toString());
+                		if ((r.mcc <= 0) || (r.mnc <= 0) || (r.area <= 0) || (r.cellId <= 0)) {
+                			Log.i(TAG, String.format("Cell %s has incomplete data, skipping", r.toString()));
+                		} else {
+                			cellsList.add(r);
+                		}
+                	}
+                }
 
                 state &= ~WIFIS_MASK & ~CELLS_MASK;
                 if (wifiQueryArgs.length < 1) {
@@ -191,20 +204,25 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                 			state |= CELLS_DATABASE_NA;
                 		}
 
-                		// TODO use multiple cells for lookup if we have complete data
-                		Log.d(TAG, "Using " + cellsList.get(0).toString());
+                		String whereClause = "";
+                		List<String> cellQueryArgs = new ArrayList<String>();
+                		for (Cell k : cellsList) {
+                			if (whereClause.length() > 1) {
+                				whereClause += " OR ";
+                			}
+                    		Log.d(TAG, "Using " + k.toString());
+                			whereClause += " (cid = ? AND mcc = ? AND mnc = ? AND area = ?)";
+                			cellQueryArgs.add(String.valueOf(k.cellId));
+                			cellQueryArgs.add(String.valueOf(k.mcc));
+                			cellQueryArgs.add(String.valueOf(k.mnc));
+                			cellQueryArgs.add(String.valueOf(k.area));
+                		}
                 		// Ignore the cell technology for the time being, using cell technology causes problems when cell supports different protocols, e.g.
                 		// UMTS and HSUPA and HSUPA+
                 		// final String cellSql = "SELECT AVG(latitude), AVG(longitude) FROM cell_zone WHERE cid = ? AND mcc = ? AND mnc = ? AND area = ? and technology = ?";
-                		final String cellSql = "SELECT AVG(latitude), AVG(longitude), mcc, mnc, area, cid FROM cell_zone WHERE cid = ? AND mcc = ? AND mnc = ? AND area = ? GROUP BY mcc, mnc, area, cid";
+                		final String cellSql = "SELECT AVG(latitude), AVG(longitude), mcc, mnc, area, cid FROM cell_zone WHERE " + whereClause + " GROUP BY mcc, mnc, area, cid";
                 		try {
-                			c = mCatalog.rawQuery(cellSql, new String[]{
-                					String.valueOf(((Cell) cellsList.get(0)).cellId),
-                					String.valueOf(((Cell) cellsList.get(0)).mcc),
-                					String.valueOf(((Cell) cellsList.get(0)).mnc),
-                					String.valueOf(((Cell) cellsList.get(0)).area)
-                					/*,String.valueOf(((Cell) cellsList.get(0)).technology)*/
-                			});
+                			c = mCatalog.rawQuery(cellSql, cellQueryArgs.toArray(new String[0]));
 
                 			for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
                 				Location location = new Location(TAG);
@@ -217,6 +235,7 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                 				b.putString("cell", c.getInt(2) + "|" + c.getInt(3) + "|" + c.getInt(4) + "|" + c.getInt(5));
                 				location.setExtras(b);
                 				locations.put(c.getInt(2) + "|" + c.getInt(3) + "|" + c.getInt(4) + "|" + c.getInt(5), location);
+                				cellResults.add(c.getInt(2) + "|" + c.getInt(3) + "|" + c.getInt(4) + "|" + c.getInt(5));
                 				state |= CELLS_MATCH;
                 			}
                 			c.close();
@@ -364,12 +383,7 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                         if ((state & WIFIS_MATCH) != 0)
                         	b.putStringArrayList("bssids", new ArrayList<String>(Arrays.asList(wifiQueryArgs)));
                         if ((state & CELLS_MATCH) != 0)
-                        	// TODO make this a StringArrayList when using multiple cells
-                        	//b.putStringArrayList("cells", new ArrayList<String>(Arrays.asList(...)));
-                        	b.putString("cell", ((Cell) cellsList.get(0)).mcc
-                        			+ "|" + ((Cell) cellsList.get(0)).mnc
-                        			+ "|" + ((Cell) cellsList.get(0)).area
-                        			+ "|" + ((Cell) cellsList.get(0)).cellId);
+                        	b.putStringArrayList("cells", cellResults);
                         result.setExtras(b);
                         return result;
                     }
