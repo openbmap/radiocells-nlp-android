@@ -428,7 +428,7 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
     private static float getWifiRxDist(int rxlev) {
     	final int refRxlev = -100;
     	final float refDist = 1000.0f;
-    	float factor = (float) Math.pow(2, 6 / (refRxlev - rxlev));
+    	float factor = (float) Math.pow(2.0f, 6.0f / (refRxlev - rxlev));
     	return refDist * factor;
     }
 
