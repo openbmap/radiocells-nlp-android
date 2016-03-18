@@ -303,9 +303,9 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                   			
                     		// RSSI-based distance
                     		float rxdist =
-                    				(resultIds[i].contains("|")) ?
+                    				(wifiList.get(resultIds[i]) == null) ?
                     						DEFAULT_CELL_ACCURACY * 10 :
-                    							getWifiRxDist(wifiList.get(resultIds[i]).level) ;
+                    							getWifiRxDist(wifiList.get(resultIds[i]).level);
                     		
                 			// distance penalty for stale wifis (supported only on Jellybean MR1 and higher)
                     		// for cells this value is always zero (cell scans are always current)
@@ -326,7 +326,7 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                     					distResults);
                     			
                     			// subtract distance between device and each transmitter to get "disagreement"
-                    			if (resultIds[j].contains("|"))
+                    			if (wifiList.get(resultIds[j]) == null)
                     				distResults[0] -= rxdist + DEFAULT_CELL_ACCURACY * 10;
                     			else {
                     				distResults[0] -= rxdist + getWifiRxDist(wifiList.get(resultIds[j]).level);
