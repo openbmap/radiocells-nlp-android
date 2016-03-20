@@ -19,9 +19,11 @@ package org.openbmap.unifiedNlp.Geocoder;
 
 import org.openbmap.unifiedNlp.services.Cell;
 
+import android.net.wifi.ScanResult;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public interface ILocationProvider {
-    public void getLocation(ArrayList<String> wifiList, List<Cell> cellsList);
+    public void getLocation(List<ScanResult> wifiList, List<Cell> cellsList);
 }

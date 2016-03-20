@@ -18,6 +18,7 @@
 package org.openbmap.unifiedNlp.Geocoder;
 
 import android.location.Location;
+import android.net.wifi.ScanResult;
 import android.util.Log;
 
 import org.openbmap.unifiedNlp.services.Cell;
@@ -31,7 +32,7 @@ public abstract class AbstractProvider implements ILocationProvider {
     private Location mLastLocation;
     private Long mLastFix;
 
-    public abstract void getLocation(ArrayList<String> wifiList, List<Cell> cellsList);
+    public abstract void getLocation(List<ScanResult> wifiList, List<Cell> cellsList);
 
     /**
      * Returns last location update
