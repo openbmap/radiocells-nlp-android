@@ -72,6 +72,7 @@ public class OnlineProvider extends AbstractProvider implements ILocationProvide
     public OnlineProvider(final Context ctx, final ILocationCallback listener, boolean debug) {
         this.mListener = listener;
         mDebug = debug;
+        setLastFix(System.currentTimeMillis());
     }
 
     /**
@@ -126,6 +127,8 @@ public class OnlineProvider extends AbstractProvider implements ILocationProvide
                         setLastLocation(result);
                         setLastFix(System.currentTimeMillis());
                         mListener.onLocationReceived(result);
+                    } else {
+                        Log.i(TAG, "Strange location, ignoring");
                     }
                 } catch (JSONException e) {
                     Log.e(TAG, "Error parsing JSON:" + e.getMessage());

@@ -21,6 +21,7 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteCantOpenDatabaseException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.location.Location;
@@ -58,10 +59,20 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
     public OfflineProvider(final Context ctx, final ILocationCallback listener) {
         mListener = listener;
         prefs = PreferenceManager.getDefaultSharedPreferences(ctx);
+
+        if (prefs.getString(Preferences.KEY_OFFLINE_CATALOG_FILE, Preferences.VAL_CATALOG_FILE).equals(Preferences.CATALOG_NONE)) {
+            Log.e(TAG, "Critical error: you chose offline provider, but didn't specify a offline catalog!");
+        }
         // Open catalog database
         String path = prefs.getString(Preferences.KEY_DATA_FOLDER, ctx.getExternalFilesDir(null).getAbsolutePath())
                 + File.separator + prefs.getString(Preferences.KEY_OFFLINE_CATALOG_FILE, Preferences.VAL_CATALOG_FILE);
-        mCatalog = SQLiteDatabase.openDatabase(path, null, SQLiteDatabase.OPEN_READONLY);
+
+        try {
+            mCatalog = SQLiteDatabase.openDatabase(path, null, SQLiteDatabase.OPEN_READONLY);
+        } catch (SQLiteCantOpenDatabaseException e) {
+            Log.e(TAG, "Error opening database");
+        }
+        setLastFix(System.currentTimeMillis());
     }
 
     @SuppressWarnings("unchecked")
@@ -219,6 +230,8 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                     setLastLocation(result);
                     setLastFix(System.currentTimeMillis());
                     mListener.onLocationReceived(result);
+                } else {
+                    Log.i(TAG, "Strange location, ignoring");
                 }
             }
         }.execute(params);

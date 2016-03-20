@@ -52,11 +52,13 @@ import java.util.Map;
 
 @SuppressLint("NewApi")
 public class OpenbmapNlpService extends LocationBackendService implements ILocationCallback {
+    private static final String TAG = OpenbmapNlpService.class.getName();
+
     /**
      * Minimum interval between two queries
      */
     protected static final long REFRESH_INTERVAL = 2000;
-    private static final String TAG = OpenbmapNlpService.class.getName();
+
     /**
      * If true, online geolocation service is used
      */
@@ -294,6 +296,10 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
         return (source.equals(Preferences.SOURCE_CELLS)) || (source.equals(Preferences.SOURCE_COMBINED));
     }
 
+    /**
+     * Returns cells phone is currently connected to
+     * @return list of cells
+     */
     private List<Cell> getCells() {
         List<Cell> cells = new ArrayList<Cell>();
 
@@ -362,11 +368,20 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
         return cells;
     }
 
+    /**
+     * Checks whether we can scan wifis
+     * @return
+     */
     public boolean isWifiSupported() {
         return ((wifiManager != null) && (wifiManager.isWifiEnabled() || ((Build.VERSION.SDK_INT >= 18) &&
                 wifiManager.isScanAlwaysAvailable())));
     }
 
+    /**
+     * Callback when new location is available
+     * @param location
+     * @return
+     */
     @Override
     public Location onLocationReceived(Location location) {
         if (location == null) {
@@ -384,6 +399,7 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
             Log.v(TAG, "Ignoring debug infos");
             location.setExtras(null);
         }
+
         report(location);
 
         last = location;
