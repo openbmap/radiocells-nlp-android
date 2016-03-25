@@ -56,8 +56,11 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
 
     /**
      * Minimum interval between two queries
+     * Please obey to this limit, you might kill the server otherwise
      */
-    protected static final long REFRESH_INTERVAL = 2000;
+    protected static final long ONLINE_REFRESH_INTERVAL = 5000;
+
+    protected static final long OFFLINE_REFRESH_INTERVAL = 2000;
 
     /**
      * If true, online geolocation service is used
@@ -93,7 +96,7 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
     /**
      * Time of last geolocation request (millis)
      */
-    private long queryTime;
+    private long lastFix;
 
     private WifiScanCallback mWifiScanResults;
 
@@ -225,9 +228,13 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
                                 // @see http://code.google.com/p/android/issues/detail?id=19078
                             	Log.e(TAG, "WifiManager.getScanResults returned null");
 
-                            if (System.currentTimeMillis() - queryTime > REFRESH_INTERVAL || queryTime == 0) {
+                            final long passed = System.currentTimeMillis() - lastFix;
+                            final boolean ok_online = (mOnlineMode && (passed > ONLINE_REFRESH_INTERVAL) || lastFix == 0);
+                            final boolean ok_offline = (!mOnlineMode && (passed > OFFLINE_REFRESH_INTERVAL) || lastFix == 0);
+
+                            if (ok_online || ok_offline) {
                                 Log.d(TAG, "Scanning wifis & cells");
-                                queryTime = System.currentTimeMillis();
+                                lastFix = System.currentTimeMillis();
 
                                 List<Cell> cells = new ArrayList<Cell>() ;
                                 // if in combined mode also query cell information, otherwise pass empty list
@@ -250,9 +257,14 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
             }
         } else if (isCellsSourceSelected()) {
             Log.d(TAG, "Scanning cells only");
-            if (System.currentTimeMillis() - queryTime > REFRESH_INTERVAL || queryTime == 0) {
+
+            final long passed = System.currentTimeMillis() - lastFix;
+            final boolean ok_online = (mOnlineMode && (passed > ONLINE_REFRESH_INTERVAL) || lastFix == 0);
+            final boolean ok_offline = (!mOnlineMode && (passed > OFFLINE_REFRESH_INTERVAL) || lastFix == 0);
+
+            if (ok_online || ok_offline) {
                 Log.d(TAG, "Scanning wifis & cells");
-                queryTime = System.currentTimeMillis();
+                lastFix = System.currentTimeMillis();
                 List<Cell> cells = getCells();
                 if (mGeocoder != null) {
                     mGeocoder.getLocation(null, cells);
@@ -319,7 +331,7 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
             for (CellInfo c : cellsRawList) {
                 Cell cell = new Cell();
                 if (c instanceof CellInfoGsm) {
-                    Log.v(TAG, "GSM cell found");
+                    //Log.v(TAG, "GSM cell found");
                     cell.cellId = ((CellInfoGsm) c).getCellIdentity().getCid();
                     cell.area = ((CellInfoGsm) c).getCellIdentity().getLac();
                     //cell.mcc = ((CellInfoGsm)c).getCellIdentity().getMcc();
@@ -335,7 +347,7 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
                     object.put("mobileNetworkCode", ((CellInfoCdma)s).getCellIdentity().getMnc());*/
                     Log.wtf(TAG, "Using of CDMA cells for NLP not yet implemented");
                 } else if (c instanceof CellInfoLte) {
-                    Log.v(TAG, "LTE cell found");
+                    //Log.v(TAG, "LTE cell found");
                     cell.cellId = ((CellInfoLte) c).getCellIdentity().getCi();
                     cell.area = ((CellInfoLte) c).getCellIdentity().getTac();
                     //cell.mcc = ((CellInfoLte)c).getCellIdentity().getMcc();
@@ -344,7 +356,7 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
                     cell.mnc = mnc;
                     cell.technology = TECHNOLOGY_MAP().get(mTelephonyManager.getNetworkType());
                 } else if (c instanceof CellInfoWcdma) {
-                    Log.v(TAG, "CellInfoWcdma cell found");
+                    //Log.v(TAG, "CellInfoWcdma cell found");
                     cell.cellId = ((CellInfoWcdma) c).getCellIdentity().getCid();
                     cell.area = ((CellInfoWcdma) c).getCellIdentity().getLac();
                     //cell.mcc = ((CellInfoWcdma)c).getCellIdentity().getMcc();

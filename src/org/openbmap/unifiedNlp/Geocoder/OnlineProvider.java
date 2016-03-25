@@ -32,6 +32,7 @@ import org.openbmap.unifiedNlp.services.JSONParser;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class OnlineProvider extends AbstractProvider implements ILocationProvider {
 
@@ -40,7 +41,7 @@ public class OnlineProvider extends AbstractProvider implements ILocationProvide
     /**
      * Geolocation service
      */
-    private static final String REQUEST_URL = "http://www.radiocells.org/geolocation/geolocate";
+    private static final String REQUEST_URL = "https://%s.radiocells.org/geolocate";
 
     /**
      * Query extra debug information from webservice
@@ -82,7 +83,7 @@ public class OnlineProvider extends AbstractProvider implements ILocationProvide
     @SuppressWarnings("unchecked")
     @Override
     public void getLocation(List<ScanResult> wifisList, List<Cell> cellsList) {
-        ArrayList<String> wifis = new ArrayList<String>();
+        ArrayList<String> wifis = new ArrayList<>();
 
         if (wifisList != null) {
             // Generates a list of wifis from scan results
@@ -103,12 +104,19 @@ public class OnlineProvider extends AbstractProvider implements ILocationProvide
                     throw new IllegalArgumentException("Wifi list was null");
                 }
                 mWifiQuery = (ArrayList<String>) params[0];
-                mCellQuery = new ArrayList<String>();
+                mCellQuery = new ArrayList<>();
                 for (Cell temp : (List<Cell>) params[1]) {
                     mCellQuery.add(temp.toString());
                 }
 
-                return loadJSON(REQUEST_URL, (ArrayList<String>) params[0], (List<Cell>) params[1]);
+                Random r = new Random();
+                int idx = r.nextInt(3);
+
+                final String balancer = String.format(REQUEST_URL, new String[]{"a","b","c"}[idx]);
+                if (mDebug) {
+                    Log.v(TAG, "Using balancer " + balancer);
+                }
+                return loadJSON(balancer, (ArrayList<String>) params[0], (List<Cell>) params[1]);
             }
 
             @Override
@@ -161,7 +169,7 @@ public class OnlineProvider extends AbstractProvider implements ILocationProvide
              * Builds a JSON array with cell and wifi query
              * @param wifis ArrayList containing bssids
              * @param cells
-             * @return
+             * @return JSON object
              */
             public JSONObject buildParams(ArrayList<String> wifis, List<Cell> cells) {
                 JSONObject root = new JSONObject();

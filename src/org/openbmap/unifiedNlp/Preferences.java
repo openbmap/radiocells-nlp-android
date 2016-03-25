@@ -126,12 +126,12 @@ public final class Preferences {
     /**
      * URL, where wifi/cell catalog with openbmap's preprocessed wifi positions can be downloaded
      */
-    public static final String CATALOG_DOWNLOAD_URL = "http://radiocells.org/openbmap/static/openbmap.sqlite";
+    public static final String CATALOG_DOWNLOAD_URL = "https://radiocells.org/openbmap/static/openbmap.sqlite";
 
     /**
      * URL to check for newer catalog files
      */
-    public static final String CATALOG_VERSION_URL = "http://radiocells.org/default/database_version.json";
+    public static final String CATALOG_VERSION_URL = "https://radiocells.org/default/database_version.json";
 
     /**
      * Filename catalog database

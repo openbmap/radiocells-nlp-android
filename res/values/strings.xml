@@ -53,4 +53,6 @@
     <string name="source_title">Use cells/wifis?</string>
     <string name="up_to_date_database">Latest version already installed</string>
     <string name="locale_version">"Local version: "</string>
+    <string name="download_failed">Download failed: Error code</string>
+    <string name="already_downloading">Another download in progress!</string>
 </resources>

@@ -30,9 +30,13 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
+import android.net.wifi.WifiManager;
+import android.net.wifi.WifiManager.WifiLock;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.PowerManager;
+import android.os.PowerManager.WakeLock;
 import android.os.StrictMode;
 import android.preference.ListPreference;
 import android.preference.Preference;
@@ -73,6 +77,10 @@ public class SettingsActivity extends PreferenceActivity {
     private DownloadManager mDownloadManager;
 
     private BroadcastReceiver mReceiver = null;
+
+    private boolean mIsDownloading;
+    private WakeLock mWakeLock;
+    private WifiLock mWifiLock;
 
     @Override
     protected final void onCreate(final Bundle savedInstanceState) {
@@ -146,6 +154,14 @@ public class SettingsActivity extends PreferenceActivity {
 
     @Override
     protected final void onDestroy() {
+        if (mWakeLock != null && mWakeLock.isHeld()) {
+            mWakeLock.release();
+        }
+
+        if (mWifiLock != null && mWifiLock.isHeld()) {
+            mWifiLock.release();
+        }
+
         if (mReceiver != null) {
             unregisterReceiver(mReceiver);
         }
@@ -192,7 +208,7 @@ public class SettingsActivity extends PreferenceActivity {
 
     /**
      * Compares local and server wifi catalog versions
-     * @param local
+     * @param local Local version
      * @return true, if server has a newer version
      */
     private boolean isNewerVersionAvailable(String local){
@@ -243,6 +259,26 @@ public class SettingsActivity extends PreferenceActivity {
      * Starts catalog download
      */
     private void downloadCatalog() {
+        if (mIsDownloading) {
+            Toast.makeText(this, R.string.already_downloading, Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        if (mWakeLock == null || !mWakeLock.isHeld()) {
+            Log.i(TAG, "Acquiring wakelock");
+            PowerManager pm = (PowerManager)this.getSystemService(Context.POWER_SERVICE);
+            mWakeLock = pm.newWakeLock(
+                    PowerManager.PARTIAL_WAKE_LOCK, "DownloadWakelock");
+            mWakeLock.acquire();
+        }
+
+        if (mWifiLock == null || !mWifiLock.isHeld()) {
+            Log.i(TAG, "Acquiring wifilock");
+            WifiManager wm = (WifiManager) this.getSystemService(Context.WIFI_SERVICE);
+            mWifiLock = wm.createWifiLock(WifiManager.WIFI_MODE_FULL , "DownloadWifiLock");
+            mWifiLock.acquire();
+        }
+
         // clean up bad download location from versions < 0.1.4
         File badFolder = new File(Environment.getExternalStorageDirectory().getPath() + File.separator + "org.openbmap.unifiednlp");
         File redundant = new File(badFolder, "openbmap.sqlite");
@@ -274,20 +310,24 @@ public class SettingsActivity extends PreferenceActivity {
             }
 
             try {
+                Log.i(TAG, "Saving " + Preferences.CATALOG_DOWNLOAD_URL + " in " + target);
                 // try to download to target. If target isn't below Environment.getExternalStorageDirectory(),
                 // e.g. on second SD card a security exception is thrown
                 Request request = new Request(Uri.parse(Preferences.CATALOG_DOWNLOAD_URL));
                 request.setDestinationUri(Uri.fromFile(target));
+                request.allowScanningByMediaScanner();
                 long catalogDownloadId = mDownloadManager.enqueue(request);
+                mIsDownloading = true;
             } catch (SecurityException sec) {
                 // download to temp dir and try to move to target later
                 Log.w(TAG, "Security exception, can't write to " + target + ", using " + this.getExternalCacheDir()
                         + File.separator + Preferences.CATALOG_FILE);
                 File tempFile = new File(this.getExternalCacheDir() + File.separator + Preferences.CATALOG_FILE);
-                Request request = new Request(
-                        Uri.parse(Preferences.CATALOG_DOWNLOAD_URL));
+                Request request = new Request(Uri.parse(Preferences.CATALOG_DOWNLOAD_URL));
                 request.setDestinationUri(Uri.fromFile(tempFile));
+                request.allowScanningByMediaScanner();
                 mDownloadManager.enqueue(request);
+                mIsDownloading = true;
             }
         } else {
             Toast.makeText(this, R.string.error_saving_file, Toast.LENGTH_SHORT).show();
@@ -298,7 +338,6 @@ public class SettingsActivity extends PreferenceActivity {
      * Initialises download manager for GINGERBREAD and newer
      */
     private void initDownloadManager() {
-
         mDownloadManager = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
 
         mReceiver = new BroadcastReceiver() {
@@ -306,16 +345,31 @@ public class SettingsActivity extends PreferenceActivity {
             public void onReceive(final Context context, final Intent intent) {
                 String action = intent.getAction();
                 if (DownloadManager.ACTION_DOWNLOAD_COMPLETE.equals(action)) {
+                    if (mWakeLock != null && mWakeLock.isHeld()) {
+                        Log.i(TAG, "Releasing wakelock");
+                        mWakeLock.release();
+                    }
+                    if (mWifiLock != null && mWifiLock.isHeld()) {
+                        Log.i(TAG, "Releasing wifilock");
+                        mWifiLock.release();
+                    }
+
                     long downloadId = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, 0);
                     Query query = new Query();
                     query.setFilterById(downloadId);
                     Cursor c = mDownloadManager.query(query);
                     if (c.moveToFirst()) {
+                        mIsDownloading = false;
                         int columnIndex = c.getColumnIndex(DownloadManager.COLUMN_STATUS);
                         if (DownloadManager.STATUS_SUCCESSFUL == c.getInt(columnIndex)) {
                             // we're not checking download id here, that is done in handleDownloads
                             String uriString = c.getString(c.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI));
                             handleDownloads(uriString);
+                        } else if (DownloadManager.STATUS_FAILED == c.getInt(columnIndex)) {
+                            int columnReason = c.getColumnIndex(DownloadManager.COLUMN_REASON);
+                            int reason = c.getInt(columnReason);
+                            Log.e(TAG, "Download failed: " + reason);
+                            Toast.makeText(SettingsActivity.this, getString(R.string.download_failed) + " " + reason, Toast.LENGTH_LONG).show();
                         }
                     }
                 }
