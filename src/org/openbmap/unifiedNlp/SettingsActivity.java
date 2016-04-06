@@ -55,6 +55,7 @@ import org.apache.http.params.BasicHttpParams;
 import org.json.JSONObject;
 import org.openbmap.unifiedNlp.utils.DirectoryChooserDialog;
 import org.openbmap.unifiedNlp.utils.FileHelpers;
+import org.openbmap.unifiedNlp.utils.MediaScanner;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
@@ -187,7 +188,7 @@ public class SettingsActivity extends PreferenceActivity {
             BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"), 8);
             StringBuilder sb = new StringBuilder();
 
-            String line = null;
+            String line;
             while ((line = reader.readLine()) != null)
             {
                 sb.append(line + "\n");
@@ -381,7 +382,6 @@ public class SettingsActivity extends PreferenceActivity {
 
     /**
      * Selects downloaded file either as wifi catalog
-     *
      * @param file
      */
     public final void handleDownloads(String file) {
@@ -408,8 +408,6 @@ public class SettingsActivity extends PreferenceActivity {
 
     /**
      * Initializes data directory preference.
-     *
-     * @return EditTextPreference with data directory.
      */
     private void initFolderChooser() {
         Preference button = (Preference) findPreference("data.dir");
@@ -421,17 +419,16 @@ public class SettingsActivity extends PreferenceActivity {
 
             @Override
             public boolean onPreferenceClick(Preference arg0) {
-
-                // Create DirectoryChooserDialog and register a callback
                 DirectoryChooserDialog directoryChooserDialog =
                         new DirectoryChooserDialog(SettingsActivity.this, new DirectoryChooserDialog.ChosenDirectoryListener() {
                             @Override
                             public void onChosenDir(String chosenDir) {
                                 mChosenDir = chosenDir;
-
                                 SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(SettingsActivity.this);
-                                settings.edit().putString("data.dir", chosenDir).commit();
+                                settings.edit().putString("data.dir", chosenDir).apply();
 
+                                // Rescan folder, in case user has copy file manually
+                                MediaScanner m = new MediaScanner(SettingsActivity.this, new File(mChosenDir));
                                 Toast.makeText(SettingsActivity.this, chosenDir, Toast.LENGTH_LONG).show();
                             }
                         });
@@ -598,7 +595,7 @@ public class SettingsActivity extends PreferenceActivity {
      *
      * @return build version
      */
-    private final String readBuildInfo() {
+    private String readBuildInfo() {
         final InputStream buildInStream = getResources().openRawResource(R.raw.build);
         final ByteArrayOutputStream buildOutStream = new ByteArrayOutputStream();
 
