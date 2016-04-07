@@ -339,6 +339,7 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
                     cell.mcc = mcc;
                     cell.mnc = mnc;
                     cell.technology = TECHNOLOGY_MAP().get(mTelephonyManager.getNetworkType());
+                    Log.d(TAG, String.format("CellInfoGsm for %d|%d|%d|%d|%s", cell.mcc, cell.mnc, cell.area, cell.cellId, cell.technology));
                 } else if (c instanceof CellInfoCdma) {
                     /*
                     object.put("cellId", ((CellInfoCdma)s).getCellIdentity().getBasestationId());
@@ -355,6 +356,7 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
                     cell.mcc = mcc;
                     cell.mnc = mnc;
                     cell.technology = TECHNOLOGY_MAP().get(mTelephonyManager.getNetworkType());
+                    Log.d(TAG, String.format("CellInfoLte for %d|%d|%d|%d|%s|%d", cell.mcc, cell.mnc, cell.area, cell.cellId, cell.technology, ((CellInfoLte)c).getCellIdentity().getPci()));
                 } else if (c instanceof CellInfoWcdma) {
                     //Log.v(TAG, "CellInfoWcdma cell found");
                     cell.cellId = ((CellInfoWcdma) c).getCellIdentity().getCid();
@@ -364,6 +366,7 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
                     cell.mcc = mcc;
                     cell.mnc = mnc;
                     cell.technology = TECHNOLOGY_MAP().get(mTelephonyManager.getNetworkType());
+                    Log.d(TAG, String.format("CellInfoWcdma for %d|%d|%d|%d|%s|%d", cell.mcc, cell.mnc, cell.area, cell.cellId, cell.technology, ((CellInfoWcdma) c).getCellIdentity().getPsc()));
                 }
                 cells.add(cell);
             }
