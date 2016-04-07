@@ -154,7 +154,15 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                 if (cellsListRaw != null) {
                 	for (Cell r : cellsListRaw) {
                 		Log.d(TAG, "Evaluating " + r.toString());
-                		if ((r.mcc <= 0) || (r.mnc <= 0) || (r.area <= 0) || (r.cellId <= 0)) {
+                		/*
+                		 * Filtering of cells happens here. This is typically the case for neighboring
+                		 * cells in UMTS or LTE networks, which are only identified by their PSC or PCI
+                		 * (and are thus useless for lookup). Other filters can be added, such as
+                		 * filtering out cells with bogus data or comparing against a blacklist of
+                		 * "cells on wheels" (whose location can change).
+                		 */
+                		if ((r.mcc <= 0) || (r.mnc <= 0) || (r.area <= 0) || (r.cellId <= 0)
+                				|| (r.mcc == Integer.MAX_VALUE) || (r.mnc == Integer.MAX_VALUE) || (r.area == Integer.MAX_VALUE) || (r.cellId == Integer.MAX_VALUE)) {
                 			Log.i(TAG, String.format("Cell %s has incomplete data, skipping", r.toString()));
                 		} else {
                 			cellsList.add(r);
