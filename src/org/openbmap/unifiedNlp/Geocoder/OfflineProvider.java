@@ -49,6 +49,8 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
     public static final int DEFAULT_WIFI_ACCURACY = 30;
     // Default accuracy for cell results (in meter)
     public static final int DEFAULT_CELL_ACCURACY = 3000;
+    // Assumed ratio between maximum and typical range
+    public static final int TYPICAL_RANGE_FACTOR = 7;
     private static final String TAG = OfflineProvider.class.getName();
     private ILocationCallback mListener;
 
@@ -315,7 +317,7 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                     		// RSSI-based distance
                     		float rxdist =
                     				(wifiList.get(resultIds[i]) == null) ?
-                    						DEFAULT_CELL_ACCURACY * 10 :
+                    						DEFAULT_CELL_ACCURACY * TYPICAL_RANGE_FACTOR :
                     							getWifiRxDist(wifiList.get(resultIds[i]).level);
                     		
                 			// distance penalty for stale wifis (supported only on Jellybean MR1 and higher)
@@ -338,7 +340,7 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                     			
                     			// subtract distance between device and each transmitter to get "disagreement"
                     			if (wifiList.get(resultIds[j]) == null)
-                    				distResults[0] -= rxdist + DEFAULT_CELL_ACCURACY * 10;
+                    				distResults[0] -= rxdist + DEFAULT_CELL_ACCURACY * TYPICAL_RANGE_FACTOR;
                     			else {
                     				distResults[0] -= rxdist + getWifiRxDist(wifiList.get(resultIds[j]).level);
                               		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1)
@@ -363,7 +365,7 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                     		}
                     		locations.get(resultIds[i]).setAccuracy(locations.get(resultIds[i]).getAccuracy() / (resultIds.length - 1));
                     		// correct distance from transmitter to a realistic value
-                    		rxdist /= 7;
+                    		rxdist /= TYPICAL_RANGE_FACTOR;
                     		
             				Log.v(TAG, String.format("%s: disagreement = %.5f, rxdist = %.5f, age = %d ms, ageBasedDist = %.5f",
             						resultIds[i],
