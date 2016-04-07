@@ -189,6 +189,7 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                 		//Log.d(TAG, sql);
 
                 		c = mCatalog.rawQuery(wifiSql, wifiQueryArgs);
+                		Log.i(TAG, String.format("Found %d known wifis", c.getCount()));
                 		for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
                 			Location location = new Location(TAG);
                 			location.setLatitude(c.getDouble(0));
@@ -206,7 +207,6 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
 
                 		if ((state & WIFIS_MATCH) != WIFIS_MATCH) {
                 			state |= WIFIS_NOT_FOUND;
-                			Log.i(TAG, "No known wifis found");
                 		}
                 	}
                     
@@ -236,7 +236,7 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                 		final String cellSql = "SELECT AVG(latitude), AVG(longitude), mcc, mnc, area, cid FROM cell_zone WHERE " + whereClause + " GROUP BY mcc, mnc, area, cid";
                 		try {
                 			c = mCatalog.rawQuery(cellSql, cellQueryArgs.toArray(new String[0]));
-
+                			Log.i(TAG, String.format("Found %d known cells", c.getCount()));
                 			for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
                 				Location location = new Location(TAG);
                 				location.setLatitude(c.getDouble(0));
@@ -255,7 +255,6 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
 
                 			if ((state & CELLS_MATCH) != CELLS_MATCH) {
                 				state |= CELLS_NOT_FOUND;
-                				Log.i(TAG, "No known cells found");
                 			}
                 		} catch (SQLiteException e) {
                 			Log.e(TAG, "SQLiteException! Update your database!");
