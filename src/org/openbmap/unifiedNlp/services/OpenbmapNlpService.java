@@ -356,10 +356,8 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
                     //Log.v(TAG, "GSM cell found");
                     cell.cellId = ((CellInfoGsm) c).getCellIdentity().getCid();
                     cell.area = ((CellInfoGsm) c).getCellIdentity().getLac();
-                    //cell.mcc = ((CellInfoGsm)c).getCellIdentity().getMcc();
-                    //cell.mnc = ((CellInfoGsm)c).getCellIdentity().getMnc();
-                    cell.mcc = mcc;
-                    cell.mnc = mnc;
+                    cell.mcc = ((CellInfoGsm)c).getCellIdentity().getMcc();
+                    cell.mnc = ((CellInfoGsm)c).getCellIdentity().getMnc();
                     cell.technology = TECHNOLOGY_MAP().get(mTelephonyManager.getNetworkType());
                     Log.d(TAG, String.format("CellInfoGsm for %d|%d|%d|%d|%s", cell.mcc, cell.mnc, cell.area, cell.cellId, cell.technology));
                 } else if (c instanceof CellInfoCdma) {
@@ -373,20 +371,16 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
                     //Log.v(TAG, "LTE cell found");
                     cell.cellId = ((CellInfoLte) c).getCellIdentity().getCi();
                     cell.area = ((CellInfoLte) c).getCellIdentity().getTac();
-                    //cell.mcc = ((CellInfoLte)c).getCellIdentity().getMcc();
-                    //cell.mnc = ((CellInfoLte)c).getCellIdentity().getMnc();
-                    cell.mcc = mcc;
-                    cell.mnc = mnc;
+                    cell.mcc = ((CellInfoLte)c).getCellIdentity().getMcc();
+                    cell.mnc = ((CellInfoLte)c).getCellIdentity().getMnc();
                     cell.technology = TECHNOLOGY_MAP().get(mTelephonyManager.getNetworkType());
                     Log.d(TAG, String.format("CellInfoLte for %d|%d|%d|%d|%s|%d", cell.mcc, cell.mnc, cell.area, cell.cellId, cell.technology, ((CellInfoLte)c).getCellIdentity().getPci()));
                 } else if (c instanceof CellInfoWcdma) {
                     //Log.v(TAG, "CellInfoWcdma cell found");
                     cell.cellId = ((CellInfoWcdma) c).getCellIdentity().getCid();
                     cell.area = ((CellInfoWcdma) c).getCellIdentity().getLac();
-                    //cell.mcc = ((CellInfoWcdma)c).getCellIdentity().getMcc();
-                    //cell.mnc = ((CellInfoWcdma)c).getCellIdentity().getMnc();
-                    cell.mcc = mcc;
-                    cell.mnc = mnc;
+                    cell.mcc = ((CellInfoWcdma)c).getCellIdentity().getMcc();
+                    cell.mnc = ((CellInfoWcdma)c).getCellIdentity().getMnc();
                     cell.technology = TECHNOLOGY_MAP().get(mTelephonyManager.getNetworkType());
                     Log.d(TAG, String.format("CellInfoWcdma for %d|%d|%d|%d|%s|%d", cell.mcc, cell.mnc, cell.area, cell.cellId, cell.technology, ((CellInfoWcdma) c).getCellIdentity().getPsc()));
                 }
