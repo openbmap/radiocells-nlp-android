@@ -335,6 +335,7 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
         		cell.mnc = mnc;
         		cell.technology = TECHNOLOGY_MAP().get(mTelephonyManager.getNetworkType());
         		Log.d(TAG, String.format("GsmCellLocation for %d|%d|%d|%d|%s|%d", cell.mcc, cell.mnc, cell.area, cell.cellId, cell.technology, ((GsmCellLocation) cellLocation).getPsc()));
+        		cells.add(cell);
         	} else if (cellLocation instanceof CdmaCellLocation) {
         		Log.w(TAG, "CdmaCellLocation: Using CDMA cells for NLP is not yet implemented");
         	} else
