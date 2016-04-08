@@ -34,6 +34,7 @@ import android.telephony.CellInfoGsm;
 import android.telephony.CellInfoLte;
 import android.telephony.CellInfoWcdma;
 import android.telephony.CellLocation;
+import android.telephony.NeighboringCellInfo;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.telephony.cdma.CdmaCellLocation;
@@ -340,6 +341,26 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
         		Log.wtf(TAG, "Got a CellLocation of an unknown class");
         } else {
             Log.d(TAG, "getCellLocation returned null");
+        }
+        
+        List<NeighboringCellInfo> neighboringCells = mTelephonyManager.getNeighboringCellInfo();
+        if (neighboringCells != null) {
+            Log.d(TAG, "getNeighboringCellInfo found " + neighboringCells.size() + " cells");
+        } else {
+            Log.d(TAG, "getNeighboringCellInfo returned null");
+        }
+        
+        if (neighboringCells != null) {
+            for (NeighboringCellInfo c : neighboringCells) {
+                Cell cell = new Cell();
+                cell.cellId = c.getCid();
+                cell.area = c.getLac();
+        		cell.mcc = mcc;
+        		cell.mnc = mnc;
+        		cell.technology = TECHNOLOGY_MAP().get(c.getNetworkType());
+                Log.d(TAG, String.format("NeighboringCellInfo for %d|%d|%d|%d|%s|%d", cell.mcc, cell.mnc, cell.area, cell.cellId, cell.technology, c.getPsc()));
+                cells.add(cell);
+            }
         }
         
         List<CellInfo> cellsRawList = mTelephonyManager.getAllCellInfo();
