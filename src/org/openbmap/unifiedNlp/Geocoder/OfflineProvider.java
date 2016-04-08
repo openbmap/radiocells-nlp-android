@@ -181,7 +181,7 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                     state |= EMPTY_CELLS_QUERY;
                 }
 
-                if ((state & (EMPTY_WIFIS_QUERY | EMPTY_CELLS_QUERY)) == 0) {
+                if ((state & (EMPTY_WIFIS_QUERY | EMPTY_CELLS_QUERY)) != (EMPTY_WIFIS_QUERY | EMPTY_CELLS_QUERY)) {
                 	Cursor c;
                 	
                 	if ((state & EMPTY_WIFIS_QUERY) == 0) {
