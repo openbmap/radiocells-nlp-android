@@ -34,6 +34,7 @@ import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
+import org.openbmap.services.wireless.blacklists.SsidBlackList;
 import org.openbmap.unifiedNlp.Preferences;
 import org.openbmap.unifiedNlp.services.Cell;
 
@@ -51,6 +52,8 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
     public static final int DEFAULT_CELL_ACCURACY = 3000;
     // Assumed ratio between maximum and typical range
     public static final int TYPICAL_RANGE_FACTOR = 7;
+    public static final String BLACKLIST_SUBDIR = "blacklists";
+    public static final String DEFAULT_SSID_BLOCK_FILE	= "default_ssid.xml";
     private static final String TAG = OfflineProvider.class.getName();
     private ILocationCallback mListener;
 
@@ -63,8 +66,15 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
      * Database containing well-known wifis from openbmap.org.
      */
     private SQLiteDatabase mCatalog;
+    
+    /**
+     * Blacklist to filter out well-known mobile SSIDs.
+     */
+    private SsidBlackList mSsidBlackList;
 
     public OfflineProvider(final Context ctx, final ILocationCallback listener) {
+        final String mBlacklistPath = ctx.getExternalFilesDir(null).getAbsolutePath() + File.separator
+                + BLACKLIST_SUBDIR;
         mListener = listener;
         prefs = PreferenceManager.getDefaultSharedPreferences(ctx);
 
@@ -72,6 +82,7 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
             Log.e(TAG, "Critical error: you chose offline provider, but didn't specify a offline catalog!");
         }
         // Open catalog database
+        Log.d(TAG, String.format("Using blacklist in %s", mBlacklistPath));
         String path = prefs.getString(Preferences.KEY_DATA_FOLDER, ctx.getExternalFilesDir(null).getAbsolutePath())
                 + File.separator + prefs.getString(Preferences.KEY_OFFLINE_CATALOG_FILE, Preferences.VAL_CATALOG_FILE);
 
@@ -80,6 +91,8 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
         } catch (SQLiteCantOpenDatabaseException e) {
             Log.e(TAG, "Error opening database");
         }
+        mSsidBlackList = new SsidBlackList();
+        mSsidBlackList.openFile(mBlacklistPath + File.separator + DEFAULT_SSID_BLOCK_FILE, null);
         setLastFix(System.currentTimeMillis());
     }
 
@@ -138,6 +151,8 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                 			Log.w(TAG, "skipping wifi with empty BSSID");
                 		else if (r.SSID.endsWith("_nomap")) {
                 			// BSSID with _nomap suffix, user does not want it to be mapped or used for geolocation
+                		} else if (mSsidBlackList.contains(r.SSID)) {
+                			Log.w(TAG, String.format("SSID '%s' is blacklisted, skipping", r.SSID));
                 		} else {
                 			if (age >= 2000)
                 				Log.w(TAG, String.format("wifi %s is stale (%d ms), using it anyway", r.BSSID, age));
