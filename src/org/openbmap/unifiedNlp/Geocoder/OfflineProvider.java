@@ -34,6 +34,7 @@ import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
+import org.openbmap.services.wireless.blacklists.SsidBlackList;
 import org.openbmap.unifiedNlp.Preferences;
 import org.openbmap.unifiedNlp.services.Cell;
 
@@ -49,6 +50,10 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
     public static final int DEFAULT_WIFI_ACCURACY = 30;
     // Default accuracy for cell results (in meter)
     public static final int DEFAULT_CELL_ACCURACY = 3000;
+    // Assumed ratio between maximum and typical range
+    public static final int TYPICAL_RANGE_FACTOR = 7;
+    public static final String BLACKLIST_SUBDIR = "blacklists";
+    public static final String DEFAULT_SSID_BLOCK_FILE	= "default_ssid.xml";
     private static final String TAG = OfflineProvider.class.getName();
     private ILocationCallback mListener;
 
@@ -61,8 +66,15 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
      * Database containing well-known wifis from openbmap.org.
      */
     private SQLiteDatabase mCatalog;
+    
+    /**
+     * Blacklist to filter out well-known mobile SSIDs.
+     */
+    private SsidBlackList mSsidBlackList;
 
     public OfflineProvider(final Context ctx, final ILocationCallback listener) {
+        final String mBlacklistPath = ctx.getExternalFilesDir(null).getAbsolutePath() + File.separator
+                + BLACKLIST_SUBDIR;
         mListener = listener;
         prefs = PreferenceManager.getDefaultSharedPreferences(ctx);
 
@@ -70,6 +82,7 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
             Log.e(TAG, "Critical error: you chose offline provider, but didn't specify a offline catalog!");
         }
         // Open catalog database
+        Log.d(TAG, String.format("Using blacklist in %s", mBlacklistPath));
         String path = prefs.getString(Preferences.KEY_DATA_FOLDER, ctx.getExternalFilesDir(null).getAbsolutePath())
                 + File.separator + prefs.getString(Preferences.KEY_OFFLINE_CATALOG_FILE, Preferences.VAL_CATALOG_FILE);
 
@@ -78,6 +91,8 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
         } catch (SQLiteCantOpenDatabaseException e) {
             Log.e(TAG, "Error opening database");
         }
+        mSsidBlackList = new SsidBlackList();
+        mSsidBlackList.openFile(mBlacklistPath + File.separator + DEFAULT_SSID_BLOCK_FILE, null);
         setLastFix(System.currentTimeMillis());
     }
 
@@ -136,6 +151,8 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                 			Log.w(TAG, "skipping wifi with empty BSSID");
                 		else if (r.SSID.endsWith("_nomap")) {
                 			// BSSID with _nomap suffix, user does not want it to be mapped or used for geolocation
+                		} else if (mSsidBlackList.contains(r.SSID)) {
+                			Log.w(TAG, String.format("SSID '%s' is blacklisted, skipping", r.SSID));
                 		} else {
                 			if (age >= 2000)
                 				Log.w(TAG, String.format("wifi %s is stale (%d ms), using it anyway", r.BSSID, age));
@@ -152,7 +169,15 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                 if (cellsListRaw != null) {
                 	for (Cell r : cellsListRaw) {
                 		Log.d(TAG, "Evaluating " + r.toString());
-                		if ((r.mcc <= 0) || (r.mnc <= 0) || (r.area <= 0) || (r.cellId <= 0)) {
+                		/*
+                		 * Filtering of cells happens here. This is typically the case for neighboring
+                		 * cells in UMTS or LTE networks, which are only identified by their PSC or PCI
+                		 * (and are thus useless for lookup). Other filters can be added, such as
+                		 * filtering out cells with bogus data or comparing against a blacklist of
+                		 * "cells on wheels" (whose location can change).
+                		 */
+                		if ((r.mcc <= 0) || (r.mnc <= 0) || (r.area <= 0) || (r.cellId <= 0)
+                				|| (r.mcc == Integer.MAX_VALUE) || (r.mnc == Integer.MAX_VALUE) || (r.area == Integer.MAX_VALUE) || (r.cellId == Integer.MAX_VALUE)) {
                 			Log.i(TAG, String.format("Cell %s has incomplete data, skipping", r.toString()));
                 		} else {
                 			cellsList.add(r);
@@ -171,7 +196,7 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                     state |= EMPTY_CELLS_QUERY;
                 }
 
-                if ((state & (EMPTY_WIFIS_QUERY | EMPTY_CELLS_QUERY)) == 0) {
+                if ((state & (EMPTY_WIFIS_QUERY | EMPTY_CELLS_QUERY)) != (EMPTY_WIFIS_QUERY | EMPTY_CELLS_QUERY)) {
                 	Cursor c;
                 	
                 	if ((state & EMPTY_WIFIS_QUERY) == 0) {
@@ -187,6 +212,7 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                 		//Log.d(TAG, sql);
 
                 		c = mCatalog.rawQuery(wifiSql, wifiQueryArgs);
+                		Log.i(TAG, String.format("Found %d known wifis", c.getCount()));
                 		for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
                 			Location location = new Location(TAG);
                 			location.setLatitude(c.getDouble(0));
@@ -204,7 +230,6 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
 
                 		if ((state & WIFIS_MATCH) != WIFIS_MATCH) {
                 			state |= WIFIS_NOT_FOUND;
-                			Log.i(TAG, "No known wifis found");
                 		}
                 	}
                     
@@ -234,7 +259,7 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                 		final String cellSql = "SELECT AVG(latitude), AVG(longitude), mcc, mnc, area, cid FROM cell_zone WHERE " + whereClause + " GROUP BY mcc, mnc, area, cid";
                 		try {
                 			c = mCatalog.rawQuery(cellSql, cellQueryArgs.toArray(new String[0]));
-
+                			Log.i(TAG, String.format("Found %d known cells", c.getCount()));
                 			for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
                 				Location location = new Location(TAG);
                 				location.setLatitude(c.getDouble(0));
@@ -253,7 +278,6 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
 
                 			if ((state & CELLS_MATCH) != CELLS_MATCH) {
                 				state |= CELLS_NOT_FOUND;
-                				Log.i(TAG, "No known cells found");
                 			}
                 		} catch (SQLiteException e) {
                 			Log.e(TAG, "SQLiteException! Update your database!");
@@ -315,7 +339,7 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                     		// RSSI-based distance
                     		float rxdist =
                     				(wifiList.get(resultIds[i]) == null) ?
-                    						DEFAULT_CELL_ACCURACY * 10 :
+                    						DEFAULT_CELL_ACCURACY * TYPICAL_RANGE_FACTOR :
                     							getWifiRxDist(wifiList.get(resultIds[i]).level);
                     		
                 			// distance penalty for stale wifis (supported only on Jellybean MR1 and higher)
@@ -338,7 +362,7 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                     			
                     			// subtract distance between device and each transmitter to get "disagreement"
                     			if (wifiList.get(resultIds[j]) == null)
-                    				distResults[0] -= rxdist + DEFAULT_CELL_ACCURACY * 10;
+                    				distResults[0] -= rxdist + DEFAULT_CELL_ACCURACY * TYPICAL_RANGE_FACTOR;
                     			else {
                     				distResults[0] -= rxdist + getWifiRxDist(wifiList.get(resultIds[j]).level);
                               		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1)
@@ -363,7 +387,7 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                     		}
                     		locations.get(resultIds[i]).setAccuracy(locations.get(resultIds[i]).getAccuracy() / (resultIds.length - 1));
                     		// correct distance from transmitter to a realistic value
-                    		rxdist /= 7;
+                    		rxdist /= TYPICAL_RANGE_FACTOR;
                     		
             				Log.v(TAG, String.format("%s: disagreement = %.5f, rxdist = %.5f, age = %d ms, ageBasedDist = %.5f",
             						resultIds[i],
