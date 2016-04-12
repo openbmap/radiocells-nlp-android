@@ -33,8 +33,12 @@ import android.telephony.CellInfoCdma;
 import android.telephony.CellInfoGsm;
 import android.telephony.CellInfoLte;
 import android.telephony.CellInfoWcdma;
+import android.telephony.CellLocation;
+import android.telephony.NeighboringCellInfo;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
+import android.telephony.cdma.CdmaCellLocation;
+import android.telephony.gsm.GsmCellLocation;
 import android.util.Log;
 
 import org.microg.nlp.api.LocationBackendService;
@@ -306,13 +310,6 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
     private List<Cell> getCells() {
         List<Cell> cells = new ArrayList<Cell>();
 
-        List<CellInfo> cellsRawList = mTelephonyManager.getAllCellInfo();
-        if (cellsRawList != null) {
-            Log.d(TAG, "Found " + cellsRawList.size() + " cells");
-        } else {
-            Log.d(TAG, "No cell available (getAllCellInfo returned null)");
-        }
-
         String operator = mTelephonyManager.getNetworkOperator();
         int mnc;
         int mcc;
@@ -327,46 +324,94 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
             mnc = 0;
         }
 
-        if (cellsRawList != null) {
-            for (CellInfo c : cellsRawList) {
+        CellLocation cellLocation = mTelephonyManager.getCellLocation();
+        
+        if (cellLocation != null) {
+        	if (cellLocation instanceof GsmCellLocation) {
+        		Cell cell = new Cell();
+        		cell.cellId = ((GsmCellLocation) cellLocation).getCid();
+        		cell.area = ((GsmCellLocation) cellLocation).getLac();
+        		cell.mcc = mcc;
+        		cell.mnc = mnc;
+        		cell.technology = TECHNOLOGY_MAP().get(mTelephonyManager.getNetworkType());
+        		Log.d(TAG, String.format("GsmCellLocation for %d|%d|%d|%d|%s|%d", cell.mcc, cell.mnc, cell.area, cell.cellId, cell.technology, ((GsmCellLocation) cellLocation).getPsc()));
+        		cells.add(cell);
+        	} else if (cellLocation instanceof CdmaCellLocation) {
+        		Log.w(TAG, "CdmaCellLocation: Using CDMA cells for NLP is not yet implemented");
+        	} else
+        		Log.wtf(TAG, "Got a CellLocation of an unknown class");
+        } else {
+            Log.d(TAG, "getCellLocation returned null");
+        }
+        
+        List<NeighboringCellInfo> neighboringCells = mTelephonyManager.getNeighboringCellInfo();
+        if (neighboringCells != null) {
+            Log.d(TAG, "getNeighboringCellInfo found " + neighboringCells.size() + " cells");
+        } else {
+            Log.d(TAG, "getNeighboringCellInfo returned null");
+        }
+        
+        if (neighboringCells != null) {
+            for (NeighboringCellInfo c : neighboringCells) {
                 Cell cell = new Cell();
-                if (c instanceof CellInfoGsm) {
-                    //Log.v(TAG, "GSM cell found");
-                    cell.cellId = ((CellInfoGsm) c).getCellIdentity().getCid();
-                    cell.area = ((CellInfoGsm) c).getCellIdentity().getLac();
-                    //cell.mcc = ((CellInfoGsm)c).getCellIdentity().getMcc();
-                    //cell.mnc = ((CellInfoGsm)c).getCellIdentity().getMnc();
-                    cell.mcc = mcc;
-                    cell.mnc = mnc;
-                    cell.technology = TECHNOLOGY_MAP().get(mTelephonyManager.getNetworkType());
-                } else if (c instanceof CellInfoCdma) {
-                    /*
-                    object.put("cellId", ((CellInfoCdma)s).getCellIdentity().getBasestationId());
-                    object.put("locationAreaCode", ((CellInfoCdma)s).getCellIdentity().getLac());
-                    object.put("mobileCountryCode", ((CellInfoCdma)s).getCellIdentity().get());
-                    object.put("mobileNetworkCode", ((CellInfoCdma)s).getCellIdentity().getMnc());*/
-                    Log.wtf(TAG, "Using of CDMA cells for NLP not yet implemented");
-                } else if (c instanceof CellInfoLte) {
-                    //Log.v(TAG, "LTE cell found");
-                    cell.cellId = ((CellInfoLte) c).getCellIdentity().getCi();
-                    cell.area = ((CellInfoLte) c).getCellIdentity().getTac();
-                    //cell.mcc = ((CellInfoLte)c).getCellIdentity().getMcc();
-                    //cell.mnc = ((CellInfoLte)c).getCellIdentity().getMnc();
-                    cell.mcc = mcc;
-                    cell.mnc = mnc;
-                    cell.technology = TECHNOLOGY_MAP().get(mTelephonyManager.getNetworkType());
-                } else if (c instanceof CellInfoWcdma) {
-                    //Log.v(TAG, "CellInfoWcdma cell found");
-                    cell.cellId = ((CellInfoWcdma) c).getCellIdentity().getCid();
-                    cell.area = ((CellInfoWcdma) c).getCellIdentity().getLac();
-                    //cell.mcc = ((CellInfoWcdma)c).getCellIdentity().getMcc();
-                    //cell.mnc = ((CellInfoWcdma)c).getCellIdentity().getMnc();
-                    cell.mcc = mcc;
-                    cell.mnc = mnc;
-                    cell.technology = TECHNOLOGY_MAP().get(mTelephonyManager.getNetworkType());
-                }
+                cell.cellId = c.getCid();
+                cell.area = c.getLac();
+        		cell.mcc = mcc;
+        		cell.mnc = mnc;
+        		cell.technology = TECHNOLOGY_MAP().get(c.getNetworkType());
+                Log.d(TAG, String.format("NeighboringCellInfo for %d|%d|%d|%d|%s|%d", cell.mcc, cell.mnc, cell.area, cell.cellId, cell.technology, c.getPsc()));
                 cells.add(cell);
             }
+        }
+        
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+        	List<CellInfo> cellsRawList = mTelephonyManager.getAllCellInfo();
+        	if (cellsRawList != null) {
+        		Log.d(TAG, "getAllCellInfo found " + cellsRawList.size() + " cells");
+        	} else {
+        		Log.d(TAG, "getAllCellInfo returned null");
+        	}
+
+        	if (cellsRawList != null) {
+        		for (CellInfo c : cellsRawList) {
+        			Cell cell = new Cell();
+        			if (c instanceof CellInfoGsm) {
+        				//Log.v(TAG, "GSM cell found");
+        				cell.cellId = ((CellInfoGsm) c).getCellIdentity().getCid();
+        				cell.area = ((CellInfoGsm) c).getCellIdentity().getLac();
+        				cell.mcc = ((CellInfoGsm)c).getCellIdentity().getMcc();
+        				cell.mnc = ((CellInfoGsm)c).getCellIdentity().getMnc();
+        				cell.technology = TECHNOLOGY_MAP().get(mTelephonyManager.getNetworkType());
+        				Log.d(TAG, String.format("CellInfoGsm for %d|%d|%d|%d|%s", cell.mcc, cell.mnc, cell.area, cell.cellId, cell.technology));
+        			} else if (c instanceof CellInfoCdma) {
+        				/*
+        				object.put("cellId", ((CellInfoCdma)s).getCellIdentity().getBasestationId());
+        				object.put("locationAreaCode", ((CellInfoCdma)s).getCellIdentity().getLac());
+        				object.put("mobileCountryCode", ((CellInfoCdma)s).getCellIdentity().get());
+        				object.put("mobileNetworkCode", ((CellInfoCdma)s).getCellIdentity().getMnc());*/
+        				Log.wtf(TAG, "Using of CDMA cells for NLP not yet implemented");
+        			} else if (c instanceof CellInfoLte) {
+        				//Log.v(TAG, "LTE cell found");
+        				cell.cellId = ((CellInfoLte) c).getCellIdentity().getCi();
+        				cell.area = ((CellInfoLte) c).getCellIdentity().getTac();
+        				cell.mcc = ((CellInfoLte)c).getCellIdentity().getMcc();
+        				cell.mnc = ((CellInfoLte)c).getCellIdentity().getMnc();
+        				cell.technology = TECHNOLOGY_MAP().get(mTelephonyManager.getNetworkType());
+        				Log.d(TAG, String.format("CellInfoLte for %d|%d|%d|%d|%s|%d", cell.mcc, cell.mnc, cell.area, cell.cellId, cell.technology, ((CellInfoLte)c).getCellIdentity().getPci()));
+        			} else if (c instanceof CellInfoWcdma) {
+        				//Log.v(TAG, "CellInfoWcdma cell found");
+        				cell.cellId = ((CellInfoWcdma) c).getCellIdentity().getCid();
+        				cell.area = ((CellInfoWcdma) c).getCellIdentity().getLac();
+        				cell.mcc = ((CellInfoWcdma)c).getCellIdentity().getMcc();
+        				cell.mnc = ((CellInfoWcdma)c).getCellIdentity().getMnc();
+        				cell.technology = TECHNOLOGY_MAP().get(mTelephonyManager.getNetworkType());
+        				Log.d(TAG, String.format("CellInfoWcdma for %d|%d|%d|%d|%s|%d", cell.mcc, cell.mnc, cell.area, cell.cellId, cell.technology, ((CellInfoWcdma) c).getCellIdentity().getPsc()));
+        			}
+        			cells.add(cell);
+        		}
+        	}
+    	} else {
+    		Log.d(TAG, "getAllCellInfo is not available (requires API 17)");
         }
         return cells;
     }
