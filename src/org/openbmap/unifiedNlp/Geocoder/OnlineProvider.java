@@ -71,7 +71,7 @@ public class OnlineProvider extends AbstractProvider implements ILocationProvide
     private ArrayList<String> mWifiQuery;
     private ArrayList<String> mCellQuery;
 
-    public OnlineProvider(final Context ctx, final ILocationCallback listener, boolean debug) {
+    public OnlineProvider(final Context context, final ILocationCallback listener, boolean debug) {
         this.mListener = listener;
         mDebug = debug;
         setLastFix(System.currentTimeMillis());
@@ -161,8 +161,7 @@ public class OnlineProvider extends AbstractProvider implements ILocationProvide
                 // Creating JSON Parser instance
                 JSONParser jParser = new JSONParser();
                 JSONObject params = buildParams(wifiParams, cellParams);
-                JSONObject reply = jParser.getJSONFromUrl(url, params);
-                return reply;
+                return jParser.getJSONFromUrl(url, params);
             }
 
             /**

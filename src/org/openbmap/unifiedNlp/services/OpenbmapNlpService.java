@@ -126,7 +126,7 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
 
     @SuppressLint("InlinedApi")
     public static Map<Integer, String> TECHNOLOGY_MAP() {
-        final Map<Integer, String> result = new HashMap<Integer, String>();
+        final Map<Integer, String> result = new HashMap<>();
         result.put(TelephonyManager.NETWORK_TYPE_UNKNOWN, "NA");
         // GPRS shall be mapped to "GSM"
         result.put(TelephonyManager.NETWORK_TYPE_GPRS, "GSM");
@@ -240,7 +240,7 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
                                 Log.d(TAG, "Scanning wifis & cells");
                                 lastFix = System.currentTimeMillis();
 
-                                List<Cell> cells = new ArrayList<Cell>() ;
+                                List<Cell> cells = new ArrayList<>() ;
                                 // if in combined mode also query cell information, otherwise pass empty list
                                 if (isCellsSourceSelected()) {
                                     cells = getCells();
@@ -308,7 +308,7 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
      * @return list of cells
      */
     private List<Cell> getCells() {
-        List<Cell> cells = new ArrayList<Cell>();
+        List<Cell> cells = new ArrayList<>();
 
         String operator = mTelephonyManager.getNetworkOperator();
         int mnc;

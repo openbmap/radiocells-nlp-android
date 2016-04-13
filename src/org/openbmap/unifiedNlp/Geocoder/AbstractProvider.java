@@ -23,7 +23,6 @@ import android.util.Log;
 
 import org.openbmap.unifiedNlp.services.Cell;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public abstract class AbstractProvider implements ILocationProvider {

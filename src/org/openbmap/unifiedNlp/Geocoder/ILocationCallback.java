@@ -20,5 +20,5 @@ package org.openbmap.unifiedNlp.Geocoder;
 import android.location.Location;
 
 public interface ILocationCallback {
-    public Location onLocationReceived(Location location);
+    Location onLocationReceived(Location location);
 }

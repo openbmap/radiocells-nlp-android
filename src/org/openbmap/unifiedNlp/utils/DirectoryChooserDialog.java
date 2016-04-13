@@ -11,6 +11,7 @@ import android.content.DialogInterface.OnClickListener;
 import android.content.DialogInterface.OnKeyListener;
 import android.os.Environment;
 import android.text.Editable;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.View;
@@ -23,6 +24,8 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.openbmap.unifiedNlp.R;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -30,6 +33,7 @@ import java.util.Comparator;
 import java.util.List;
 
 public class DirectoryChooserDialog {
+    private static final String TAG = DirectoryChooserDialog.class.getSimpleName();
     private boolean mIsNewFolderEnabled = true;
     private String mSdcardDirectory = "";
     private Context mContext;
@@ -146,7 +150,7 @@ public class DirectoryChooserDialog {
     }
 
     private List<String> getDirectories(String dir) {
-        List<String> dirs = new ArrayList<String>();
+        List<String> dirs = new ArrayList<>();
         dirs.add("..");
         try {
             File dirFile = new File(dir);
@@ -160,6 +164,7 @@ public class DirectoryChooserDialog {
                 }
             }
         } catch (Exception e) {
+            Log.e(TAG, "Error listing directory");
         }
 
         Collections.sort(dirs, new Comparator<String>() {
@@ -196,7 +201,7 @@ public class DirectoryChooserDialog {
 
         Button newDirButton = new Button(mContext);
         newDirButton.setLayoutParams(new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));
-        newDirButton.setText("Create new folder");
+        newDirButton.setText(R.string.new_folder);
         newDirButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -273,6 +278,6 @@ public class DirectoryChooserDialog {
      * Callback interface for selected directory
      */
     public interface ChosenDirectoryListener {
-        public void onChosenDir(String chosenDir);
+        void onChosenDir(String chosenDir);
     }
 }

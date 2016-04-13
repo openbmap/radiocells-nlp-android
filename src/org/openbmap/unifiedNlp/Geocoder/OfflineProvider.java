@@ -72,18 +72,17 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
      */
     private SsidBlackList mSsidBlackList;
 
-    public OfflineProvider(final Context ctx, final ILocationCallback listener) {
-        final String mBlacklistPath = ctx.getExternalFilesDir(null).getAbsolutePath() + File.separator
-                + BLACKLIST_SUBDIR;
+    public OfflineProvider(final Context context, final ILocationCallback listener) {
+        final String mBlacklistPath = context.getExternalFilesDir(null).getAbsolutePath() + File.separator + BLACKLIST_SUBDIR;
         mListener = listener;
-        prefs = PreferenceManager.getDefaultSharedPreferences(ctx);
+        prefs = PreferenceManager.getDefaultSharedPreferences(context);
 
         if (prefs.getString(Preferences.KEY_OFFLINE_CATALOG_FILE, Preferences.VAL_CATALOG_FILE).equals(Preferences.CATALOG_NONE)) {
             Log.e(TAG, "Critical error: you chose offline provider, but didn't specify a offline catalog!");
         }
         // Open catalog database
         Log.d(TAG, String.format("Using blacklist in %s", mBlacklistPath));
-        String path = prefs.getString(Preferences.KEY_DATA_FOLDER, ctx.getExternalFilesDir(null).getAbsolutePath())
+        String path = prefs.getString(Preferences.KEY_DATA_FOLDER, context.getExternalFilesDir(null).getAbsolutePath())
                 + File.separator + prefs.getString(Preferences.KEY_OFFLINE_CATALOG_FILE, Preferences.VAL_CATALOG_FILE);
 
         try {
@@ -133,7 +132,7 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                 List<Cell> cellsList = new ArrayList<Cell>();
                 HashMap<String, Location> locations = new HashMap<String, Location>();
                 String[] resultIds = new String[0];
-        		ArrayList<String> cellResults = new ArrayList<String>();
+        		ArrayList<String> cellResults = new ArrayList<>();
                 Location result = null;
 
                 if (wifiListRaw != null) {
@@ -241,7 +240,7 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                 		}
 
                 		String whereClause = "";
-                		List<String> cellQueryArgs = new ArrayList<String>();
+                		List<String> cellQueryArgs = new ArrayList<>();
                 		for (Cell k : cellsList) {
                 			if (whereClause.length() > 1) {
                 				whereClause += " OR ";
@@ -300,7 +299,7 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                     		result.setAccuracy(getWifiRxDist(wifiList.get(resultIds[0]).level) / 10);
                         Bundle b = new Bundle();
                         b.putString("source", "wifis");
-                        b.putStringArrayList("bssids", new ArrayList<String>(Arrays.asList(wifiQueryArgs)));
+                        b.putStringArrayList("bssids", new ArrayList<>(Arrays.asList(wifiQueryArgs)));
                         result.setExtras(b);
                         return result;
                     } else {
@@ -421,7 +420,7 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                         else if ((state & CELLS_MATCH) != 0)
                         	b.putString("source", "cells");
                         if ((state & WIFIS_MATCH) != 0)
-                        	b.putStringArrayList("bssids", new ArrayList<String>(Arrays.asList(wifiQueryArgs)));
+                        	b.putStringArrayList("bssids", new ArrayList<>(Arrays.asList(wifiQueryArgs)));
                         if ((state & CELLS_MATCH) != 0)
                         	b.putStringArrayList("cells", cellResults);
                         result.setExtras(b);

@@ -17,13 +17,12 @@
 */
 package org.openbmap.unifiedNlp.Geocoder;
 
-import org.openbmap.unifiedNlp.services.Cell;
-
 import android.net.wifi.ScanResult;
 
-import java.util.ArrayList;
+import org.openbmap.unifiedNlp.services.Cell;
+
 import java.util.List;
 
 public interface ILocationProvider {
-    public void getLocation(List<ScanResult> wifiList, List<Cell> cellsList);
+    void getLocation(List<ScanResult> wifiList, List<Cell> cellsList);
 }
