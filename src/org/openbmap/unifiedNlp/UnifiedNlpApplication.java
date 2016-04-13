@@ -7,7 +7,7 @@ import org.acra.annotation.ReportsCrashes;
 
 @ReportsCrashes(
         formKey = "", // This is required for backward compatibility but not used
-        formUri = "http://radiocells.org/openbmap/uploads/crash_report"
+        formUri = "https://radiocells.org/openbmap/uploads/crash_report"
 )
 public class UnifiedNlpApplication extends Application {
     @Override
