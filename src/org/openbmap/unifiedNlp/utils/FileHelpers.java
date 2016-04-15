@@ -58,9 +58,10 @@ public class FileHelpers {
      *
      * @param src Source file
      * @param dst Destination file
+     * @return target file or null if something went wrong
      * @throws IOException
      */
-    public static void copyFile(File src, File dst) throws IOException {
+    public static File copyFile(File src, File dst) throws IOException {
         FileChannel inChannel = new FileInputStream(src).getChannel();
         FileChannel outChannel = new FileOutputStream(dst).getChannel();
         try {
@@ -71,6 +72,12 @@ public class FileHelpers {
             }
             outChannel.close();
         }
+
+        if (dst != null && dst.exists()) {
+            return dst;
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -78,10 +85,37 @@ public class FileHelpers {
      *
      * @param src Source file
      * @param dst Destination file
+     * @return target file or null if something went wrong
      * @throws IOException
      */
-    public static void moveFile(File src, File dst) throws IOException {
-        copyFile(src, dst);
+    public static File moveFile(File src, File dst) throws IOException {
+        File result = copyFile(src, dst);
         src.delete();
+
+        if (result != null && result.exists()) {
+            return result;
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Moves file from source to destination
+     *
+     * @param src Source filename
+     * @param dst Destination filename
+     * @return target file or null if something went wrong
+     * @throws IOException
+     */
+    public static File moveFile(String src, String dst) throws IOException {
+        final File source = new File(src);
+        final File destination = new File(dst);
+
+        File result = moveFile(source, destination);
+        if (result != null && result.exists()) {
+            return result;
+        } else {
+            return null;
+        }
     }
 }
