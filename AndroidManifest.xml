@@ -1,8 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="org.openbmap.unifiedNlp"
     android:sharedUserId="org.openbmap"
-    android:versionCode="14"
-    android:versionName="0.2.2">
+    android:versionCode="15"
+    android:versionName="0.2.3">
 
     <uses-sdk
         android:minSdkVersion="16"
@@ -25,7 +25,7 @@
         <activity
             android:name="org.openbmap.unifiedNlp.SettingsActivity"
             android:exported="true"
-            android:label="Preferences"></activity>
+            android:label="@string/preferences"/>
 
         <service
             android:name="org.openbmap.unifiedNlp.services.OpenbmapNlpService"

@@ -55,15 +55,14 @@ public class DirectoryChooserDialog {
         return mIsNewFolderEnabled;
     }
 
-    ///////////////////////////////////////////////////////////////////////
-    // setNewFolderEnabled() - enable/disable new folder button
-    ///////////////////////////////////////////////////////////////////////
-
+    /**
+     * enable/disable new folder button
+     */
     public void setNewFolderEnabled(boolean isNewFolderEnabled) {
         mIsNewFolderEnabled = isNewFolderEnabled;
     }
 
-    /*
+    /**
      * chooseDirectory() - load directory chooser dialog for initial default sdcard directory
      */
     public void chooseDirectory() {
@@ -71,7 +70,7 @@ public class DirectoryChooserDialog {
         chooseDirectory(mSdcardDirectory);
     }
 
-    /*
+    /**
      * chooseDirectory(String dir) - load directory chooser dialog for initial input 'dir' directory
      */
     public void chooseDirectory(String dir) {

@@ -33,12 +33,11 @@ public class FileHelpers {
     /**
      * Moves file to specified folder
      *
-     * @param file
-     * @param folder
+     * @param file source file (full path)
+     * @param folder target folder (without file name)
      * @return new file name
      */
     public static String moveToFolder(String file, String folder) {
-        // file path contains external cache dir, so we have to move..
         File source = new File(file);
         File destination = new File(folder + File.separator + source.getName());
         Log.i(TAG, file + " stored in temp folder. Moving to " + destination.getAbsolutePath());
@@ -55,7 +54,6 @@ public class FileHelpers {
      * Copies file to destination.
      * This was needed to copy file from temp folder to SD card. A simple renameTo fails..
      * see http://stackoverflow.com/questions/4770004/how-to-move-rename-file-from-internal-app-storage-to-external-storage-on-android
-     *
      * @param src Source file
      * @param dst Destination file
      * @return target file or null if something went wrong

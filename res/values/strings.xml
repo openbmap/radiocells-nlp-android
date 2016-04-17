@@ -1,43 +1,20 @@
 <resources>
-
-    <string name="app_name">org.openbmap.unifiedNlpProvider</string>
-
-    <string name="error_saving_file">Error saving file</string>
-
-    <string name="error_create_folder">Couldn\'t create folder</string>
-
+    <string name="app_name" translatable="false">org.openbmap.unifiedNlpProvider</string>
     <string name="prefs_none">None</string>
-
     <string name="operation_mode_summary">When using offline mode, be sure to press \'Update offline database\' below. Online mode queries the openbmap geolocation service and requires mobile data access</string>
-
     <string name="operation_mode_title">Online/offline mode</string>
-
     <string name="wifi_catalog_title">Offline database</string>
-
     <string name="wifi_catalog_summary">Select a offline database\nIf none is available, click \'Update offline database\'</string>
-
-    <string name="update_wifi_catalog_title">Update offline database</string>
-
-    <string name="update_wifi_catalog_summary">Click to download the latest offline geolocation database (approx. 400 MB)</string>
-
     <string name="database_folder_title">Database folder</string>
-
     <string name="database_folder_summary">Choose folder for offline database</string>
-
     <string name="debug_category_title">Debug</string>
-
     <string name="crash_report_summary_off">Don\'t send crash reports</string>
-
     <string name="crash_report_summary_on">Send crash reports</string>
-
     <string name="crash_reports_title">Crash reports</string>
-
     <string name="version">Openbmap UnifiedNLP Provider</string>
-    <string name="local_version">"Local version: "</string>
-    <string name="online_mode">Using online mode!\nYou can download offline catalog any times later</string>
+    <string name="using_online_mode">Using online mode!\nYou can download offline catalog any times later</string>
     <string name="offline_catalog_n_a">No offline catalog found</string>
     <string name="question_download_catalog">Download offline catalog now?\n(approx. 400MB)</string>
-    <string name="download_started">New catalog available! Downloading..</string>
     <string name="download_completed">Download completed</string>
     <string name="warning_catalog_missing">Be warned!\nOffline geolocation won\'t work without offline catalog</string>
     <string name="question_activate_offline_mode">Activate offline mode now?</string>
@@ -51,8 +28,15 @@
     <string name="operation_mode_category">Operation mode</string>
     <string name="source_summary">Select which data is used for geolocation\n(Wifis and Cells, Wifis only, Cells only)</string>
     <string name="source_title">Use cells/wifis?</string>
-    <string name="up_to_date_database">Latest version already installed</string>
-    <string name="locale_version">"Local version: "</string>
-    <string name="download_failed">Download failed: Error code</string>
-    <string name="already_downloading">Another download in progress!</string>
+    <string name="download_failed">Download failed! (Error code %s)</string>
+    <string name="preferences">Preferences</string>
+    <string name="new_folder">Create new folder</string>
+    <string name="invalid_download">Invalid download</string>
+    <string name="downloading">Downloading</string>
+    <string name="error_save_file_failed">Download failed! Check SD card/permissions!</string>
+    <string name="prefs_check_server">Contacting server…</string>
+    <string name="please_stay_patient">Please stay patient..</string>
+    <string name="prefs_download_wifi_catalog">Download Wifi Catalog</string>
+    <string name="prefs_download_wifi_catalog_summary">Current size (10–400MB depending on country)</string>
+    <string name="server_parsing_error">Error parsing server reply</string>
 </resources>

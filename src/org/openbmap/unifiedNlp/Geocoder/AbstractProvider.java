@@ -35,7 +35,7 @@ public abstract class AbstractProvider implements ILocationProvider {
 
     /**
      * Returns last location update
-     * @return
+     * @return last location
      */
     public Location getLastLocation() {
         return mLastLocation;
@@ -43,8 +43,7 @@ public abstract class AbstractProvider implements ILocationProvider {
 
     /**
      * Saves last location
-     *
-     * @param location
+     * @param location last location
      */
     public void setLastLocation(Location location) {
         mLastLocation = location;
@@ -52,8 +51,7 @@ public abstract class AbstractProvider implements ILocationProvider {
 
     /**
      * Set time of last location update
-     *
-     * @param millis
+     * @param millis system time millis
      */
     public void setLastFix(Long millis) {
         mLastFix = millis;

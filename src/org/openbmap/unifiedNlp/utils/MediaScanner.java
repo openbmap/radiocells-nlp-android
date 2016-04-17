@@ -44,19 +44,13 @@ public class MediaScanner implements MediaScannerConnectionClient {
     }
 
     /**
-     * Scans folder for gpx, sqlite, map and xml files, so they become visible
+     * Scans folder for sqlite files, so they become visible
      */
     @Override
     public final void onMediaScannerConnected() {
         final File[] files = mFolder.listFiles();
         for (final File file : files) {
-            if (
-                    file.getName().endsWith(".xml") ||
-                            file.getName().endsWith(".gpx") ||
-                            file.getName().endsWith(".map") ||
-                            file.getName().endsWith(".sqlite")) {
-                mScanner.scanFile(file.getAbsolutePath(), null);
-            }
+            mScanner.scanFile(file.getAbsolutePath(), null);
         }
     }
 

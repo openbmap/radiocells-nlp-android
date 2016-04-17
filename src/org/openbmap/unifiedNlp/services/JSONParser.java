@@ -35,11 +35,11 @@ import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 
 public class JSONParser {
-    static final String TAG = JSONParser.class.getSimpleName();
+    private static final String TAG = JSONParser.class.getSimpleName();
 
-    static InputStream is = null;
-    static JSONObject jObj = null;
-    static String json = "";
+    private static InputStream is = null;
+    private static JSONObject jObj = null;
+    private static String json = "";
 
     // constructor
     public JSONParser() {
@@ -48,9 +48,9 @@ public class JSONParser {
     /**
      * Sends a http post request
      *
-     * @param url
-     * @param params
-     * @return
+     * @param url JSON endpoint
+     * @param params JSON parameters
+     * @return server reply
      */
     public JSONObject getJSONFromUrl(String url, JSONObject params) {
         // Making HTTP request

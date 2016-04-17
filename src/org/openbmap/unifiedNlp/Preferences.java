@@ -37,19 +37,9 @@ public final class Preferences {
     public static final String KEY_SOURCE = "source";
 
     /**
-     * Offline catalog download button
-     */
-    public static final String KEY_DOWNLOAD_OFFLINE_CATALOG = "data.download_wifi_catalog";
-
-    /**
      * Selected catalog file
      */
     public static final String KEY_OFFLINE_CATALOG_FILE = "data.ref_database";
-
-    /**
-     * Catalog download date
-     */
-    public static final String KEY_OFFLINE_CATALOG_VERSION = "data.ref_database_version";
 
     /**
      * Broadcast debug messages?
@@ -138,6 +128,13 @@ public final class Preferences {
      */
     public static final String CATALOG_FILE = "openbmap.sqlite";
 
+    /**
+     * Server host name excluding final slash
+     */
+    public static final String SERVER_BASE = "https://radiocells.org";
+
+    // 'Button id' catalog download preference
+    public static final String KEY_CATALOGS_DIALOG = "catalogs_dialog";
 
     /**
      * Private dummy constructor

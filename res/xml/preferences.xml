@@ -7,7 +7,7 @@
             android:entryValues="@array/operation_mode_values"
             android:key="mode"
             android:summary="@string/operation_mode_summary"
-            android:title="@string/operation_mode_title"></ListPreference>
+            android:title="@string/operation_mode_title"/>
     </PreferenceCategory>
         <ListPreference
             android:defaultValue="combined"
@@ -15,23 +15,25 @@
             android:entryValues="@array/source_values"
             android:key="source"
             android:summary="@string/source_summary"
-            android:title="@string/source_title"></ListPreference>
+            android:title="@string/source_title"/>
     <PreferenceCategory android:title="@string/database_category_title">
         <ListPreference
             android:defaultValue="none"
             android:key="data.ref_database"
             android:summary="@string/wifi_catalog_summary"
-            android:title="@string/wifi_catalog_title"></ListPreference>
+            android:title="@string/wifi_catalog_title"/>
 
-        <Preference
-            android:key="data.download_wifi_catalog"
-            android:summary="@string/update_wifi_catalog_summary"
-            android:title="@string/update_wifi_catalog_title"></Preference>
+        <org.openbmap.unifiedNlp.DialogPreferenceCatalogs
+            android:selectable="true"
+            android:enabled="true"
+            android:title="@string/prefs_download_wifi_catalog"
+            android:summary="@string/prefs_download_wifi_catalog_summary"
+            android:key="catalogs_dialog"/>
 
         <Preference
             android:key="data.dir"
             android:summary="@string/database_folder_summary"
-            android:title="@string/database_folder_title"></Preference>
+            android:title="@string/database_folder_title"/>
 
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/debug_category_title">
@@ -51,5 +53,5 @@
     <Preference
         android:key="version"
         android:summary="-"
-        android:title="@string/version"></Preference>
+        android:title="@string/version"/>
 </PreferenceScreen>
