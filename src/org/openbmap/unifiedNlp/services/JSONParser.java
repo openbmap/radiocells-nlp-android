@@ -27,6 +27,7 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.openbmap.unifiedNlp.BuildConfig;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -36,6 +37,7 @@ import java.io.UnsupportedEncodingException;
 
 public class JSONParser {
     private static final String TAG = JSONParser.class.getSimpleName();
+    private static final String USER_AGENT = "Openbmap NLP/" + BuildConfig.VERSION_NAME;
 
     private static InputStream is = null;
     private static JSONObject jObj = null;
@@ -53,9 +55,8 @@ public class JSONParser {
      * @return server reply
      */
     public JSONObject getJSONFromUrl(String url, JSONObject params) {
-        // Making HTTP request
-        try {
 
+        try {
             DefaultHttpClient httpClient = new DefaultHttpClient();
             HttpPost httpPost = new HttpPost(url);
             //passes the results to a string builder/entity
@@ -67,7 +68,7 @@ public class JSONParser {
             //will know what to do with it
             httpPost.setHeader("Accept", "application/json");
             httpPost.setHeader("Content-type", "application/json");
-            httpPost.setHeader("User-Agent", "Openbmap NLP/0.1");
+            httpPost.setHeader("User-Agent", USER_AGENT);
             HttpResponse httpResponse = httpClient.execute(httpPost);
             HttpEntity httpEntity = httpResponse.getEntity();
             is = httpEntity.getContent();
