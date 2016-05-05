@@ -120,7 +120,7 @@ public class DialogPreferenceCatalogs extends DialogPreference implements ICatal
 
     @Override
     public void onItemClicked(CatalogDownload catalog) {
-        ((ICatalogChooser) getContext()).catalogSelected(catalog.getRelativeUrl());
+        ((ICatalogChooser) getContext()).catalogSelected(catalog.getUrl());
         getDialog().dismiss();
     }
 

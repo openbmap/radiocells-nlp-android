@@ -64,7 +64,7 @@ public class DialogPreferenceCatalogsListAdapter extends BaseExpandableListAdapt
         }
         text = (TextView) convertView.findViewById(R.id.textView1);
         text.setText(children.getTitle());
-        text.setTag(children.getRelativeUrl());
+        text.setTag(children.getUrl());
         convertView.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {

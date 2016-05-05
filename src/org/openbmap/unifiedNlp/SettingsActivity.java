@@ -429,18 +429,19 @@ public class SettingsActivity extends PreferenceActivity implements ICatalogChoo
 
     /**
      * Downloads selected catalog
-     * @param relativeUrl
+     * @param url absolute url
      */
     @Override
-    public void catalogSelected(String relativeUrl) {
-        if (relativeUrl == null) {
+    public void catalogSelected(String url) {
+        if (url == null) {
             Toast.makeText(this, R.string.invalid_download, Toast.LENGTH_LONG).show();
             return;
         }
 
-        Toast.makeText(this, getString(R.string.downloading) + " " + relativeUrl, Toast.LENGTH_LONG).show();
-        // try to create directory
-        final File folder = new File(PreferenceManager.getDefaultSharedPreferences(this).getString(Preferences.KEY_DATA_FOLDER, getExternalFilesDir(null).getAbsolutePath()));
+        Toast.makeText(this, getString(R.string.downloading) + " " + url, Toast.LENGTH_LONG).show();
+
+        final File folder = new File(PreferenceManager.getDefaultSharedPreferences(this).getString(Preferences.KEY_DATA_FOLDER,
+                getExternalFilesDir(null).getAbsolutePath()));
 
         Log.d(TAG, "Download destination" + folder.getAbsolutePath());
 
@@ -457,7 +458,7 @@ public class SettingsActivity extends PreferenceActivity implements ICatalogChoo
         }
 
         if (folderAccessible) {
-            final String filename = relativeUrl.substring(relativeUrl.lastIndexOf('/') + 1);
+            final String filename = url.substring(url.lastIndexOf('/') + 1);
 
             final File target = new File(folder.getAbsolutePath() + File.separator + filename);
             if (target.exists()) {
@@ -465,13 +466,13 @@ public class SettingsActivity extends PreferenceActivity implements ICatalogChoo
                 target.delete();
             }
 
-            Log.i(TAG, String.format("Saving %s @ %s", Preferences.SERVER_BASE + relativeUrl, folder.getAbsolutePath() + File.separator + filename));
+            Log.i(TAG, String.format("Saving %s @ %s", url, folder.getAbsolutePath() + File.separator + filename));
 
             final DownloadManager dm = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
             try {
                 // try to download to target. If target isn't below Environment.getExternalStorageDirectory(),
                 // e.g. on second SD card a security exception is thrown
-                final DownloadManager.Request request = new DownloadManager.Request(Uri.parse(Preferences.SERVER_BASE + relativeUrl));
+                final DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url));
                 request.setDestinationUri(Uri.fromFile(target));
                 mCurrentCatalogDownloadId = dm.enqueue(request);
             } catch (final SecurityException sec) {
@@ -479,7 +480,7 @@ public class SettingsActivity extends PreferenceActivity implements ICatalogChoo
                 Log.w(TAG, "Security exception, can't write to " + target + ", using " + getExternalCacheDir());
                 final File tempFile = new File(getExternalCacheDir() + File.separator + filename);
 
-                final DownloadManager.Request request = new DownloadManager.Request(Uri.parse(relativeUrl));
+                final DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url));
                 request.setDestinationUri(Uri.fromFile(tempFile));
                 mCurrentCatalogDownloadId = dm.enqueue(request);
             }

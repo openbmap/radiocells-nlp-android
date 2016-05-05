@@ -22,10 +22,6 @@ package org.openbmap.unifiedNlp;
  * See preferences.xml for layout, strings-preferences.xml for text.
  */
 public final class Preferences {
-    // Property names
-    public static final String KEY_GPS_OSSETTINGS = "gps.ossettings";
-    public static final String KEY_GPS_LOGGING_INTERVAL = "gps.interval";
-    public static final String KEY_GPS_SAVE_COMPLETE_TRACK = "gps.save_track";
     public static final String KEY_VERSION_INFO = "version";
     public static final String KEY_DATA_FOLDER = "data.dir";
 
@@ -45,16 +41,6 @@ public final class Preferences {
      * Broadcast debug messages?
      */
     public static final String KEY_DEBUG_MESSAGES = "debug.messages";
-
-    /**
-     * Openbmap user name
-     */
-    //public static final String KEY_CREDENTIALS_USER = "credentials.user";
-
-    /**
-     * Openbmap password
-     */
-    //public static final String KEY_CREDENTIALS_PASSWORD = "credentials.password";
 
 	/*
      * Default values following ..
@@ -97,12 +83,6 @@ public final class Preferences {
      */
     public static final String CATALOG_NONE = "none";
 
-
-    /**
-     * Reference database version not set
-     */
-    public static final String CATALOG_VERSION_NONE = "not yet downloaded";
-
     /**
      * Dummy response, if server doesn't provide version info
      */
@@ -116,17 +96,12 @@ public final class Preferences {
     /**
      * URL, where wifi/cell catalog with openbmap's preprocessed wifi positions can be downloaded
      */
-    public static final String CATALOG_DOWNLOAD_URL = "https://radiocells.org/openbmap/static/openbmap.sqlite";
+    public static final String PLANET_DOWNLOAD_URL = "https://radiocells.org/openbmap/static/openbmap.sqlite";
 
     /**
      * URL to check for newer catalog files
      */
-    public static final String CATALOG_VERSION_URL = "https://radiocells.org/default/database_version.json";
-
-    /**
-     * Filename catalog database
-     */
-    public static final String CATALOG_FILE = "openbmap.sqlite";
+    public static final String PLANET_VERSION_URL = "https://radiocells.org/default/database_version.json";
 
     /**
      * Server host name excluding final slash
