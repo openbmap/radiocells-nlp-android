@@ -15,7 +15,7 @@ $(unifiednlp_root)/$(unifiednlp_apk):
 	mkdir -p $(unifiednlp_out)
 	mkdir -p $(unifiednlp_build)
 	ln -sf $(unifiednlp_out) $(unifiednlp_build)
-	cd $(unifiednlp_root) && JAVA_TOOL_OPTIONS="$(JAVA_TOOL_OPTIONS) -Dfile.encoding=UTF8" gradle assembleRelease
+	cd $(unifiednlp_root) && JAVA_TOOL_OPTIONS="$(JAVA_TOOL_OPTIONS) -Dfile.encoding=UTF8" ./gradlew assembleRelease
 
 LOCAL_CERTIFICATE := platform
 LOCAL_SRC_FILES := $(unifiednlp_apk)

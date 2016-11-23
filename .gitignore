@@ -5,7 +5,6 @@
 /build
 /.gradle
 /*.iml
-/gradle
 /res/raw/build.txt
 /.settings
 /local.properties
