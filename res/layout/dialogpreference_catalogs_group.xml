@@ -9,4 +9,5 @@
     android:paddingTop="8dp"
     android:textSize="14sp"
     android:textAlignment="textEnd"
+    android:textAppearance="?android:attr/textAppearanceMedium"
     android:textStyle="bold" />
