@@ -47,7 +47,11 @@ public class DialogPreferenceCatalogsListAdapter extends BaseExpandableListAdapt
 
     @Override
     public Object getChild(int groupPosition, int childPosition) {
-        return mGroups.get(groupPosition).children.get(childPosition);
+        if (mGroups.get(groupPosition) != null) {
+            return mGroups.get(groupPosition).children.get(childPosition);
+        } else {
+            return null;
+        }
     }
 
     @Override
@@ -78,7 +82,11 @@ public class DialogPreferenceCatalogsListAdapter extends BaseExpandableListAdapt
 
     @Override
     public int getChildrenCount(int groupPosition) {
-        return mGroups.get(groupPosition).children.size();
+        if (mGroups.get(groupPosition) != null) {
+            return mGroups.get(groupPosition).children.size();
+        } else {
+            return 0;
+        }
     }
 
     @Override
