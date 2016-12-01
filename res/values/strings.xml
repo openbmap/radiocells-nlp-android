@@ -14,7 +14,7 @@
     <string name="version">Openbmap UnifiedNLP Provider</string>
     <string name="using_online_mode">Using online mode!\nYou can download offline catalog any times later</string>
     <string name="offline_catalog_n_a">No offline catalog found</string>
-    <string name="question_download_catalog">Download offline catalog now?\n(approx. 400MB)</string>
+    <string name="question_download_catalog">Download offline catalog now?</string>
     <string name="download_completed">Download completed</string>
     <string name="warning_catalog_missing">Be warned!\nOffline geolocation won\'t work without offline catalog</string>
     <string name="question_activate_offline_mode">Activate offline mode now?</string>
