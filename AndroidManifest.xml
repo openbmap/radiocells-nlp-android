@@ -1,8 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="org.openbmap.unifiedNlp"
     android:sharedUserId="org.openbmap"
-    android:versionCode="17"
-    android:versionName="0.2.5">
+    android:versionCode="18"
+    android:versionName="0.2.6">
 
     <uses-sdk
         android:minSdkVersion="16"
