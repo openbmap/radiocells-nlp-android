@@ -1,4 +1,4 @@
-package org.openbmap.unifiedNlp.services;
+package org.openbmap.unifiedNlp.models;
 
 
 public class Cell {

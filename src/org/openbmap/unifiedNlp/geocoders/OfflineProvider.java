@@ -15,7 +15,7 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.openbmap.unifiedNlp.Geocoder;
+package org.openbmap.unifiedNlp.geocoders;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
@@ -36,7 +36,7 @@ import android.util.Log;
 
 import org.openbmap.services.wireless.blacklists.SsidBlackList;
 import org.openbmap.unifiedNlp.Preferences;
-import org.openbmap.unifiedNlp.services.Cell;
+import org.openbmap.unifiedNlp.models.Cell;
 
 import java.io.File;
 import java.util.ArrayList;

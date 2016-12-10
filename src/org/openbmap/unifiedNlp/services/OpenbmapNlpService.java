@@ -42,11 +42,12 @@ import android.telephony.gsm.GsmCellLocation;
 import android.util.Log;
 
 import org.microg.nlp.api.LocationBackendService;
-import org.openbmap.unifiedNlp.Geocoder.ILocationCallback;
-import org.openbmap.unifiedNlp.Geocoder.ILocationProvider;
-import org.openbmap.unifiedNlp.Geocoder.OfflineProvider;
-import org.openbmap.unifiedNlp.Geocoder.OnlineProvider;
+import org.openbmap.unifiedNlp.geocoders.ILocationCallback;
+import org.openbmap.unifiedNlp.geocoders.ILocationProvider;
+import org.openbmap.unifiedNlp.geocoders.OfflineProvider;
+import org.openbmap.unifiedNlp.geocoders.OnlineProvider;
 import org.openbmap.unifiedNlp.Preferences;
+import org.openbmap.unifiedNlp.models.Cell;
 
 import java.util.ArrayList;
 import java.util.Collections;

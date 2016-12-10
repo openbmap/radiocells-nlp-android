@@ -15,10 +15,14 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-package org.openbmap.unifiedNlp.Geocoder;
+package org.openbmap.unifiedNlp.geocoders;
 
-import android.location.Location;
+import android.net.wifi.ScanResult;
 
-public interface ILocationCallback {
-    Location onLocationReceived(Location location);
+import org.openbmap.unifiedNlp.models.Cell;
+
+import java.util.List;
+
+public interface ILocationProvider {
+    void getLocation(List<ScanResult> wifiList, List<Cell> cellsList);
 }

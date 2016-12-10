@@ -15,7 +15,7 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-package org.openbmap.unifiedNlp.Geocoder;
+package org.openbmap.unifiedNlp.geocoders;
 
 import android.content.Context;
 import android.location.Location;
@@ -27,7 +27,7 @@ import android.util.Log;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.openbmap.unifiedNlp.services.Cell;
+import org.openbmap.unifiedNlp.models.Cell;
 import org.openbmap.unifiedNlp.services.JSONParser;
 
 import java.util.ArrayList;
