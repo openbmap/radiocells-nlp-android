@@ -56,8 +56,8 @@ import java.util.List;
 import java.util.Map;
 
 @SuppressLint("NewApi")
-public class OpenbmapNlpService extends LocationBackendService implements ILocationCallback {
-    private static final String TAG = OpenbmapNlpService.class.getName();
+public class LocationService extends LocationBackendService implements ILocationCallback {
+    private static final String TAG = LocationService.class.getName();
 
     /**
      * Minimum interval between two queries
@@ -94,7 +94,7 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
 
     private boolean scanning;
 
-    private ILocationProvider mGeocoder;
+    private ILocationProvider mProvider;
 
     private boolean running;
 
@@ -161,7 +161,7 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
 
     @Override
     protected void onOpen() {
-        Log.i(TAG, "Opening " + TAG);
+        Log.i(TAG, "Open " + TAG);
         wifiManager = (WifiManager) getSystemService(WIFI_SERVICE);
 
         mWifiLock = wifiManager.createWifiLock(WifiManager.WIFI_MODE_SCAN_ONLY, "SCAN_LOCK");
@@ -201,18 +201,22 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
             return null;
         }
 
-        if (mGeocoder == null) {
+        if (mProvider == null) {
             if (mOnlineMode) {
-                Log.i(TAG, "Using online geocoder");
-                mGeocoder = new OnlineProvider(this, this, mDebug);
+                Log.i(TAG, "Using online provider");
+                mProvider = new OnlineProvider(this, this, mDebug);
             } else {
-                Log.i(TAG, "Using offline geocoder");
-                mGeocoder = new OfflineProvider(this, this);
+                Log.i(TAG, "Using offline provider");
+                mProvider = new OfflineProvider(this, this);
             }
         }
 
-        if (isWifiSupported() && isWifisSourceSelected()) {
-            //Log.i(TAG, "Scanning wifis");
+        if (isWifisSourceSelected()) {
+            if (!isWifiSupported()) {
+                Log.w(TAG, "Couldn't get wifi results, check whether wifi or background scanning is allowed");
+                return null;
+            }
+
             scanning = wifiManager.startScan();
 
             /**
@@ -227,30 +231,32 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
                         if (scanning) {
                         	// TODO pass wifi signal strength to geocoder
                             //Log.i(TAG, "Wifi scan results arrived..");
-                            List<ScanResult> scans = wifiManager.getScanResults();
+                            List<ScanResult> wifis = wifiManager.getScanResults();
                             
-                            if (scans == null)
+                            if (wifis == null) {
                                 // @see http://code.google.com/p/android/issues/detail?id=19078
-                            	Log.e(TAG, "WifiManager.getScanResults returned null");
+                                Log.e(TAG, "WifiManager.getScanResults returned null");
+                            }
 
                             final long passed = System.currentTimeMillis() - lastFix;
                             final boolean ok_online = (mOnlineMode && (passed > ONLINE_REFRESH_INTERVAL) || lastFix == 0);
                             final boolean ok_offline = (!mOnlineMode && (passed > OFFLINE_REFRESH_INTERVAL) || lastFix == 0);
 
                             if (ok_online || ok_offline) {
-                                Log.d(TAG, "Scanning wifis & cells");
+                                Log.d(TAG, "Using wifi scans");
                                 lastFix = System.currentTimeMillis();
 
                                 List<Cell> cells = new ArrayList<>() ;
                                 // if in combined mode also query cell information, otherwise pass empty list
                                 if (isCellsSourceSelected()) {
+                                    Log.d(TAG, "Using cell scans as backup");
                                     cells = getCells();
                                 }
 
-                                if (mGeocoder != null) {
-                                    mGeocoder.getLocation(scans, cells);
+                                if (mProvider != null) {
+                                    mProvider.getLocation(wifis, cells);
                                 } else {
-                                    Log.e(TAG, "Geocoder is null!");
+                                    Log.e(TAG, "Provider is null!");
                                 }
                             } else {
                                 Log.v(TAG, "Too frequent requests.. Skipping geolocation update..");
@@ -268,19 +274,19 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
             final boolean ok_offline = (!mOnlineMode && (passed > OFFLINE_REFRESH_INTERVAL) || lastFix == 0);
 
             if (ok_online || ok_offline) {
-                Log.d(TAG, "Scanning wifis & cells");
+                Log.d(TAG, "Using cell scans");
                 lastFix = System.currentTimeMillis();
                 List<Cell> cells = getCells();
-                if (mGeocoder != null) {
-                    mGeocoder.getLocation(null, cells);
+                if (mProvider != null) {
+                    mProvider.getLocation(null, cells);
                 } else {
-                    Log.e(TAG, "Geocoder is null!");
+                    Log.e(TAG, "Provider is null!");
                 }
             } else {
                 Log.v(TAG, "Too frequent requests.. Skipping geolocation update..");
             }
         } else {
-            Log.e(TAG, "Neigther cells nor wifis as source selected? Com'on..");
+            Log.e(TAG, "Neither cells nor wifis as source selected?? This won't work..");
         }
 
         return null;
@@ -419,7 +425,8 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
 
     /**
      * Checks whether we can scan wifis
-     * @return
+     * @return false, if wifi manager has not yet been initialized or neither wifi is enabled nor
+     * background scanning is allowed
      */
     public boolean isWifiSupported() {
         return ((wifiManager != null) && (wifiManager.isWifiEnabled() || ((Build.VERSION.SDK_INT >= 18) &&

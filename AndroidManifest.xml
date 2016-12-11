@@ -28,7 +28,7 @@
             android:label="@string/preferences"/>
 
         <service
-            android:name="org.openbmap.unifiedNlp.services.OpenbmapNlpService"
+            android:name="org.openbmap.unifiedNlp.services.LocationService"
             android:exported="true"
             android:label="Openbmap Unified Network Location Provider Backend"
             android:permission="android.permission.ACCESS_COARSE_LOCATION">
