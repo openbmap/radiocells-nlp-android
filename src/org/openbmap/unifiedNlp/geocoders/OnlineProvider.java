@@ -129,7 +129,7 @@ public class OnlineProvider extends AbstractProvider implements ILocationProvide
                 try {
                     Log.i(TAG, "JSON response: " + jsonData.toString());
 
-                    if (!jsonData.has("error")) {
+                    if (jsonData.has("resultType") && !jsonData.getString("resultType").equals("error")) {
                         String source = jsonData.getString("source");
                         JSONObject location = jsonData.getJSONObject("location");
                         Double lat = location.getDouble("lat");
