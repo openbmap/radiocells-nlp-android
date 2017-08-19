@@ -41,7 +41,7 @@ public class OnlineProvider extends AbstractProvider implements ILocationProvide
     /**
      * Geolocation service
      */
-    private static final String REQUEST_URL = "https://%s.radiocells.org/geolocate";
+        private static final String REQUEST_URL = "https://%s.radiocells.org/geolocate";
 
     /**
      * Query extra debug information from webservice
