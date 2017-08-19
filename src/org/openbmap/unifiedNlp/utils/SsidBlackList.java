@@ -16,7 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package org.openbmap.services.wireless.blacklists;
+package org.openbmap.unifiedNlp.utils;
 
 import android.annotation.SuppressLint;
 import android.util.Log;
