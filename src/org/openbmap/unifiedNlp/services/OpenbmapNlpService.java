@@ -27,6 +27,7 @@ import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
 import android.net.wifi.WifiManager.WifiLock;
 import android.os.Build;
+import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.telephony.CellInfo;
 import android.telephony.CellInfoCdma;
@@ -49,6 +50,7 @@ import org.openbmap.unifiedNlp.Geocoder.OnlineProvider;
 import org.openbmap.unifiedNlp.Preferences;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -92,6 +94,8 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
     private WifiManager wifiManager;
 
     private boolean scanning;
+    
+    private Calendar nextScanningAllowedFrom;
 
     private ILocationProvider mGeocoder;
 
@@ -193,9 +197,24 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
         wifiManager = null;
     }
 
+    Handler timerHandler = new Handler();
+    Runnable timerRunnable = new Runnable() {
+
+        @Override
+        public void run() {
+            if (nextScanningAllowedFrom == null) {
+                return;
+            }
+            nextScanningAllowedFrom = null;
+            getLocationFromWifisAndCells(new ArrayList<ScanResult>());
+        }
+    };
+    
     @Override
     protected Location update() {
-        if (scanning) {
+        Calendar now = Calendar.getInstance();
+        
+        if ((nextScanningAllowedFrom != null) && (nextScanningAllowedFrom.after(now))) {
             Log.v(TAG, "Another scan is taking place");
             return null;
         }
@@ -209,20 +228,26 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
                 mGeocoder = new OfflineProvider(this, this);
             }
         }
-
         if (isWifiSupported() && isWifisSourceSelected()) {
             //Log.i(TAG, "Scanning wifis");
-            scanning = wifiManager.startScan();
-
+            if(nextScanningAllowedFrom == null) {
+                scanning = wifiManager.startScan();
+                nextScanningAllowedFrom = Calendar.getInstance();
+                nextScanningAllowedFrom.add(Calendar.MINUTE, 5);
+                timerHandler.postDelayed(timerRunnable, 20000);
+            }
+            
             /**
              * Processes scan results and sends query to geocoding service
              */
             if (mWifiScanResults == null) {
                 mWifiScanResults = new WifiScanCallback() {
 
+                    @Override
                     public void onWifiResultsAvailable() {
                         //Log.d(TAG, "Wifi results are available now.");
-
+                        nextScanningAllowedFrom = null;
+                        timerHandler.removeCallbacks(timerRunnable);
                         if (scanning) {
                         	// TODO pass wifi signal strength to geocoder
                             //Log.i(TAG, "Wifi scan results arrived..");
@@ -232,28 +257,7 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
                                 // @see http://code.google.com/p/android/issues/detail?id=19078
                             	Log.e(TAG, "WifiManager.getScanResults returned null");
 
-                            final long passed = System.currentTimeMillis() - lastFix;
-                            final boolean ok_online = (mOnlineMode && (passed > ONLINE_REFRESH_INTERVAL) || lastFix == 0);
-                            final boolean ok_offline = (!mOnlineMode && (passed > OFFLINE_REFRESH_INTERVAL) || lastFix == 0);
-
-                            if (ok_online || ok_offline) {
-                                Log.d(TAG, "Scanning wifis & cells");
-                                lastFix = System.currentTimeMillis();
-
-                                List<Cell> cells = new ArrayList<>() ;
-                                // if in combined mode also query cell information, otherwise pass empty list
-                                if (isCellsSourceSelected()) {
-                                    cells = getCells();
-                                }
-
-                                if (mGeocoder != null) {
-                                    mGeocoder.getLocation(scans, cells);
-                                } else {
-                                    Log.e(TAG, "Geocoder is null!");
-                                }
-                            } else {
-                                Log.v(TAG, "Too frequent requests.. Skipping geolocation update..");
-                            }
+                            getLocationFromWifisAndCells(scans);
                         }
                         scanning = false;
                     }
@@ -261,23 +265,7 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
             }
         } else if (isCellsSourceSelected()) {
             Log.d(TAG, "Scanning cells only");
-
-            final long passed = System.currentTimeMillis() - lastFix;
-            final boolean ok_online = (mOnlineMode && (passed > ONLINE_REFRESH_INTERVAL) || lastFix == 0);
-            final boolean ok_offline = (!mOnlineMode && (passed > OFFLINE_REFRESH_INTERVAL) || lastFix == 0);
-
-            if (ok_online || ok_offline) {
-                Log.d(TAG, "Scanning wifis & cells");
-                lastFix = System.currentTimeMillis();
-                List<Cell> cells = getCells();
-                if (mGeocoder != null) {
-                    mGeocoder.getLocation(null, cells);
-                } else {
-                    Log.e(TAG, "Geocoder is null!");
-                }
-            } else {
-                Log.v(TAG, "Too frequent requests.. Skipping geolocation update..");
-            }
+            getLocationFromWifisAndCells(null);
         } else {
             Log.e(TAG, "Neigther cells nor wifis as source selected? Com'on..");
         }
@@ -285,6 +273,30 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
         return null;
     }
 
+    private void getLocationFromWifisAndCells(List<ScanResult> scans) {
+        final long passed = System.currentTimeMillis() - lastFix;
+        final boolean ok_online = (mOnlineMode && (passed > ONLINE_REFRESH_INTERVAL) || lastFix == 0);
+        final boolean ok_offline = (!mOnlineMode && (passed > OFFLINE_REFRESH_INTERVAL) || lastFix == 0);
+
+        if (ok_online || ok_offline) {
+            Log.d(TAG, "Scanning wifis & cells");
+            lastFix = System.currentTimeMillis();
+
+            List<Cell> cells = new ArrayList<>() ;
+            // if in combined mode also query cell information, otherwise pass empty list
+            if (isCellsSourceSelected()) {
+                cells = getCells();
+            }
+            if (mGeocoder != null) {
+                mGeocoder.getLocation(scans, cells);
+            } else {
+                Log.e(TAG, "Geocoder is null!");
+            }
+        } else {
+            Log.v(TAG, "Too frequent requests.. Skipping geolocation update..");
+        }
+    }
+    
     /**
      * Checks whether user has selected wifis as geolocation source in settings
      * @return true if source wifis or combined has been chosen
@@ -311,17 +323,17 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
         List<Cell> cells = new ArrayList<>();
 
         String operator = mTelephonyManager.getNetworkOperator();
-        int mnc;
+        String mnc;
         int mcc;
 
         // getNetworkOperator() may return empty string, probably due to dropped connection
         if (operator != null && operator.length() > 3) {
             mcc = Integer.valueOf(operator.substring(0, 3));
-            mnc = Integer.valueOf(operator.substring(3));
+            mnc = operator.substring(3);
         } else {
             Log.e(TAG, "Error retrieving network operator, skipping cell");
             mcc = 0;
-            mnc = 0;
+            mnc = "";
         }
 
         CellLocation cellLocation = mTelephonyManager.getCellLocation();
@@ -334,7 +346,7 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
         		cell.mcc = mcc;
         		cell.mnc = mnc;
         		cell.technology = TECHNOLOGY_MAP().get(mTelephonyManager.getNetworkType());
-        		Log.d(TAG, String.format("GsmCellLocation for %d|%d|%d|%d|%s|%d", cell.mcc, cell.mnc, cell.area, cell.cellId, cell.technology, ((GsmCellLocation) cellLocation).getPsc()));
+        		Log.d(TAG, String.format("GsmCellLocation for %d|%s|%d|%d|%s|%d", cell.mcc, cell.mnc, cell.area, cell.cellId, cell.technology, ((GsmCellLocation) cellLocation).getPsc()));
         		cells.add(cell);
         	} else if (cellLocation instanceof CdmaCellLocation) {
         		Log.w(TAG, "CdmaCellLocation: Using CDMA cells for NLP is not yet implemented");
@@ -380,7 +392,7 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
         				cell.cellId = ((CellInfoGsm) c).getCellIdentity().getCid();
         				cell.area = ((CellInfoGsm) c).getCellIdentity().getLac();
         				cell.mcc = ((CellInfoGsm)c).getCellIdentity().getMcc();
-        				cell.mnc = ((CellInfoGsm)c).getCellIdentity().getMnc();
+        				cell.mnc = String.valueOf(((CellInfoGsm)c).getCellIdentity().getMnc());
         				cell.technology = TECHNOLOGY_MAP().get(mTelephonyManager.getNetworkType());
         				Log.d(TAG, String.format("CellInfoGsm for %d|%d|%d|%d|%s", cell.mcc, cell.mnc, cell.area, cell.cellId, cell.technology));
         			} else if (c instanceof CellInfoCdma) {
@@ -395,7 +407,7 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
         				cell.cellId = ((CellInfoLte) c).getCellIdentity().getCi();
         				cell.area = ((CellInfoLte) c).getCellIdentity().getTac();
         				cell.mcc = ((CellInfoLte)c).getCellIdentity().getMcc();
-        				cell.mnc = ((CellInfoLte)c).getCellIdentity().getMnc();
+        				cell.mnc = String.valueOf(((CellInfoLte)c).getCellIdentity().getMnc());
         				cell.technology = TECHNOLOGY_MAP().get(mTelephonyManager.getNetworkType());
         				Log.d(TAG, String.format("CellInfoLte for %d|%d|%d|%d|%s|%d", cell.mcc, cell.mnc, cell.area, cell.cellId, cell.technology, ((CellInfoLte)c).getCellIdentity().getPci()));
         			} else if (c instanceof CellInfoWcdma) {
@@ -403,7 +415,7 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
         				cell.cellId = ((CellInfoWcdma) c).getCellIdentity().getCid();
         				cell.area = ((CellInfoWcdma) c).getCellIdentity().getLac();
         				cell.mcc = ((CellInfoWcdma)c).getCellIdentity().getMcc();
-        				cell.mnc = ((CellInfoWcdma)c).getCellIdentity().getMnc();
+        				cell.mnc = String.valueOf(((CellInfoWcdma)c).getCellIdentity().getMnc());
         				cell.technology = TECHNOLOGY_MAP().get(mTelephonyManager.getNetworkType());
         				Log.d(TAG, String.format("CellInfoWcdma for %d|%d|%d|%d|%s|%d", cell.mcc, cell.mnc, cell.area, cell.cellId, cell.technology, ((CellInfoWcdma) c).getCellIdentity().getPsc()));
         			}
@@ -443,9 +455,6 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
             if (last != null) {
                 Log.d(TAG, "[UnifiedNlp Results]: Est. Speed " + Math.round(location.distanceTo(last) / (location.getTime() - last.getTime() / 1000 / 60)) + " km/h");
             }
-        } else {
-            Log.v(TAG, "Ignoring debug infos");
-            location.setExtras(null);
         }
 
         report(location);
