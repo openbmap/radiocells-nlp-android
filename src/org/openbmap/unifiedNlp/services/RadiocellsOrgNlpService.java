@@ -148,16 +148,10 @@ public class RadiocellsOrgNlpService extends LocationBackendService implements I
         result.put(TelephonyManager.NETWORK_TYPE_IDEN, "IDEN");
 
         // add new network types not available in all revisions
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {
-            result.put(TelephonyManager.NETWORK_TYPE_EVDO_B, "EDV0_B");
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-            result.put(TelephonyManager.NETWORK_TYPE_LTE, "LTE");
-            result.put(TelephonyManager.NETWORK_TYPE_EHRPD, "eHRPD");
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
-            result.put(TelephonyManager.NETWORK_TYPE_HSPAP, "HSPA+");
-        }
+        result.put(TelephonyManager.NETWORK_TYPE_EVDO_B, "EDV0_B");
+        result.put(TelephonyManager.NETWORK_TYPE_LTE, "LTE");
+        result.put(TelephonyManager.NETWORK_TYPE_EHRPD, "eHRPD");
+        result.put(TelephonyManager.NETWORK_TYPE_HSPAP, "HSPA+");
 
         return Collections.unmodifiableMap(result);
 
@@ -372,7 +366,7 @@ public class RadiocellsOrgNlpService extends LocationBackendService implements I
         		cell.mcc = mcc;
         		cell.mnc = mnc;
         		cell.technology = TECHNOLOGY_MAP().get(c.getNetworkType());
-                Log.d(TAG, String.format("NeighboringCellInfo for %d|%d|%d|%d|%s|%d", cell.mcc, cell.mnc, cell.area, cell.cellId, cell.technology, c.getPsc()));
+                Log.d(TAG, String.format("NeighboringCellInfo for %d|%s|%d|%d|%s|%d", cell.mcc, cell.mnc, cell.area, cell.cellId, cell.technology, c.getPsc()));
                 cells.add(cell);
             }
         }
@@ -395,7 +389,7 @@ public class RadiocellsOrgNlpService extends LocationBackendService implements I
         				cell.mcc = ((CellInfoGsm)c).getCellIdentity().getMcc();
         				cell.mnc = String.valueOf(((CellInfoGsm)c).getCellIdentity().getMnc());
         				cell.technology = TECHNOLOGY_MAP().get(mTelephonyManager.getNetworkType());
-        				Log.d(TAG, String.format("CellInfoGsm for %d|%d|%d|%d|%s", cell.mcc, cell.mnc, cell.area, cell.cellId, cell.technology));
+                        Log.d(TAG, String.format("CellInfoGsm for %d|%s|%d|%d|%s", cell.mcc, cell.mnc, cell.area, cell.cellId, cell.technology));
         			} else if (c instanceof CellInfoCdma) {
         				/*
         				object.put("cellId", ((CellInfoCdma)s).getCellIdentity().getBasestationId());
@@ -410,7 +404,7 @@ public class RadiocellsOrgNlpService extends LocationBackendService implements I
         				cell.mcc = ((CellInfoLte)c).getCellIdentity().getMcc();
         				cell.mnc = String.valueOf(((CellInfoLte)c).getCellIdentity().getMnc());
         				cell.technology = TECHNOLOGY_MAP().get(mTelephonyManager.getNetworkType());
-        				Log.d(TAG, String.format("CellInfoLte for %d|%d|%d|%d|%s|%d", cell.mcc, cell.mnc, cell.area, cell.cellId, cell.technology, ((CellInfoLte)c).getCellIdentity().getPci()));
+                        Log.d(TAG, String.format("CellInfoLte for %d|%s|%d|%d|%s|%d", cell.mcc, cell.mnc, cell.area, cell.cellId, cell.technology, ((CellInfoLte)c).getCellIdentity().getPci()));
         			} else if (c instanceof CellInfoWcdma) {
         				//Log.v(TAG, "CellInfoWcdma cell found");
         				cell.cellId = ((CellInfoWcdma) c).getCellIdentity().getCid();
@@ -418,7 +412,7 @@ public class RadiocellsOrgNlpService extends LocationBackendService implements I
         				cell.mcc = ((CellInfoWcdma)c).getCellIdentity().getMcc();
         				cell.mnc = String.valueOf(((CellInfoWcdma)c).getCellIdentity().getMnc());
         				cell.technology = TECHNOLOGY_MAP().get(mTelephonyManager.getNetworkType());
-        				Log.d(TAG, String.format("CellInfoWcdma for %d|%d|%d|%d|%s|%d", cell.mcc, cell.mnc, cell.area, cell.cellId, cell.technology, ((CellInfoWcdma) c).getCellIdentity().getPsc()));
+                        Log.d(TAG, String.format("CellInfoWcdma for %d|%s|%d|%d|%s|%d", cell.mcc, cell.mnc, cell.area, cell.cellId, cell.technology, ((CellInfoWcdma) c).getCellIdentity().getPsc()));
         			}
         			cells.add(cell);
         		}
@@ -431,7 +425,7 @@ public class RadiocellsOrgNlpService extends LocationBackendService implements I
 
     /**
      * Checks whether we can scan wifis
-     * @return
+     * @return true if wifi is enabled or background scanning allowed
      */
     public boolean isWifiSupported() {
         return ((wifiManager != null) && (wifiManager.isWifiEnabled() || ((Build.VERSION.SDK_INT >= 18) &&

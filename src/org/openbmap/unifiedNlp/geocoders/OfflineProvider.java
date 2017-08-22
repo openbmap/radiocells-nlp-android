@@ -130,11 +130,11 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                     throw new IllegalArgumentException("No catalog database was specified");
                 }
 
-                List<ScanResult> wifiListRaw = ((LocationQueryParams) params[0]).wifiList;
-                List<Cell> cellsListRaw = ((LocationQueryParams) params[0]).cellsList;
-                HashMap<String, ScanResult> wifiList = new HashMap<String, ScanResult>();
-                List<Cell> cellsList = new ArrayList<Cell>();
-                HashMap<String, Location> locations = new HashMap<String, Location>();
+                List<ScanResult> wifiListRaw = params[0].wifiList;
+                List<Cell> cellsListRaw = params[0].cellsList;
+                HashMap<String, ScanResult> wifiList = new HashMap<>();
+                List<Cell> cellsList = new ArrayList<>();
+                HashMap<String, Location> locations = new HashMap<>();
                 String[] resultIds = new String[0];
                 ArrayList<String> cellResults = new ArrayList<>();
                 Location result = null;
