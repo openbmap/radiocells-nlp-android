@@ -371,7 +371,7 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
         		cell.mcc = mcc;
         		cell.mnc = mnc;
         		cell.technology = TECHNOLOGY_MAP().get(c.getNetworkType());
-                Log.d(TAG, String.format("NeighboringCellInfo for %d|%d|%d|%d|%s|%d", cell.mcc, cell.mnc, cell.area, cell.cellId, cell.technology, c.getPsc()));
+                Log.d(TAG, String.format("NeighboringCellInfo for %d|%s|%d|%d|%s|%d", cell.mcc, cell.mnc, cell.area, cell.cellId, cell.technology, c.getPsc()));
                 cells.add(cell);
             }
         }
@@ -394,7 +394,7 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
         				cell.mcc = ((CellInfoGsm)c).getCellIdentity().getMcc();
         				cell.mnc = String.valueOf(((CellInfoGsm)c).getCellIdentity().getMnc());
         				cell.technology = TECHNOLOGY_MAP().get(mTelephonyManager.getNetworkType());
-        				Log.d(TAG, String.format("CellInfoGsm for %d|%d|%d|%d|%s", cell.mcc, cell.mnc, cell.area, cell.cellId, cell.technology));
+        				Log.d(TAG, String.format("CellInfoGsm for %d|%s|%d|%d|%s", cell.mcc, cell.mnc, cell.area, cell.cellId, cell.technology));
         			} else if (c instanceof CellInfoCdma) {
         				/*
         				object.put("cellId", ((CellInfoCdma)s).getCellIdentity().getBasestationId());
@@ -409,7 +409,7 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
         				cell.mcc = ((CellInfoLte)c).getCellIdentity().getMcc();
         				cell.mnc = String.valueOf(((CellInfoLte)c).getCellIdentity().getMnc());
         				cell.technology = TECHNOLOGY_MAP().get(mTelephonyManager.getNetworkType());
-        				Log.d(TAG, String.format("CellInfoLte for %d|%d|%d|%d|%s|%d", cell.mcc, cell.mnc, cell.area, cell.cellId, cell.technology, ((CellInfoLte)c).getCellIdentity().getPci()));
+        				Log.d(TAG, String.format("CellInfoLte for %d|%s|%d|%d|%s|%d", cell.mcc, cell.mnc, cell.area, cell.cellId, cell.technology, ((CellInfoLte)c).getCellIdentity().getPci()));
         			} else if (c instanceof CellInfoWcdma) {
         				//Log.v(TAG, "CellInfoWcdma cell found");
         				cell.cellId = ((CellInfoWcdma) c).getCellIdentity().getCid();
@@ -417,7 +417,7 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
         				cell.mcc = ((CellInfoWcdma)c).getCellIdentity().getMcc();
         				cell.mnc = String.valueOf(((CellInfoWcdma)c).getCellIdentity().getMnc());
         				cell.technology = TECHNOLOGY_MAP().get(mTelephonyManager.getNetworkType());
-        				Log.d(TAG, String.format("CellInfoWcdma for %d|%d|%d|%d|%s|%d", cell.mcc, cell.mnc, cell.area, cell.cellId, cell.technology, ((CellInfoWcdma) c).getCellIdentity().getPsc()));
+        				Log.d(TAG, String.format("CellInfoWcdma for %d|%s|%d|%d|%s|%d", cell.mcc, cell.mnc, cell.area, cell.cellId, cell.technology, ((CellInfoWcdma) c).getCellIdentity().getPsc()));
         			}
         			cells.add(cell);
         		}
