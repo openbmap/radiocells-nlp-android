@@ -4,7 +4,7 @@
     android:layout_width="wrap_content"
     android:layout_height="?android:attr/listPreferredItemHeight"
     android:layout_marginLeft="8dp"
-    android:gravity="start"
+    android:gravity="end"
     android:paddingLeft="32dp"
     android:paddingTop="8dp"
     android:textSize="14sp"

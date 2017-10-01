@@ -30,6 +30,8 @@ public final class Preferences {
      */
     public static final String KEY_OPERATION_MODE = "mode";
 
+    public static final String KEY_WAKE_UP_STRATEGY = "wake.up.strategy";
+    
     public static final String KEY_SOURCE = "source";
 
     /**
@@ -41,6 +43,9 @@ public final class Preferences {
      * Broadcast debug messages?
      */
     public static final String KEY_DEBUG_MESSAGES = "debug.messages";
+    public static final String KEY_DEBUG_FILE = "debug.log.file";
+    public static final String KEY_DEBUG_TO_FILE = "debug.to.file";
+    public static final String KEY_DEBUG_FILE_LASTING_HOURS = "debug.file.lasting.hours";
 
 	/*
      * Default values following ..

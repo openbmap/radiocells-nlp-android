@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="operation_mode_entries">
+        <item>Online mode</item>
+        <item>Offline mode</item>
+    </string-array>
+    <string-array name="operation_mode_values">
+        <item>online</item>
+        <item>offline</item>
+    </string-array>
+</resources>

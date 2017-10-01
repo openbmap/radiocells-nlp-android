@@ -44,6 +44,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
+import static org.openbmap.unifiedNlp.utils.LogToFile.appendLog;
+
 public class OfflineProvider extends AbstractProvider implements ILocationProvider {
 
     // Default accuracy for wifi results (in meter)
@@ -220,7 +222,7 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                         //Log.d(TAG, sql);
                         try {
                             c = mCatalog.rawQuery(wifiSql, wifiQueryArgs);
-                            boolean zero = c.getCount() == 0;
+                            appendLog(TAG, String.format("Found %d known wifis", c.getCount()));
                             Log.i(TAG, String.format("Found %d known wifis", c.getCount()));
                             for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
                                 Location location = new Location(TAG);
@@ -235,15 +237,7 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                                 locations.put(c.getString(2), location);
                                 state |= WIFIS_MATCH;
                             }
-                            c.close();
-                            
-                            if(zero) {
-                                c = mCatalog.rawQuery("SELECT count(0) FROM wifi_zone",
-                                                    new String[0]);
-                                c.moveToFirst();
-                                c.close();
-                            }
-                            
+                            c.close();                            
                         } catch (SQLiteException e) {
                             Log.e(TAG, "SQLiteException! Update your database!");
                             state |= WIFI_DATABASE_NA;
@@ -279,6 +273,7 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                         String cellSql = "SELECT AVG(latitude), AVG(longitude), mcc, mnc, area, cid FROM cell_zone WHERE " + whereClause + " GROUP BY mcc, mnc, area, cid";
                         try {
                             c = mCatalog.rawQuery(cellSql, cellQueryArgs.toArray(new String[0]));
+                            appendLog(TAG, String.format("Found %d known cells", c.getCount()));
                             Log.i(TAG, String.format("Found %d known cells", c.getCount()));
                             if (c.getCount() == 0) {
                                 c.close();
@@ -298,6 +293,7 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                                 }
                                 cellSql = "SELECT AVG(latitude), AVG(longitude), mcc, mnc, area, cid FROM cell_zone WHERE " + whereClause + " GROUP BY mcc, mnc, area, cid";
                                 c = mCatalog.rawQuery(cellSql, cellQueryArgs.toArray(new String[0]));
+                                appendLog(TAG, String.format("Found %d known cells", c.getCount()));
                                 Log.i(TAG, String.format("Found %d known cells", c.getCount()));
                             }
                             
@@ -328,6 +324,8 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
 
                     resultIds = locations.keySet().toArray(new String[0]);
 
+                    appendLog(TAG, ":resultIds:" + ((resultIds.length > 0)?resultIds[0]:"") + ":" + resultIds.length);
+                    
                     if (resultIds.length == 0) {
                         return null;
                     } else if (resultIds.length == 1) {
@@ -507,7 +505,8 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
             @Override
             protected void onPostExecute(Location result) {
                 if (result == null) {
-                    Log.w(TAG, "Location was null");
+                    Log.d(TAG, "Broadcasting location" + result);
+                    mListener.onLocationReceived(result);
                     return;
                 }
 
