@@ -411,7 +411,9 @@ public class SettingsActivity extends PreferenceActivity implements ICatalogChoo
                                 onDownloadCompleted(uriString);
                             } else {
                                 final int reason = c.getInt(c.getColumnIndex(DownloadManager.COLUMN_REASON));
-                                Toast.makeText(SettingsActivity.this, String.format(getString(R.string.download_failed), reason), Toast.LENGTH_LONG).show();
+                                Toast.makeText(SettingsActivity.this,
+                                        String.format(getString(R.string.download_failed),
+                                                String.valueOf(reason)), Toast.LENGTH_LONG).show();
                                 Log.e(TAG, "Download failed: " + reason);
                             }
                         }

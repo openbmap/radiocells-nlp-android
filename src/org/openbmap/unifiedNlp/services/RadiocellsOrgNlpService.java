@@ -45,11 +45,12 @@ import android.telephony.gsm.GsmCellLocation;
 import android.util.Log;
 
 import org.microg.nlp.api.LocationBackendService;
-import org.openbmap.unifiedNlp.Geocoder.ILocationCallback;
-import org.openbmap.unifiedNlp.Geocoder.ILocationProvider;
-import org.openbmap.unifiedNlp.Geocoder.OfflineProvider;
-import org.openbmap.unifiedNlp.Geocoder.OnlineProvider;
 import org.openbmap.unifiedNlp.Preferences;
+import org.openbmap.unifiedNlp.geocoders.ILocationCallback;
+import org.openbmap.unifiedNlp.geocoders.ILocationProvider;
+import org.openbmap.unifiedNlp.geocoders.OfflineProvider;
+import org.openbmap.unifiedNlp.geocoders.OnlineProvider;
+import org.openbmap.unifiedNlp.models.Cell;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -62,8 +63,8 @@ import org.openbmap.unifiedNlp.utils.LogToFile;
 import static org.openbmap.unifiedNlp.utils.LogToFile.appendLog;
 
 @SuppressLint("NewApi")
-public class OpenbmapNlpService extends LocationBackendService implements ILocationCallback {
-    private static final String TAG = OpenbmapNlpService.class.getName();
+public class RadiocellsOrgNlpService extends LocationBackendService implements ILocationCallback {
+    private static final String TAG = RadiocellsOrgNlpService.class.getName();
 
     /**
      * Minimum interval between two queries
@@ -152,16 +153,10 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
         result.put(TelephonyManager.NETWORK_TYPE_IDEN, "IDEN");
 
         // add new network types not available in all revisions
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {
-            result.put(TelephonyManager.NETWORK_TYPE_EVDO_B, "EDV0_B");
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-            result.put(TelephonyManager.NETWORK_TYPE_LTE, "LTE");
-            result.put(TelephonyManager.NETWORK_TYPE_EHRPD, "eHRPD");
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
-            result.put(TelephonyManager.NETWORK_TYPE_HSPAP, "HSPA+");
-        }
+        result.put(TelephonyManager.NETWORK_TYPE_EVDO_B, "EDV0_B");
+        result.put(TelephonyManager.NETWORK_TYPE_LTE, "LTE");
+        result.put(TelephonyManager.NETWORK_TYPE_EHRPD, "eHRPD");
+        result.put(TelephonyManager.NETWORK_TYPE_HSPAP, "HSPA+");
 
         return Collections.unmodifiableMap(result);
 
@@ -175,7 +170,7 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
         LogToFile.logToFileEnabled = PreferenceManager.getDefaultSharedPreferences(this).getBoolean(Preferences.KEY_DEBUG_TO_FILE, false);
         LogToFile.logFileHoursOfLasting = Integer.valueOf(PreferenceManager.getDefaultSharedPreferences(this).getString(Preferences.KEY_DEBUG_FILE_LASTING_HOURS, "24"));
         
-        wifiManager = (WifiManager) getSystemService(WIFI_SERVICE);
+        wifiManager = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
 
         mWifiLock = wifiManager.createWifiLock(WifiManager.WIFI_MODE_SCAN_ONLY, "SCAN_LOCK");
         if(!mWifiLock.isHeld()){
@@ -232,7 +227,7 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
     }
         
     private PendingIntent getIntentToGetCellsOnly() {
-        Intent intent = new Intent(getBaseContext(), OpenbmapNlpService.class);
+        Intent intent = new Intent(getBaseContext(), RadiocellsOrgNlpService.class);
         intent.setAction("org.openbmap.unifiedNlp.LOCATION_UPDATE_CELLS_ONLY");
         return PendingIntent.getService(getBaseContext(),
                                               0,
@@ -545,7 +540,7 @@ public class OpenbmapNlpService extends LocationBackendService implements ILocat
     
     /**
      * Checks whether we can scan wifis
-     * @return
+     * @return true if wifi is enabled or background scanning allowed
      */
     public boolean isWifiSupported() {
         return ((wifiManager != null) && (wifiManager.isWifiEnabled() || ((Build.VERSION.SDK_INT >= 18) &&

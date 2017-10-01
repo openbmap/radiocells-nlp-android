@@ -15,7 +15,7 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.openbmap.unifiedNlp.Geocoder;
+package org.openbmap.unifiedNlp.geocoders;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
@@ -34,9 +34,9 @@ import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
-import org.openbmap.services.wireless.blacklists.SsidBlackList;
+import org.openbmap.unifiedNlp.utils.SsidBlackList;
 import org.openbmap.unifiedNlp.Preferences;
-import org.openbmap.unifiedNlp.services.Cell;
+import org.openbmap.unifiedNlp.models.Cell;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -132,11 +132,11 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                     throw new IllegalArgumentException("No catalog database was specified");
                 }
 
-                List<ScanResult> wifiListRaw = ((LocationQueryParams) params[0]).wifiList;
-                List<Cell> cellsListRaw = ((LocationQueryParams) params[0]).cellsList;
-                HashMap<String, ScanResult> wifiList = new HashMap<String, ScanResult>();
-                List<Cell> cellsList = new ArrayList<Cell>();
-                HashMap<String, Location> locations = new HashMap<String, Location>();
+                List<ScanResult> wifiListRaw = params[0].wifiList;
+                List<Cell> cellsListRaw = params[0].cellsList;
+                HashMap<String, ScanResult> wifiList = new HashMap<>();
+                List<Cell> cellsList = new ArrayList<>();
+                HashMap<String, Location> locations = new HashMap<>();
                 String[] resultIds = new String[0];
                 ArrayList<String> cellResults = new ArrayList<>();
                 Location result = null;

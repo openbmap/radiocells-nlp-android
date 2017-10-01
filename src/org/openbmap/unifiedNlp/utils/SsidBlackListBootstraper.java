@@ -17,7 +17,7 @@ Radiobeacon - Openbmap wifi and cell logger
  */
 
 
-package org.openbmap.services.wireless.blacklists;
+package org.openbmap.unifiedNlp.utils;
 
 import android.util.Log;
 

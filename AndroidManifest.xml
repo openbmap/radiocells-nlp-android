@@ -1,12 +1,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="org.openbmap.unifiedNlp"
     android:sharedUserId="org.openbmap"
-    android:versionCode="18"
-    android:versionName="0.2.6">
+    android:versionCode="20"
+    android:versionName="0.2.8">
 
     <uses-sdk
         android:minSdkVersion="17"
-        android:targetSdkVersion="21" />
+        android:targetSdkVersion="26" />
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
@@ -30,9 +30,9 @@
             android:label="@string/preferences"/>
         
         <service
-            android:name="org.openbmap.unifiedNlp.services.OpenbmapNlpService"
+            android:name="org.openbmap.unifiedNlp.services.RadiocellsOrgNlpService"
             android:exported="true"
-            android:label="Openbmap Unified Network Location Provider Backend"
+            android:label="Radiocells.org Unified Network Location Provider Backend"
             android:permission="android.permission.ACCESS_COARSE_LOCATION">
             <intent-filter>
                 <action android:name="org.microg.nlp.LOCATION_BACKEND" />

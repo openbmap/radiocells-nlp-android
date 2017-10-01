@@ -15,7 +15,7 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-package org.openbmap.unifiedNlp.Geocoder;
+package org.openbmap.unifiedNlp.geocoders;
 
 import android.content.Context;
 import android.location.Location;
@@ -27,7 +27,7 @@ import android.util.Log;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.openbmap.unifiedNlp.services.Cell;
+import org.openbmap.unifiedNlp.models.Cell;
 import org.openbmap.unifiedNlp.services.JSONParser;
 
 import java.util.ArrayList;
@@ -41,7 +41,7 @@ public class OnlineProvider extends AbstractProvider implements ILocationProvide
     /**
      * Geolocation service
      */
-    private static final String REQUEST_URL = "https://%s.radiocells.org/geolocate";
+        private static final String REQUEST_URL = "https://%s.radiocells.org/geolocate";
 
     /**
      * Query extra debug information from webservice
@@ -128,29 +128,34 @@ public class OnlineProvider extends AbstractProvider implements ILocationProvide
 
                 try {
                     Log.i(TAG, "JSON response: " + jsonData.toString());
-                    String source = jsonData.getString("source");
-                    JSONObject location = jsonData.getJSONObject("location");
-                    Double lat = location.getDouble("lat");
-                    Double lon = location.getDouble("lng");
-                    Long acc = jsonData.getLong("accuracy");
-                    Location result = new Location(TAG);
-                    result.setLatitude(lat);
-                    result.setLongitude(lon);
-                    result.setAccuracy(acc);
-                    result.setTime(System.currentTimeMillis());
 
-                    Bundle b = new Bundle();
-                    b.putString("source", source);
-                    b.putStringArrayList("bssids", mWifiQuery);
-                    b.putStringArrayList("cells", mCellQuery);
-                    result.setExtras(b);
+                    if (jsonData.has("resultType") && !jsonData.getString("resultType").equals("error")) {
+                        String source = jsonData.getString("source");
+                        JSONObject location = jsonData.getJSONObject("location");
+                        Double lat = location.getDouble("lat");
+                        Double lon = location.getDouble("lng");
+                        Long acc = jsonData.getLong("accuracy");
+                        Location result = new Location(TAG);
+                        result.setLatitude(lat);
+                        result.setLongitude(lon);
+                        result.setAccuracy(acc);
+                        result.setTime(System.currentTimeMillis());
 
-                    if (plausibleLocationUpdate(result)) {
-                        setLastLocation(result);
-                        setLastFix(System.currentTimeMillis());
-                        mListener.onLocationReceived(result);
+                        Bundle b = new Bundle();
+                        b.putString("source", source);
+                        b.putStringArrayList("bssids", mWifiQuery);
+                        b.putStringArrayList("cells", mCellQuery);
+                        result.setExtras(b);
+
+                        if (plausibleLocationUpdate(result)) {
+                            setLastLocation(result);
+                            setLastFix(System.currentTimeMillis());
+                            mListener.onLocationReceived(result);
+                        } else {
+                            Log.i(TAG, "Strange location, ignoring");
+                        }
                     } else {
-                        Log.i(TAG, "Strange location, ignoring");
+                        Log.w(TAG, "Server returned error, maybe not found / bad query?");
                     }
                 } catch (JSONException e) {
                     Log.e(TAG, "Error parsing JSON:" + e.getMessage());
