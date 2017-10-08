@@ -27,7 +27,7 @@
     <string name="operation_mode_category">オペレーションモード</string>
     <string name="source_summary">ジオロケーションに使用するデータを選択\n(WiFi と基地局、WiFi のみ、基地局のみ)</string>
     <string name="source_title">基地局/WiFiを使用しますか?</string>
-    <string name="download_failed">ダウンロードに失敗しました! (エラーコード %d)</string>
+    <string name="download_failed">ダウンロードに失敗しました! (エラーコード %s)</string>
     <string name="preferences">設定</string>
     <string name="new_folder">新しいフォルダーを作成</string>
     <string name="invalid_download">無効なダウンロード</string>

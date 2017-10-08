@@ -69,17 +69,8 @@
             android:key="debug.file.lasting.hours"
             android:summary="@string/log_file_lasting_summary"
             android:title="@string/log_file_lasting_title"/>
-        <com.github.angads25.filepicker.view.FilePickerPreference
-            xmlns:app="http://schemas.android.com/apk/res-auto"
-            android:key="debug.log.file"
-            android:title="Pick file for logging"
-            android:summary="Pick file for logging"
-            android:defaultValue="/sdcard:/mnt"
-            app:title_text="Select log file"
-            app:error_dir="/mnt"
-            app:root_dir="/"
-            app:selection_mode="single_mode"
-            app:selection_type="dir_select" />
+        <Preference android:title="@string/debug_choose_file"
+            android:key="debug.log.file" />
     </PreferenceCategory>
     <Preference
         android:key="version"

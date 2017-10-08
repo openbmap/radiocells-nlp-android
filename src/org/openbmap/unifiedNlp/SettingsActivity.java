@@ -38,6 +38,8 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.obsez.android.lib.filechooser.ChooserDialog;
+
 import org.openbmap.unifiedNlp.utils.DirectoryChooserDialog;
 import org.openbmap.unifiedNlp.utils.FileHelpers;
 import org.openbmap.unifiedNlp.utils.MediaScanner;
@@ -296,26 +298,29 @@ public class SettingsActivity extends PreferenceActivity implements ICatalogChoo
     }
 
     private void initLogFileChooser() {
-        Preference logFilePicker = (Preference) findPreference(Preferences.KEY_DEBUG_FILE);
-        logFilePicker.setSummary(PreferenceManager.getDefaultSharedPreferences(SettingsActivity.this).getString(Preferences.KEY_DEBUG_FILE,""));
-        logFilePicker.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
-
+        Preference buttonFileLog = findPreference(Preferences.KEY_DEBUG_FILE);
+        buttonFileLog.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
-            public boolean onPreferenceChange(Preference preference, Object value) {
-                String newPaths = (String) value;
-                
-                int indexOfLastColon = newPaths.indexOf(":");
-                
-                String newLogFileName = newPaths.substring(0, indexOfLastColon) + "/log-openbmapnlpservice.txt";
-                
-                Preference logFilePicker = findPreference(Preferences.KEY_DEBUG_FILE);
-                logFilePicker.getEditor().putString(Preferences.KEY_DEBUG_FILE, newLogFileName).apply();
-                LogToFile.logFilePathname = newLogFileName;
-                logFilePicker.setSummary(PreferenceManager.getDefaultSharedPreferences(SettingsActivity.this).getString(Preferences.KEY_DEBUG_FILE,""));
-                return false;
+            public boolean onPreferenceClick(final Preference preference) {
+                new ChooserDialog().with(SettingsActivity.this)
+                        .withFilter(true, false)
+                        .withStartFile("/mnt")
+                        .withChosenListener(new ChooserDialog.Result() {
+                            @Override
+                            public void onChoosePath(String path, File pathFile) {
+                                String logFileName = path + "/log-openbmapnlpservice.txt";
+                                LogToFile.logFilePathname = logFileName;
+                                SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(SettingsActivity.this);
+                                preferences.edit().putString(Preferences.KEY_DEBUG_FILE, logFileName).apply();
+                                preference.setSummary(preferences.getString(Preferences.KEY_DEBUG_FILE,""));
+                            }
+                        })
+                        .build()
+                        .show();
+                return true;
             }
         });
-        
+
         Preference logToFilePicker = (Preference) findPreference(Preferences.KEY_DEBUG_TO_FILE);
         logToFilePicker.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
 
