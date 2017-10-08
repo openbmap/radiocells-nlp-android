@@ -29,9 +29,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
-import android.net.wifi.WifiManager.WifiLock;
 import android.os.Bundle;
-import android.os.PowerManager.WakeLock;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.Preference.OnPreferenceChangeListener;
@@ -39,6 +37,8 @@ import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Toast;
+
+import com.obsez.android.lib.filechooser.ChooserDialog;
 
 import org.openbmap.unifiedNlp.utils.DirectoryChooserDialog;
 import org.openbmap.unifiedNlp.utils.FileHelpers;
@@ -49,6 +49,7 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
+import org.openbmap.unifiedNlp.utils.LogToFile;
 
 /**
  * Preferences activity.
@@ -61,18 +62,15 @@ public class SettingsActivity extends PreferenceActivity implements ICatalogChoo
 
     private BroadcastReceiver mReceiver = null;
 
-    private boolean mIsDownloading;
-    private WakeLock mWakeLock;
-    private WifiLock mWifiLock;
-
-    private long mCurrentCatalogDownloadId;
-
     @Override
     protected final void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         addPreferencesFromResource(R.xml.preferences);
 
         registerDownloadManager();
+        
+        initLogFileChooser();
+        initLogFileLasting();
 
         initFolderChooser();
 
@@ -114,6 +112,8 @@ public class SettingsActivity extends PreferenceActivity implements ICatalogChoo
         }
 
         pref.setSummary(version + " (" + readBuildInfo() + ")");
+        
+        initWakeUpStrategy();
     }
 
     @Override
@@ -125,20 +125,46 @@ public class SettingsActivity extends PreferenceActivity implements ICatalogChoo
 
     @Override
     protected final void onDestroy() {
-        if (mWakeLock != null && mWakeLock.isHeld()) {
-            mWakeLock.release();
-        }
-
-        if (mWifiLock != null && mWifiLock.isHeld()) {
-            mWifiLock.release();
-        }
-
         if (mReceiver != null) {
             unregisterReceiver(mReceiver);
         }
         super.onDestroy();
     }
-
+    
+    private void initWakeUpStrategy() {
+        Preference wakeUpStrategy = findPreference(Preferences.KEY_WAKE_UP_STRATEGY);
+        wakeUpStrategy.setSummary(
+                getWakeUpStrategyLabel(
+                        PreferenceManager.getDefaultSharedPreferences(SettingsActivity.this).getString(Preferences.KEY_WAKE_UP_STRATEGY, "nowakeup")
+                )
+        );
+        wakeUpStrategy.setOnPreferenceChangeListener(new OnPreferenceChangeListener() {
+            @Override
+            public boolean onPreferenceChange(Preference wakeUpStrategy, Object value) {
+                String wakeUpStrategyValue = (String) value;
+                wakeUpStrategy.setSummary(getString(getWakeUpStrategyLabel(wakeUpStrategyValue)));
+                return true;
+            }
+        });
+    }
+    
+    private int getWakeUpStrategyLabel(String wakeUpStrategyValue) {
+        int wakeUpStrategyId;
+        switch (wakeUpStrategyValue) {
+            case "wakeuppartial":
+                wakeUpStrategyId = R.string.wakeuppartial_label;
+                break;
+            case "wakeupfull":
+                wakeUpStrategyId = R.string.wakeupfull_label;
+                break;
+            case "nowakeup":
+            default:
+                wakeUpStrategyId = R.string.nowakeup_label;
+                break;
+        }
+        return wakeUpStrategyId;
+    }
+    
     private void showCatalogDownloadDialog() {
         DialogPreferenceCatalogs catalogs = (DialogPreferenceCatalogs) findPreference(Preferences.KEY_CATALOGS_DIALOG);
         catalogs.showDialog(null);
@@ -271,6 +297,87 @@ public class SettingsActivity extends PreferenceActivity implements ICatalogChoo
         });
     }
 
+    private void initLogFileChooser() {
+        Preference buttonFileLog = findPreference(Preferences.KEY_DEBUG_FILE);
+        buttonFileLog.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+            @Override
+            public boolean onPreferenceClick(final Preference preference) {
+                new ChooserDialog().with(SettingsActivity.this)
+                        .withFilter(true, false)
+                        .withStartFile("/mnt")
+                        .withChosenListener(new ChooserDialog.Result() {
+                            @Override
+                            public void onChoosePath(String path, File pathFile) {
+                                String logFileName = path + "/log-openbmapnlpservice.txt";
+                                LogToFile.logFilePathname = logFileName;
+                                SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(SettingsActivity.this);
+                                preferences.edit().putString(Preferences.KEY_DEBUG_FILE, logFileName).apply();
+                                preference.setSummary(preferences.getString(Preferences.KEY_DEBUG_FILE,""));
+                            }
+                        })
+                        .build()
+                        .show();
+                return true;
+            }
+        });
+
+        Preference logToFilePicker = (Preference) findPreference(Preferences.KEY_DEBUG_TO_FILE);
+        logToFilePicker.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+
+            @Override
+            public boolean onPreferenceChange(Preference preference, Object value) {
+                boolean logToFile = (Boolean) value;
+                preference.getEditor().putBoolean(Preferences.KEY_DEBUG_TO_FILE, logToFile).apply();
+                LogToFile.logToFileEnabled = logToFile;
+                return true;
+            }
+        });
+    }
+    
+    private void initLogFileLasting() {
+        Preference logFileLasting = findPreference(Preferences.KEY_DEBUG_FILE_LASTING_HOURS);
+        logFileLasting.setSummary(
+                getLogFileLastingLabel(Integer.parseInt(
+                        PreferenceManager.getDefaultSharedPreferences(SettingsActivity.this).getString(Preferences.KEY_DEBUG_FILE_LASTING_HOURS, "24"))
+                )
+        );
+        logFileLasting.setOnPreferenceChangeListener(new OnPreferenceChangeListener() {
+            @Override
+            public boolean onPreferenceChange(Preference logFileLasting, Object value) {
+                Integer logFileLastingHours = Integer.valueOf((String) value);
+                logFileLasting.setSummary(getString(getLogFileLastingLabel(logFileLastingHours)));
+                LogToFile.logFileHoursOfLasting = logFileLastingHours;
+                return true;
+            }
+        });
+    }
+    
+    private int getLogFileLastingLabel(int logFileLastingValue) {
+        int logFileLastingId;
+        switch (logFileLastingValue) {
+            case 12:
+                logFileLastingId = R.string.log_file_12_label;
+                break;
+            case 48:
+                logFileLastingId = R.string.log_file_48_label;
+                break;
+            case 72:
+                logFileLastingId = R.string.log_file_72_label;
+                break;
+            case 168:
+                logFileLastingId = R.string.log_file_168_label;
+                break;
+            case 720:
+                logFileLastingId = R.string.log_file_720_label;
+                break;
+            case 24:
+            default:
+                logFileLastingId = R.string.log_file_24_label;
+                break;
+        }
+        return logFileLastingId;
+    }
+    
     /**
      * Lets user select source for geolocation (wifis, cells, combined)
      */
@@ -476,7 +583,7 @@ public class SettingsActivity extends PreferenceActivity implements ICatalogChoo
                 // e.g. on second SD card a security exception is thrown
                 final DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url));
                 request.setDestinationUri(Uri.fromFile(target));
-                mCurrentCatalogDownloadId = dm.enqueue(request);
+                dm.enqueue(request);
             } catch (final SecurityException sec) {
                 // download to temp dir and try to move to target later
                 Log.w(TAG, "Security exception, can't write to " + target + ", using " + getExternalCacheDir());
@@ -484,7 +591,7 @@ public class SettingsActivity extends PreferenceActivity implements ICatalogChoo
 
                 final DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url));
                 request.setDestinationUri(Uri.fromFile(tempFile));
-                mCurrentCatalogDownloadId = dm.enqueue(request);
+                dm.enqueue(request);
             }
         } else {
             Toast.makeText(this, R.string.error_save_file_failed, Toast.LENGTH_SHORT).show();

@@ -28,17 +28,19 @@ apply plugin: 'com.android.application'
 
 repositories {
     mavenCentral()
+    jcenter()
 }
 
 dependencies {
     compile group: 'org.microg', name: 'unifiednlp-api', version: '1.5.4'
     compile 'ch.acra:acra:4.5.0'
     compile 'com.android.support:support-v4:25.3.1'
+    compile 'com.obsez.android.lib.filechooser:filechooser:1.1.5'
 }
 
 android {
     compileSdkVersion 21
-    buildToolsVersion '25.0.3'
+    buildToolsVersion "25.0.3"
     lintOptions.abortOnError false
 
     sourceSets {
