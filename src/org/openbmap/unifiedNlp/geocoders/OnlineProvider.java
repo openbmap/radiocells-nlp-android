@@ -180,11 +180,6 @@ public class OnlineProvider extends AbstractProvider implements ILocationProvide
                 try {
                     // add wifi objects
                     JSONArray jsonArray = new JSONArray();
-                    if (mDebug) {
-                        JSONObject object = new JSONObject();
-                        object.put("debug", "1");
-                        jsonArray.put(object);
-                    }
 
                     for (String s : wifis) {
                         JSONObject object = new JSONObject();
@@ -193,6 +188,11 @@ public class OnlineProvider extends AbstractProvider implements ILocationProvide
                         jsonArray.put(object);
                     }
                     if (jsonArray.length() > 0) {
+                        if (mDebug) {
+                            JSONObject object = new JSONObject();
+                            object.put("debug", "1");
+                            jsonArray.put(object);
+                        }
                         root.put("wifiAccessPoints", jsonArray);
                     }
 
