@@ -17,6 +17,7 @@
 */
 package org.openbmap.unifiedNlp;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.DownloadManager;
@@ -37,6 +38,8 @@ import android.preference.Preference;
 import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -56,21 +59,47 @@ import java.io.InputStream;
 public class SettingsActivity extends PreferenceActivity implements ICatalogChooser {
 
     private static final String TAG = SettingsActivity.class.getSimpleName();
+    private static final int MY_PERMISSIONS_REQUEST_COARSE_LOCATION = 121212;
 
     private DownloadManager mDownloadManager;
 
     private BroadcastReceiver mReceiver = null;
 
-    private boolean mIsDownloading;
-    private WakeLock mWakeLock;
-    private WifiLock mWifiLock;
-
     private long mCurrentCatalogDownloadId;
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,  String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case MY_PERMISSIONS_REQUEST_COARSE_LOCATION: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    // permission was granted, yay! Do the
+                    // contacts-related task you need to do.
+                } else {
+                    // permission denied, boo! Disable the
+                    // functionality that depends on this permission.
+                    Toast.makeText(this, "We're sorry: without location permission, we can't give you locations ;-)", Toast.LENGTH_LONG);
+                }
+                return;
+            }
+
+            // other 'case' lines to check for other
+            // permissions this app might request.
+        }
+    }
 
     @Override
     protected final void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         addPreferencesFromResource(R.xml.preferences);
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            Log.i(TAG, "Coarse Location permission is missing");
+
+            ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
+                        MY_PERMISSIONS_REQUEST_COARSE_LOCATION);
+        }
 
         registerDownloadManager();
 
@@ -125,14 +154,6 @@ public class SettingsActivity extends PreferenceActivity implements ICatalogChoo
 
     @Override
     protected final void onDestroy() {
-        if (mWakeLock != null && mWakeLock.isHeld()) {
-            mWakeLock.release();
-        }
-
-        if (mWifiLock != null && mWifiLock.isHeld()) {
-            mWifiLock.release();
-        }
-
         if (mReceiver != null) {
             unregisterReceiver(mReceiver);
         }
