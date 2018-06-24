@@ -218,7 +218,6 @@ public class SettingsActivity extends PreferenceActivity implements ICatalogChoo
 
         // Check for presence of database directory
         File folder = new File(catalogFolder);
-
         if (folder.exists() && folder.canRead()) {
             // List each map file
             String[] dbFiles = folder.list(new FilenameFilter() {

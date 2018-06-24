@@ -94,16 +94,6 @@ public final class Preferences {
     public static final String CATALOG_FILE_EXTENSION = ".sqlite";
 
     /**
-     * URL, where wifi/cell catalog with openbmap's preprocessed wifi positions can be downloaded
-     */
-    public static final String PLANET_DOWNLOAD_URL = "https://radiocells.org/openbmap/static/openbmap.sqlite";
-
-    /**
-     * URL to check for newer catalog files
-     */
-    public static final String PLANET_VERSION_URL = "https://radiocells.org/default/database_version.json";
-
-    /**
      * Server host name excluding final slash
      */
     public static final String SERVER_BASE = "https://radiocells.org";

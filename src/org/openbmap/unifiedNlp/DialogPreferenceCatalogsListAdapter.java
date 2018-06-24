@@ -35,10 +35,10 @@ public class DialogPreferenceCatalogsListAdapter extends BaseExpandableListAdapt
 
     private final SparseArray<DialogPreferenceCatalogsGroup> mGroups;
     private final ICatalogsListAdapterListener mCallback;
-    public LayoutInflater mInflater;
-    public Context mContext;
+    private LayoutInflater mInflater;
+    private Context mContext;
 
-    public DialogPreferenceCatalogsListAdapter(Context context, SparseArray<DialogPreferenceCatalogsGroup> groups, ICatalogsListAdapterListener callback) {
+    DialogPreferenceCatalogsListAdapter(Context context, SparseArray<DialogPreferenceCatalogsGroup> groups, ICatalogsListAdapterListener callback) {
         mGroups = groups;
         mContext = context;
         mInflater =  LayoutInflater.from(mContext);
