@@ -213,7 +213,8 @@ public class SettingsActivity extends PreferenceActivity implements ICatalogChoo
         String[] entries;
         String[] values;
 
-        MediaScanner m = new MediaScanner(this, new File(catalogFolder));
+        // rescan
+        new MediaScanner(this, new File(catalogFolder));
 
         // Check for presence of database directory
         File folder = new File(catalogFolder);
@@ -317,7 +318,6 @@ public class SettingsActivity extends PreferenceActivity implements ICatalogChoo
                 public void onReceive(final Context context, final Intent intent) {
                     final String action = intent.getAction();
                     if (DownloadManager.ACTION_DOWNLOAD_COMPLETE.equals(action)) {
-
                         final long downloadId = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, 0);
                         final DownloadManager.Query query = new DownloadManager.Query();
                         query.setFilterById(downloadId);
