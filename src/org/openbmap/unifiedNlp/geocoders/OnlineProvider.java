@@ -22,6 +22,7 @@ import android.location.Location;
 import android.net.wifi.ScanResult;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.renderscript.RenderScript;
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -48,6 +49,8 @@ public class OnlineProvider extends AbstractProvider implements ILocationProvide
      */
     private final boolean mDebug;
 
+    private final Context mContext;
+
     /**
      * Example wifi query JSON
      */
@@ -72,8 +75,9 @@ public class OnlineProvider extends AbstractProvider implements ILocationProvide
     private ArrayList<String> mCellQuery;
 
     public OnlineProvider(final Context context, final ILocationCallback listener, boolean debug) {
-        this.mListener = listener;
+        mListener = listener;
         mDebug = debug;
+        mContext = context;
         setLastFix(System.currentTimeMillis());
     }
 
@@ -95,7 +99,7 @@ public class OnlineProvider extends AbstractProvider implements ILocationProvide
             Log.i(TAG, "Using " + wifis.size() + " wifis for geolocation");
         } else
             Log.i(TAG, "No wifis supplied for geolocation");
-        
+
         new AsyncTask<Object, Void, JSONObject>() {
 
             @Override
@@ -112,7 +116,8 @@ public class OnlineProvider extends AbstractProvider implements ILocationProvide
                 Random r = new Random();
                 int idx = r.nextInt(3);
 
-                final String balancer = String.format(REQUEST_URL, new String[]{"a","b","c"}[idx]);
+                // balancing is handle by the server - so removed choice here
+                final String balancer = String.format(REQUEST_URL, new String[]{"a"}[idx]);
                 if (mDebug) {
                     Log.v(TAG, "Using balancer " + balancer);
                 }
@@ -164,7 +169,7 @@ public class OnlineProvider extends AbstractProvider implements ILocationProvide
 
             public JSONObject loadJSON(String url, ArrayList<String> wifiParams, List<Cell> cellParams) {
                 // Creating JSON Parser instance
-                JSONParser jParser = new JSONParser();
+                JSONParser jParser = new JSONParser(mContext.getApplicationContext());
                 JSONObject params = buildParams(wifiParams, cellParams);
                 return jParser.getJSONFromUrl(url, params);
             }
