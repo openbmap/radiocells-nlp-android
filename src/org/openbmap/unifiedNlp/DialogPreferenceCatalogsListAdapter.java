@@ -62,11 +62,11 @@ public class DialogPreferenceCatalogsListAdapter extends BaseExpandableListAdapt
     @Override
     public View getChildView(int groupPosition, final int childPosition, boolean isLastChild, View convertView, ViewGroup parent) {
         final CatalogDownload children = (CatalogDownload) getChild(groupPosition, childPosition);
-        TextView text = null;
+        TextView text;
         if (convertView == null) {
             convertView = mInflater.inflate(R.layout.dialogpreference_catalogs_detail, null);
         }
-        text = (TextView) convertView.findViewById(R.id.textView1);
+        text = convertView.findViewById(R.id.textView1);
         text.setText(children.getTitle());
         text.setTag(children.getUrl());
         convertView.setOnClickListener(new OnClickListener() {

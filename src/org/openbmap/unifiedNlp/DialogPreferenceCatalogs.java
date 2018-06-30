@@ -66,7 +66,7 @@ public class DialogPreferenceCatalogs extends DialogPreference implements ICatal
     protected void onBindDialogView(View v) {
         super.onBindDialogView(v);
         groups = new SparseArray<>();
-        ExpandableListView listView = (ExpandableListView) v.findViewById(R.id.list);
+        ExpandableListView listView = v.findViewById(R.id.list);
         mAdapter = new DialogPreferenceCatalogsListAdapter(getContext(), groups, this);
         listView.setAdapter(mAdapter);
 
@@ -94,7 +94,7 @@ public class DialogPreferenceCatalogs extends DialogPreference implements ICatal
     /**
      * Creates list of online maps
      */
-    public void populateListView() {
+    private void populateListView() {
         DialogPreferenceCatalogsGroup group = null;
         String name;
         int j = 0;
@@ -145,11 +145,11 @@ public class DialogPreferenceCatalogs extends DialogPreference implements ICatal
                 con.connect();
                 InputStream stream = con.getInputStream();
                 BufferedReader rd = new BufferedReader(new InputStreamReader(stream));
-                StringBuffer bf = new StringBuffer();
+                StringBuilder bf = new StringBuilder();
                 String line;
 
                 while ((line = rd.readLine()) != null) {
-                    bf.append(line+"\n");
+                    bf.append(line).append("\n");
                 }
                 json = bf.toString();
             } catch (Exception e) {
@@ -157,7 +157,7 @@ public class DialogPreferenceCatalogs extends DialogPreference implements ICatal
             }
 
             try {
-                JSONObject jObject = new JSONObject(json.toString());
+                JSONObject jObject = new JSONObject(json);
                 JSONArray arr;
                 arr = jObject.getJSONArray("downloads");
                 for (int i = 0; i < arr.length(); i++) {

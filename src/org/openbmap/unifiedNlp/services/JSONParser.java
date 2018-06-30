@@ -17,96 +17,81 @@
 */
 package org.openbmap.unifiedNlp.services;
 
+import android.content.Context;
 import android.util.Log;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.DefaultHttpClient;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.openbmap.unifiedNlp.BuildConfig;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
 public class JSONParser {
     private static final String TAG = JSONParser.class.getSimpleName();
     private static final String USER_AGENT = "Openbmap NLP/" + BuildConfig.VERSION_NAME;
 
-    private static InputStream is = null;
     private static JSONObject jObj = null;
-    private static String json = "";
 
-    // constructor
-    public JSONParser() {
+    public JSONParser(Context context) {
+
     }
 
     /**
-     * Sends a http post request
+     * Sends a http JSON post request
      *
-     * @param url JSON endpoint
+     * @param endpoint JSON endpoint
      * @param params JSON parameters
      * @return server reply
      */
-    public JSONObject getJSONFromUrl(String url, JSONObject params) {
-
+    public JSONObject getJSONFromUrl(String endpoint, JSONObject params) {
+        Log.v(TAG, "Online query " + params.toString());
         try {
-            DefaultHttpClient httpClient = new DefaultHttpClient();
-            HttpPost httpPost = new HttpPost(url);
-            //passes the results to a string builder/entity
-            StringEntity se = new StringEntity(params.toString());
+            URL url = new URL(endpoint);
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setRequestMethod("POST");
+            con.setRequestProperty("Content-Type", "application/json");
+            con.setRequestProperty("Accept","application/json");
+            con.setRequestProperty("User-Agent", USER_AGENT);
+            con.setDoOutput(true);
+            con.setDoInput(true);
+            con.connect();
 
-            //sets the post request as the resulting string
-            httpPost.setEntity(se);
-            //sets a request header so the page receving the request
-            //will know what to do with it
-            httpPost.setHeader("Accept", "application/json");
-            httpPost.setHeader("Content-type", "application/json");
-            httpPost.setHeader("User-Agent", USER_AGENT);
-            HttpResponse httpResponse = httpClient.execute(httpPost);
-            HttpEntity httpEntity = httpResponse.getEntity();
-            is = httpEntity.getContent();
+            OutputStream os = con.getOutputStream();
+            os.write(params.toString().getBytes("UTF-8"));
+            os.close();
 
             try {
-                BufferedReader reader = new BufferedReader(new InputStreamReader(is, "iso-8859-1"), 8);
-                StringBuilder sb = new StringBuilder();
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    sb.append(line + "n");
+                if (con.getResponseCode() == HttpURLConnection.HTTP_OK) {
+                    StringBuilder sb = new StringBuilder();
+                    String inputLine;
+                    BufferedInputStream is = new BufferedInputStream(con.getInputStream());
+                    BufferedReader br = new BufferedReader(new InputStreamReader(is));
+                    while ((inputLine = br.readLine()) != null) {
+                        sb.append(inputLine);
+                    }
+                    jObj = new JSONObject(sb.toString());
+                } else if (con.getResponseCode() == HttpURLConnection.HTTP_NOT_FOUND) {
+                    // do nothing - server reply for missing cell/wifi data
+                    jObj = null;
                 }
-                is.close();
-                json = sb.toString();
-            } catch (Exception e) {
-                Log.e(TAG, "Error converting result " + e.toString());
+                else {
+                    Log.i(TAG, "No results, code " + con.getResponseCode());
+                    jObj = null;
+                }
+                con.disconnect();
+            } catch (JSONException e) {
+                Log.e("JSON Parser", "Error parsing data " + e.toString());
             }
-
-            try {
-                httpEntity.consumeContent();
-            } catch (IOException e) {
-                Log.e(TAG, "Error closing http entity");
-            }
-
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        } catch (ClientProtocolException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
+            return jObj;
+        } catch (Exception e) {
+            Log.e(TAG, e.getMessage());
         }
 
-        // try parse the string to a JSON object
-        try {
-            jObj = new JSONObject(json);
-        } catch (JSONException e) {
-            Log.e("JSON Parser", "Error parsing data " + e.toString());
-        }
-        // return JSON String
-        return jObj;
-    }
+        return null;
+      }
 }

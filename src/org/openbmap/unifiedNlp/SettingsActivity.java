@@ -30,14 +30,13 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
-import android.net.wifi.WifiManager.WifiLock;
 import android.os.Bundle;
-import android.os.PowerManager.WakeLock;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
@@ -68,23 +67,19 @@ public class SettingsActivity extends PreferenceActivity implements ICatalogChoo
     private long mCurrentCatalogDownloadId;
 
     @Override
-    public void onRequestPermissionsResult(int requestCode,  String permissions[], int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], int[] grantResults) {
         switch (requestCode) {
             case MY_PERMISSIONS_REQUEST_COARSE_LOCATION: {
                 // If request is cancelled, the result arrays are empty.
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    // permission was granted, yay! Do the
-                    // contacts-related task you need to do.
+                    Log.i(TAG, "Location permission granted");
                 } else {
                     // permission denied, boo! Disable the
                     // functionality that depends on this permission.
-                    Toast.makeText(this, "We're sorry: without location permission, we can't give you locations ;-)", Toast.LENGTH_LONG);
+                    Toast.makeText(this, "We're sorry: without location permission, we can't give you locations ;-)",
+                            Toast.LENGTH_LONG).show();
                 }
-                return;
             }
-
-            // other 'case' lines to check for other
-            // permissions this app might request.
         }
     }
 
@@ -361,7 +356,7 @@ public class SettingsActivity extends PreferenceActivity implements ICatalogChoo
             MediaScanner m = new MediaScanner(this, new File(targetFolder.getAbsolutePath()));
 
             // if file has been downloaded to cache folder, move to target folder
-            if (file.indexOf(this.getExternalCacheDir().getPath()) > -1) {
+            if (file.contains(this.getExternalCacheDir().getPath())) {
                 try {
                     Log.i(TAG, "Moving file to" + targetFolder.getAbsolutePath());
                     String target = targetFolder.getAbsolutePath()+ File.separator + file;
@@ -382,14 +377,15 @@ public class SettingsActivity extends PreferenceActivity implements ICatalogChoo
      */
     public void activateCatalog(final String absoluteFile) {
 
-        if (new File(absoluteFile).exists() == false) {
-            Toast.makeText(this, String.format("File %s doesn't exists!", absoluteFile), Toast.LENGTH_LONG).show();
+        if (!new File(absoluteFile).exists()) {
+            Toast.makeText(this, String.format("File %s doesn't exists!", absoluteFile),
+                    Toast.LENGTH_LONG).show();
             return;
         }
 
         ListPreference lf = (ListPreference) findPreference(Preferences.KEY_OFFLINE_CATALOG_FILE);
         // get filename
-        String[] filenameArray = absoluteFile.split("\\/");
+        String[] filenameArray = absoluteFile.split("/");
         String file = filenameArray[filenameArray.length - 1];
 
         CharSequence[] values = lf.getEntryValues();
@@ -501,7 +497,6 @@ public class SettingsActivity extends PreferenceActivity implements ICatalogChoo
                 // download to temp dir and try to move to target later
                 Log.w(TAG, "Security exception, can't write to " + target + ", using " + getExternalCacheDir());
                 final File tempFile = new File(getExternalCacheDir() + File.separator + filename);
-
                 final DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url));
                 request.setDestinationUri(Uri.fromFile(tempFile));
                 mCurrentCatalogDownloadId = dm.enqueue(request);

@@ -22,7 +22,6 @@ import android.location.Location;
 import android.net.wifi.ScanResult;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.renderscript.RenderScript;
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -33,7 +32,6 @@ import org.openbmap.unifiedNlp.services.JSONParser;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 public class OnlineProvider extends AbstractProvider implements ILocationProvider {
 
@@ -84,7 +82,6 @@ public class OnlineProvider extends AbstractProvider implements ILocationProvide
     /**
      * Queries location for list of wifis
      */
-    @SuppressWarnings("unchecked")
     @Override
     public void getLocation(List<ScanResult> wifisList, List<Cell> cellsList) {
         ArrayList<String> wifis = new ArrayList<>();
@@ -101,7 +98,6 @@ public class OnlineProvider extends AbstractProvider implements ILocationProvide
             Log.i(TAG, "No wifis supplied for geolocation");
 
         new AsyncTask<Object, Void, JSONObject>() {
-
             @Override
             protected JSONObject doInBackground(Object... params) {
                 if (params == null) {
@@ -113,15 +109,11 @@ public class OnlineProvider extends AbstractProvider implements ILocationProvide
                     mCellQuery.add(temp.toString());
                 }
 
-                Random r = new Random();
-                int idx = r.nextInt(3);
-
                 // balancing is handle by the server - so removed choice here
+                //Random r = new Random();
+                int idx = 0; //r.nextInt(3);
                 final String balancer = String.format(REQUEST_URL, new String[]{"a"}[idx]);
-                if (mDebug) {
-                    Log.v(TAG, "Using balancer " + balancer);
-                }
-                return loadJSON(balancer, (ArrayList<String>) params[0], (List<Cell>) params[1]);
+                return queryServer(balancer, (ArrayList<String>) params[0], (List<Cell>) params[1]);
             }
 
             @Override
@@ -134,8 +126,8 @@ public class OnlineProvider extends AbstractProvider implements ILocationProvide
                 try {
                     Log.i(TAG, "JSON response: " + jsonData.toString());
 
-                    if (jsonData.has("resultType") && !jsonData.getString("resultType").equals("error")) {
-                        String source = jsonData.getString("source");
+                    if (jsonData.has("location")) {
+                        String source = jsonData.optString("source", "unknown");
                         JSONObject location = jsonData.getJSONObject("location");
                         Double lat = location.getDouble("lat");
                         Double lon = location.getDouble("lng");
@@ -167,7 +159,7 @@ public class OnlineProvider extends AbstractProvider implements ILocationProvide
                 }
             }
 
-            public JSONObject loadJSON(String url, ArrayList<String> wifiParams, List<Cell> cellParams) {
+            private JSONObject queryServer(String url, ArrayList<String> wifiParams, List<Cell> cellParams) {
                 // Creating JSON Parser instance
                 JSONParser jParser = new JSONParser(mContext.getApplicationContext());
                 JSONObject params = buildParams(wifiParams, cellParams);
@@ -176,16 +168,15 @@ public class OnlineProvider extends AbstractProvider implements ILocationProvide
 
             /**
              * Builds a JSON array with cell and wifi query
-             * @param wifis ArrayList containing bssids
-             * @param cells
+             * @param wifis bssids to query
+             * @param cells cells to query
              * @return JSON object
              */
-            public JSONObject buildParams(ArrayList<String> wifis, List<Cell> cells) {
+            private JSONObject buildParams(ArrayList<String> wifis, List<Cell> cells) {
                 JSONObject root = new JSONObject();
                 try {
                     // add wifi objects
                     JSONArray jsonArray = new JSONArray();
-
                     for (String s : wifis) {
                         JSONObject object = new JSONObject();
                         object.put("macAddress", s);

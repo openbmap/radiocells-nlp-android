@@ -34,9 +34,9 @@ import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
-import org.openbmap.unifiedNlp.utils.SsidBlackList;
 import org.openbmap.unifiedNlp.Preferences;
 import org.openbmap.unifiedNlp.models.Cell;
+import org.openbmap.unifiedNlp.utils.SsidBlackList;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -49,18 +49,18 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
     // Default accuracy for wifi results (in meter)
     public static final int DEFAULT_WIFI_ACCURACY = 30;
     // Default accuracy for cell results (in meter)
-    public static final int DEFAULT_CELL_ACCURACY = 3000;
+    private static final int DEFAULT_CELL_ACCURACY = 3000;
     // Assumed ratio between maximum and typical range
-    public static final int TYPICAL_RANGE_FACTOR = 7;
-    public static final String BLACKLIST_SUBDIR = "blacklists";
-    public static final String DEFAULT_SSID_BLOCK_FILE = "default_ssid.xml";
+    private static final int TYPICAL_RANGE_FACTOR = 7;
+    private static final String BLACKLIST_SUBDIR = "blacklists";
+    private static final String DEFAULT_SSID_BLOCK_FILE = "default_ssid.xml";
     private static final String TAG = OfflineProvider.class.getName();
     private ILocationCallback mListener;
 
     /**
      * Keeps the SharedPreferences.
      */
-    private SharedPreferences prefs = null;
+    private SharedPreferences prefs;
 
     /**
      * Database containing well-known wifis from openbmap.org.
@@ -209,12 +209,12 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                             Log.w(TAG, "Wifi tables not available. Check your database");
                             state |= WIFI_DATABASE_NA;
                         }
-                        String whereClause = "";
+                        StringBuilder whereClause = new StringBuilder();
                         for (String k : wifiQueryArgs) {
                             if (whereClause.length() > 1) {
-                                whereClause += " OR ";
+                                whereClause.append(" OR ");
                             }
-                            whereClause += " bssid = ?";
+                            whereClause.append(" bssid = ?");
                         }
                         final String wifiSql = "SELECT latitude, longitude, bssid FROM wifi_zone WHERE " + whereClause;
                         //Log.d(TAG, sql);
@@ -260,14 +260,14 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                             state |= CELLS_DATABASE_NA;
                         }
 
-                        String whereClause = "";
+                        StringBuilder whereClause = new StringBuilder();
                         List<String> cellQueryArgs = new ArrayList<>();
                         for (Cell k : cellsList) {
                             if (whereClause.length() > 1) {
-                                whereClause += " OR ";
+                                whereClause.append(" OR ");
                             }
                             Log.d(TAG, "Using " + k.toString());
-                            whereClause += " (cid = ? AND mcc = ? AND mnc = ? AND area = ?)";
+                            whereClause.append(" (cid = ? AND mcc = ? AND mnc = ? AND area = ?)");
                             cellQueryArgs.add(String.valueOf(k.cellId));
                             cellQueryArgs.add(String.valueOf(k.mcc));
                             cellQueryArgs.add(k.mnc);
@@ -283,14 +283,14 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                             if (c.getCount() == 0) {
                                 c.close();
                                 
-                                whereClause = "";
+                                whereClause = new StringBuilder();
                                 cellQueryArgs = new ArrayList<>();
                                 for (Cell k : cellsList) {
                                     if (whereClause.length() > 1) {
-                                        whereClause += " OR ";
+                                        whereClause.append(" OR ");
                                     }
                                     Log.d(TAG, "Using " + k.toString());
-                                    whereClause += " (cid = ? AND mcc = ? AND mnc = ? AND area = ?)";
+                                    whereClause.append(" (cid = ? AND mcc = ? AND mnc = ? AND area = ?)");
                                     cellQueryArgs.add(String.valueOf(k.cellId));
                                     cellQueryArgs.add(String.valueOf(k.mcc));
                                     cellQueryArgs.add(String.valueOf(Integer.valueOf(k.mnc)));
