@@ -25,7 +25,8 @@
         <activity
             android:name="org.openbmap.unifiedNlp.SettingsActivity"
             android:exported="true"
-            android:label="@string/preferences"/>
+            android:label="@string/preferences"
+            android:theme="@style/AppBaseTheme" />
 
         <service
             android:name="org.openbmap.unifiedNlp.services.RadiocellsOrgNlpService"
