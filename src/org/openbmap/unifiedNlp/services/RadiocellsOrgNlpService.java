@@ -160,6 +160,8 @@ public class RadiocellsOrgNlpService extends LocationBackendService implements I
     @Override
     protected void onOpen() {
         Log.i(TAG, "Opening " + TAG);
+
+
         wifiManager = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
 
         mWifiLock = wifiManager.createWifiLock(WifiManager.WIFI_MODE_SCAN_ONLY, "SCAN_LOCK");

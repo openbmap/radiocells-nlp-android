@@ -64,8 +64,6 @@ public class SettingsActivity extends PreferenceActivity implements ICatalogChoo
 
     private BroadcastReceiver mReceiver = null;
 
-    private long mCurrentCatalogDownloadId;
-
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], int[] grantResults) {
         switch (requestCode) {
@@ -487,6 +485,7 @@ public class SettingsActivity extends PreferenceActivity implements ICatalogChoo
             Log.i(TAG, String.format("Saving %s @ %s", url, folder.getAbsolutePath() + File.separator + filename));
 
             final DownloadManager dm = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
+            long mCurrentCatalogDownloadId;
             try {
                 // try to download to target. If target isn't below Environment.getExternalStorageDirectory(),
                 // e.g. on second SD card a security exception is thrown

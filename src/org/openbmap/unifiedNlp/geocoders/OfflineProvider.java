@@ -135,7 +135,7 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
                 HashMap<String, ScanResult> wifiList = new HashMap<>();
                 List<Cell> cellsList = new ArrayList<>();
                 HashMap<String, Location> locations = new HashMap<>();
-                String[] resultIds = new String[0];
+                String[] resultIds;
                 ArrayList<String> cellResults = new ArrayList<>();
                 Location result = null;
 
