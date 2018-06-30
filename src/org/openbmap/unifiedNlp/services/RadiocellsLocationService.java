@@ -58,8 +58,8 @@ import java.util.List;
 import java.util.Map;
 
 @SuppressLint("NewApi")
-public class RadiocellsOrgNlpService extends LocationBackendService implements ILocationCallback {
-    private static final String TAG = RadiocellsOrgNlpService.class.getName();
+public class RadiocellsLocationService extends LocationBackendService implements ILocationCallback {
+    private static final String TAG = RadiocellsLocationService.class.getName();
 
     /**
      * Minimum interval between two queries
@@ -129,7 +129,6 @@ public class RadiocellsOrgNlpService extends LocationBackendService implements I
         }
     };
 
-    @SuppressLint("InlinedApi")
     public static Map<Integer, String> TECHNOLOGY_MAP() {
         final Map<Integer, String> result = new HashMap<>();
         result.put(TelephonyManager.NETWORK_TYPE_UNKNOWN, "NA");
@@ -154,13 +153,11 @@ public class RadiocellsOrgNlpService extends LocationBackendService implements I
         result.put(TelephonyManager.NETWORK_TYPE_HSPAP, "HSPA+");
 
         return Collections.unmodifiableMap(result);
-
     }
 
     @Override
     protected void onOpen() {
         Log.i(TAG, "Opening " + TAG);
-
 
         wifiManager = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
 

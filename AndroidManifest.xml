@@ -29,7 +29,7 @@
             android:theme="@style/AppBaseTheme" />
 
         <service
-            android:name="org.openbmap.unifiedNlp.services.RadiocellsOrgNlpService"
+            android:name="org.openbmap.unifiedNlp.services.RadiocellsLocationService"
             android:exported="true"
             android:label="Radiocells.org Unified Network Location Provider Backend"
             android:permission="android.permission.ACCESS_COARSE_LOCATION">
