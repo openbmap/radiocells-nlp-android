@@ -1,22 +1,22 @@
 <resources>
     <string name="app_name" translatable="false">org.openbmap.unifiedNlpProvider</string>
     <string name="prefs_none">None</string>
-    <string name="operation_mode_summary">When using offline mode, be sure to press \'Update offline database\' below. Online mode queries the openbmap geolocation service and requires mobile data access</string>
+    <string name="operation_mode_summary">When using offline mode, be sure to press \'Update offline database\' below. Online mode queries the Radiocells.org geolocation service and requires mobile data access</string>
     <string name="operation_mode_title">Online/offline mode</string>
     <string name="wifi_catalog_title">Offline database</string>
-    <string name="wifi_catalog_summary">Select a offline database\nIf none is available, click \'Update offline database\'</string>
+    <string name="wifi_catalog_summary">Select a offline database\nIf none is available, tap \'Download offline database\'</string>
     <string name="database_folder_title">Database folder</string>
     <string name="database_folder_summary">Choose folder for offline database</string>
     <string name="debug_category_title">Debug</string>
     <string name="crash_report_summary_off">Don\'t send crash reports</string>
     <string name="crash_report_summary_on">Send crash reports</string>
     <string name="crash_reports_title">Crash reports</string>
-    <string name="version">Openbmap UnifiedNLP Provider</string>
-    <string name="using_online_mode">Using online mode!\nYou can download offline catalog any times later</string>
-    <string name="offline_catalog_n_a">No offline catalog found</string>
-    <string name="question_download_catalog">Download offline catalog now?</string>
+    <string name="version">Radiocells.org UnifiedNLP Provider</string>
+    <string name="using_online_mode">Using online mode!\nYou can download offline database any times later</string>
+    <string name="offline_catalog_n_a">No offline database found</string>
+    <string name="question_download_catalog">Download offline database now?</string>
     <string name="download_completed">Download completed</string>
-    <string name="warning_catalog_missing">Be warned!\nOffline geolocation won\'t work without offline catalog</string>
+    <string name="warning_catalog_missing">Be warned!\nOffline geolocation won\'t work without offline database</string>
     <string name="question_activate_offline_mode">Activate offline mode now?</string>
     <string name="using_offline_mode">Using offline mode!</string>
     <string name="yes">Yes</string>
@@ -36,7 +36,7 @@
     <string name="error_save_file_failed">Download failed! Check SD card/permissions!</string>
     <string name="prefs_check_server">Contacting server…</string>
     <string name="please_stay_patient">Please stay patient..</string>
-    <string name="prefs_download_wifi_catalog">Download Wifi Catalog</string>
-    <string name="prefs_download_wifi_catalog_summary">Current size (10–400MB depending on country)</string>
+    <string name="prefs_download_wifi_catalog">Download Offline Database</string>
+    <string name="prefs_download_wifi_catalog_summary">Size between 10–400MB depending on country</string>
     <string name="server_parsing_error">Error parsing server reply</string>
 </resources>
