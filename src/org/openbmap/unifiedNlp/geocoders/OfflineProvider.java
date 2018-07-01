@@ -98,6 +98,7 @@ public class OfflineProvider extends AbstractProvider implements ILocationProvid
         setLastFix(System.currentTimeMillis());
     }
 
+    @SuppressLint("StaticFieldLeak")
     @SuppressWarnings("unchecked")
     @Override
     public void getLocation(final List<ScanResult> wifiList, final List<Cell> cellsList) {

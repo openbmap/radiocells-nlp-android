@@ -17,6 +17,7 @@
 */
 package org.openbmap.unifiedNlp.geocoders;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.location.Location;
 import android.net.wifi.ScanResult;
@@ -82,6 +83,7 @@ public class OnlineProvider extends AbstractProvider implements ILocationProvide
     /**
      * Queries location for list of wifis
      */
+    @SuppressLint("StaticFieldLeak")
     @Override
     public void getLocation(List<ScanResult> wifisList, List<Cell> cellsList) {
         ArrayList<String> wifis = new ArrayList<>();
