@@ -1,22 +1,18 @@
-Openbmap Unified Network Location Provider is a module for offline geolocation with the UnifiedNLP framework.
+Radiocells.org Unified Network Location Provider is a geolocation module for the UnifiedNLP framework.
 License: AGPLv3
 
-UnifiedNLP (https://github.com/microg/android_packages_apps_UnifiedNlp) is a great framework, which intends to replace Google's propriertary geolocations services.
-Thereby UnifiedNLP is a pure backend framework, meaning it doesn't provide any geolocation mechanisms by itself.
-Instead you choose a concrete module which does the actual geolocation part.
+UnifiedNLP (https://github.com/microg/android_packages_apps_UnifiedNlp) is a great framework, which intends to replace Google's propriertary geolocations services. This provider is also compatible with the MicroG framework (https://microg.org/). UnifiedNLP provides the backend framework, but no actual geolocation mechanisms by itself. At this point the Radiocells.org geolocation module kicks in, but there's also a variety of other open source geolocation modules (e.g. Mozilla location service)
 
-The Openbmap geolocation module is one such module, but there's also a variety of other open source modules
-(e.g. opencellid or Mozilla location service)
+The Radiocells.org geolocation works either completly offline or online. For OFFLINE operation you need to download a copy of our geolocation database upfront (see 'Settings'!). Default setting is ONLINE mode. In this case a https request with currently visible cells and wifi bssids to our server to determine estimated location.
 
-You may operate this module completely OFFLINE, if you download a copy of our geolocation database (check 'Settings'!).
-Per default this module operates in ONLINE mode.
-
-In latter case this module sends a https request with currently visible cells and wifi bssids to our server, which in turn provides the estimated location.
-We promise not save any of this uploaded information, but if you're as privacy-aware as we are, you should choose the offline mode.
-By using offline mode you're doing our server a great favour anyways :-)
+Privacy notice: we might use ONLINE queries to improve the radiocells.org database. In particular we might use the query data to add geolocation for yet unknown wifis by combining wifi and cell query data (correlation data). Besides that we don't collect any personal identifiable data information (no device ids, no fingerprinting, no adware). If you're really privacy concerned, please use OFFLINE mode only! Thanks.
 
 History
 
+0.2.9
+   - added Android 7+ support (new permission system)
+   - fixed issues in ONLINE geolocation
+   
 0.2.2
    - major improvements on offline geolocation (thx mvglasow !!!! https://github.com/wish7code/org.openbmap.unifiedNlpProvider/pull/19)
    - switched to https completey
