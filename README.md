@@ -15,7 +15,11 @@ In latter case this module sends a https request with currently visible cells an
 We promise not save any of this uploaded information, but if you're as privacy-aware as we are, you should choose the offline mode.
 By using offline mode you're doing our server a great favour anyways :-)
 
-History
+[<img src="https://f-droid.org/badge/get-it-on.png"
+      alt="Get it on F-Droid"
+      height="80">](https://f-droid.org/packages/org.openbmap/)
+
+# History
 
 0.2.2
    - major improvements on offline geolocation (thx mvglasow !!!! https://github.com/wish7code/org.openbmap.unifiedNlpProvider/pull/19)
