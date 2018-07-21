@@ -7,6 +7,10 @@ The Radiocells.org geolocation works either completly offline or online. For OFF
 
 Privacy notice: we might use ONLINE queries to improve the radiocells.org database. In particular we might use the query data to add geolocation for yet unknown wifis by combining wifi and cell query data (correlation data). Besides that we don't collect any personal identifiable data information (no device ids, no fingerprinting, no adware). If you're really privacy concerned, please use OFFLINE mode only! Thanks.
 
+[<img src="https://f-droid.org/badge/get-it-on.png"
+      alt="Get it on F-Droid"
+      height="80">](https://f-droid.org/packages/org.openbmap/)
+
 History
 
 0.2.9
