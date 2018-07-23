@@ -29,8 +29,14 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.location.Criteria;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.Preference.OnPreferenceChangeListener;
@@ -51,17 +57,20 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import static org.microg.nlp.api.Constants.LOCATION_EXTRA_BACKEND_COMPONENT;
 
 /**
  * Preferences activity.
  */
-public class SettingsActivity extends PreferenceActivity implements ICatalogChooser {
+public class SettingsActivity extends PreferenceActivity implements ICatalogChooser, LocationListener {
 
     private static final String TAG = SettingsActivity.class.getSimpleName();
     private static final int MY_PERMISSIONS_REQUEST_COARSE_LOCATION = 121212;
 
     private DownloadManager mDownloadManager;
-
     private BroadcastReceiver mReceiver = null;
 
     @Override
@@ -72,13 +81,38 @@ public class SettingsActivity extends PreferenceActivity implements ICatalogChoo
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     Log.i(TAG, "Location permission granted");
                 } else {
-                    // permission denied, boo! Disable the
-                    // functionality that depends on this permission.
-                    Toast.makeText(this, "We're sorry: without location permission, we can't give you locations ;-)",
-                            Toast.LENGTH_LONG).show();
+                    // permission not granted (or revoked) - ask user again?
+                    requestPermission();
                 }
             }
         }
+    }
+
+    private void requestPermission() {
+        AlertDialog.Builder bld = new AlertDialog.Builder(this);
+        bld.setMessage(this.getString(R.string.app_name) + " won't work without location permission.\nGrant permission now?");
+        bld.setCancelable(true);
+        bld.setPositiveButton(
+                "Yes",
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        dialog.cancel();
+                        ActivityCompat.requestPermissions(SettingsActivity.this,
+                                new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
+                                MY_PERMISSIONS_REQUEST_COARSE_LOCATION);
+                    }
+                });
+        bld.setNegativeButton(
+                "No",
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        dialog.cancel();
+                        // permission denied, boo! Disable the
+                        // functionality that depends on this permission.
+                    }
+                });
+        AlertDialog alertDlg = bld.create();
+        alertDlg.show();
     }
 
     @Override
@@ -88,10 +122,7 @@ public class SettingsActivity extends PreferenceActivity implements ICatalogChoo
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             Log.i(TAG, "Coarse Location permission is missing");
-
-            ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
-                        MY_PERMISSIONS_REQUEST_COARSE_LOCATION);
+            requestPermission();
         }
 
         registerDownloadManager();
@@ -126,15 +157,55 @@ public class SettingsActivity extends PreferenceActivity implements ICatalogChoo
             dialog.show();
         }
 
-        Preference pref = findPreference(Preferences.KEY_VERSION_INFO);
+        Preference button = findPreference("test");
+        button.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+            @Override
+            public boolean onPreferenceClick(Preference preference) {
+                if (ActivityCompat.checkSelfPermission(SettingsActivity.this,
+                        Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
+                {
+                    Log.i(TAG, "Coarse location permission missing - abort");
+                    requestPermission();
+                    return true;
+                }
 
+                final LocationManager locationManager = (LocationManager) getSystemService(
+                        Context.LOCATION_SERVICE);
+
+                boolean networkEnabled = locationManager.getProviders(true).contains(
+                        LocationManager.NETWORK_PROVIDER);
+                Log.i(TAG, "Network provider enabled: " + networkEnabled);
+                if (!networkEnabled) {
+                    Toast.makeText(SettingsActivity.this,
+                            SettingsActivity.this.getString(R.string.warning_no_network_location),
+                            Toast.LENGTH_LONG).show();
+                }
+                Log.i(TAG, "Requesting network location");
+
+                // TODO use check as in https://github.com/microg/android_packages_apps_UnifiedNlp/blob/bf8682e00fa829d3c6041a3646afce9a264696da/unifiednlp-base/src/main/java/org/microg/tools/selfcheck/NlpStatusChecks.java
+                locationManager.requestSingleUpdate(LocationManager.NETWORK_PROVIDER,
+                        SettingsActivity.this, null);
+                Runnable myRunnable = new Runnable() {
+                    public void run() {
+                        Log.i(TAG, "Timeout reached");
+                        locationManager.removeUpdates(SettingsActivity.this);
+                        //Toast.makeText(TAG, "Timeout - no response received", Toast.LENGTH_LONG).show();
+                    }
+                };
+
+                Handler handler = new Handler();
+                handler.postDelayed(myRunnable, 10000);
+                return true;
+            }
+        });
+
+        Preference pref = findPreference(Preferences.KEY_VERSION_INFO);
         String version = "n/a";
         try {
             version = getPackageManager().getPackageInfo(this.getPackageName(), 0).versionName;
         } catch (PackageManager.NameNotFoundException e) {
             e.printStackTrace();
         }
-
         pref.setSummary(version + " (" + readBuildInfo() + ")");
     }
 
@@ -305,7 +376,6 @@ public class SettingsActivity extends PreferenceActivity implements ICatalogChoo
 
         if(mReceiver == null) {
             mReceiver = new BroadcastReceiver() {
-                @SuppressLint("NewApi")
                 @Override
                 public void onReceive(final Context context, final Intent intent) {
                     final String action = intent.getAction();
@@ -351,7 +421,7 @@ public class SettingsActivity extends PreferenceActivity implements ICatalogChoo
 
         if (extension.equals(Preferences.CATALOG_FILE_EXTENSION)) {
             final File targetFolder = new File(PreferenceManager.getDefaultSharedPreferences(this).getString(Preferences.KEY_DATA_FOLDER, this.getExternalFilesDir(null).getAbsolutePath()));
-            MediaScanner m = new MediaScanner(this, new File(targetFolder.getAbsolutePath()));
+            new MediaScanner(this, new File(targetFolder.getAbsolutePath()));
 
             // if file has been downloaded to cache folder, move to target folder
             if (file.contains(this.getExternalCacheDir().getPath())) {
@@ -503,5 +573,29 @@ public class SettingsActivity extends PreferenceActivity implements ICatalogChoo
         } else {
             Toast.makeText(this, R.string.error_save_file_failed, Toast.LENGTH_SHORT).show();
         }
+    }
+
+
+    @Override
+    public void onLocationChanged(Location location) {
+        Toast.makeText(this, location.toString(), Toast.LENGTH_LONG).show();
+        //Toast.makeText(this,location.getExtras().toString(), Toast.LENGTH_SHORT).show();
+        //boolean hasKnown = location != null && location.getExtras() != null &&
+        //        location.getExtras().containsKey("SERVICE_BACKEND_COMPONENT");
+    }
+
+    @Override
+    public void onStatusChanged(String s, int i, Bundle bundle) {
+
+    }
+
+    @Override
+    public void onProviderEnabled(String s) {
+
+    }
+
+    @Override
+    public void onProviderDisabled(String s) {
+
     }
 }

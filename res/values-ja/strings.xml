@@ -1,6 +1,6 @@
 <resources>
     <string name="prefs_none">なし</string>
-    <string name="operation_mode_summary">オフラインモードを使用するときは、下の \'オフラインデータベースを更新\' を押してください。 オンラインモードは openbmap ジオロケーションサービスに問い合わせし、モバイルデータアクセスが必要です</string>
+    <string name="operation_mode_summary">オフラインモードを使用するときは、下の \'オフラインデータベースを更新\' を押してください。 オンラインモードは Radiocells.org ジオロケーションサービスに問い合わせし、モバイルデータアクセスが必要です</string>
     <string name="operation_mode_title">オンライン/オフラインモード</string>
     <string name="wifi_catalog_title">オフラインデータベース</string>
     <string name="wifi_catalog_summary">オフラインデータベースを選択\n利用できるものがない場合は \'オフラインデータベースを更新\' をクリックしてください</string>
@@ -10,7 +10,7 @@
     <string name="crash_report_summary_off">クラッシュレポートを送信しない</string>
     <string name="crash_report_summary_on">クラッシュレポートを送信する</string>
     <string name="crash_reports_title">クラッシュレポート</string>
-    <string name="version">Openbmap ユニファイドNLP プロバイダー</string>
+    <string name="version">Radiocells.org ユニファイドNLP プロバイダー</string>
     <string name="using_online_mode">オンラインモードを使用します!\n後でいつでもオフラインカタログをダウンロードできます</string>
     <string name="offline_catalog_n_a">オフラインカタログが見つかりません</string>
     <string name="question_download_catalog">今すぐオフラインカタログをダウンロードしますか?</string>

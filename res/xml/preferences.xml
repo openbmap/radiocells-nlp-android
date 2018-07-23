@@ -39,17 +39,15 @@
     <PreferenceCategory android:title="@string/debug_category_title">
         <CheckBoxPreference
             android:defaultValue="false"
-            android:key="acra.enable"
-            android:summaryOff="@string/crash_report_summary_off"
-            android:summaryOn="@string/crash_report_summary_on"
-            android:title="@string/crash_reports_title" />
-        <CheckBoxPreference
-            android:defaultValue="false"
             android:key="debug.messages"
             android:summaryOff="@string/off"
             android:summaryOn="@string/on"
             android:title="@string/debug_title" />
     </PreferenceCategory>
+    <Preference
+        android:key="test"
+        android:summary="@string/test_summary"
+        android:title="@string/test"/>
     <Preference
         android:key="version"
         android:summary="-"

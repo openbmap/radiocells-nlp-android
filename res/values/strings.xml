@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name" translatable="false">org.openbmap.unifiedNlpProvider</string>
+    <string name="app_name" translatable="false">UnifiedNlpProvider for Radiocells.org</string>
     <string name="prefs_none">None</string>
     <string name="operation_mode_summary">When using offline mode, be sure to press \'Update offline database\' below. Online mode queries the Radiocells.org geolocation service and requires mobile data access</string>
     <string name="operation_mode_title">Online/offline mode</string>
@@ -36,4 +36,7 @@
     <string name="prefs_download_wifi_catalog">Download Offline Database</string>
     <string name="prefs_download_wifi_catalog_summary">Size between 10–400MB depending on country</string>
     <string name="server_parsing_error">Error parsing server reply</string>
+    <string name="test_summary">Send a test query</string>
+    <string name="test">Test provider</string>
+    <string name="warning_no_network_location">Please enable \'High Accuracy\' or \'Energy Saving\' in Android Location Settings (instead of GPS only)</string>
 </resources>

@@ -11,10 +11,6 @@ Privacy notice: we might use ONLINE queries to improve the radiocells.org databa
       alt="Get it on F-Droid"
       height="80">](https://f-droid.org/packages/org.openbmap/)
 
-[<img src="https://f-droid.org/badge/get-it-on.png"
-      alt="Get it on F-Droid"
-      height="80">](https://f-droid.org/packages/org.openbmap/)
-
 # History
 
 0.2.9
