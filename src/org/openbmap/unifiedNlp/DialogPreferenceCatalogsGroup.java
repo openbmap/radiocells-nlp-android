@@ -28,7 +28,7 @@ public class DialogPreferenceCatalogsGroup {
     public String string;
     public final List<CatalogDownload> children = new ArrayList<>();
 
-    public DialogPreferenceCatalogsGroup(String string) {
+    DialogPreferenceCatalogsGroup(String string) {
         this.string = string;
     }
 

@@ -10,6 +10,7 @@ import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.content.DialogInterface.OnKeyListener;
 import android.os.Environment;
+import android.support.annotation.NonNull;
 import android.text.Editable;
 import android.util.Log;
 import android.view.Gravity;
@@ -35,14 +36,14 @@ import java.util.List;
 public class DirectoryChooserDialog {
     private static final String TAG = DirectoryChooserDialog.class.getSimpleName();
     private boolean mIsNewFolderEnabled = true;
-    private String mSdcardDirectory = "";
+    private String mSdcardDirectory;
     private Context mContext;
     private TextView mTitleView;
     private TextView mSubtitleView;
 
     private String mDir = "";
     private List<String> mSubdirs = null;
-    private ChosenDirectoryListener mChosenDirectoryListener = null;
+    private ChosenDirectoryListener mChosenDirectoryListener;
     private ArrayAdapter<String> mListAdapter = null;
 
     public DirectoryChooserDialog(Context context, ChosenDirectoryListener chosenDirectoryListener) {
@@ -257,9 +258,10 @@ public class DirectoryChooserDialog {
     private ArrayAdapter<String> createListAdapter(List<String> items) {
         return new ArrayAdapter<String>(mContext,
                 android.R.layout.select_dialog_item, android.R.id.text1, items) {
+            @NonNull
             @Override
             public View getView(int position, View convertView,
-                                ViewGroup parent) {
+                                @NonNull ViewGroup parent) {
                 View v = super.getView(position, convertView, parent);
 
                 if (v instanceof TextView) {

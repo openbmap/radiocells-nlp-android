@@ -17,6 +17,7 @@
 */
 package org.openbmap.unifiedNlp;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.DownloadManager;
@@ -29,14 +30,15 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
-import android.net.wifi.WifiManager.WifiLock;
 import android.os.Bundle;
-import android.os.PowerManager.WakeLock;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -56,21 +58,41 @@ import java.io.InputStream;
 public class SettingsActivity extends PreferenceActivity implements ICatalogChooser {
 
     private static final String TAG = SettingsActivity.class.getSimpleName();
+    private static final int MY_PERMISSIONS_REQUEST_COARSE_LOCATION = 121212;
 
     private DownloadManager mDownloadManager;
 
     private BroadcastReceiver mReceiver = null;
 
-    private boolean mIsDownloading;
-    private WakeLock mWakeLock;
-    private WifiLock mWifiLock;
-
-    private long mCurrentCatalogDownloadId;
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case MY_PERMISSIONS_REQUEST_COARSE_LOCATION: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Log.i(TAG, "Location permission granted");
+                } else {
+                    // permission denied, boo! Disable the
+                    // functionality that depends on this permission.
+                    Toast.makeText(this, "We're sorry: without location permission, we can't give you locations ;-)",
+                            Toast.LENGTH_LONG).show();
+                }
+            }
+        }
+    }
 
     @Override
     protected final void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         addPreferencesFromResource(R.xml.preferences);
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            Log.i(TAG, "Coarse Location permission is missing");
+
+            ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
+                        MY_PERMISSIONS_REQUEST_COARSE_LOCATION);
+        }
 
         registerDownloadManager();
 
@@ -125,14 +147,6 @@ public class SettingsActivity extends PreferenceActivity implements ICatalogChoo
 
     @Override
     protected final void onDestroy() {
-        if (mWakeLock != null && mWakeLock.isHeld()) {
-            mWakeLock.release();
-        }
-
-        if (mWifiLock != null && mWifiLock.isHeld()) {
-            mWifiLock.release();
-        }
-
         if (mReceiver != null) {
             unregisterReceiver(mReceiver);
         }
@@ -192,11 +206,11 @@ public class SettingsActivity extends PreferenceActivity implements ICatalogChoo
         String[] entries;
         String[] values;
 
-        MediaScanner m = new MediaScanner(this, new File(catalogFolder));
+        // rescan
+        new MediaScanner(this, new File(catalogFolder));
 
         // Check for presence of database directory
         File folder = new File(catalogFolder);
-
         if (folder.exists() && folder.canRead()) {
             // List each map file
             String[] dbFiles = folder.list(new FilenameFilter() {
@@ -296,7 +310,6 @@ public class SettingsActivity extends PreferenceActivity implements ICatalogChoo
                 public void onReceive(final Context context, final Intent intent) {
                     final String action = intent.getAction();
                     if (DownloadManager.ACTION_DOWNLOAD_COMPLETE.equals(action)) {
-
                         final long downloadId = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, 0);
                         final DownloadManager.Query query = new DownloadManager.Query();
                         query.setFilterById(downloadId);
@@ -341,7 +354,7 @@ public class SettingsActivity extends PreferenceActivity implements ICatalogChoo
             MediaScanner m = new MediaScanner(this, new File(targetFolder.getAbsolutePath()));
 
             // if file has been downloaded to cache folder, move to target folder
-            if (file.indexOf(this.getExternalCacheDir().getPath()) > -1) {
+            if (file.contains(this.getExternalCacheDir().getPath())) {
                 try {
                     Log.i(TAG, "Moving file to" + targetFolder.getAbsolutePath());
                     String target = targetFolder.getAbsolutePath()+ File.separator + file;
@@ -362,14 +375,15 @@ public class SettingsActivity extends PreferenceActivity implements ICatalogChoo
      */
     public void activateCatalog(final String absoluteFile) {
 
-        if (new File(absoluteFile).exists() == false) {
-            Toast.makeText(this, String.format("File %s doesn't exists!", absoluteFile), Toast.LENGTH_LONG).show();
+        if (!new File(absoluteFile).exists()) {
+            Toast.makeText(this, String.format("File %s doesn't exists!", absoluteFile),
+                    Toast.LENGTH_LONG).show();
             return;
         }
 
         ListPreference lf = (ListPreference) findPreference(Preferences.KEY_OFFLINE_CATALOG_FILE);
         // get filename
-        String[] filenameArray = absoluteFile.split("\\/");
+        String[] filenameArray = absoluteFile.split("/");
         String file = filenameArray[filenameArray.length - 1];
 
         CharSequence[] values = lf.getEntryValues();
@@ -471,6 +485,7 @@ public class SettingsActivity extends PreferenceActivity implements ICatalogChoo
             Log.i(TAG, String.format("Saving %s @ %s", url, folder.getAbsolutePath() + File.separator + filename));
 
             final DownloadManager dm = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
+            long mCurrentCatalogDownloadId;
             try {
                 // try to download to target. If target isn't below Environment.getExternalStorageDirectory(),
                 // e.g. on second SD card a security exception is thrown
@@ -481,7 +496,6 @@ public class SettingsActivity extends PreferenceActivity implements ICatalogChoo
                 // download to temp dir and try to move to target later
                 Log.w(TAG, "Security exception, can't write to " + target + ", using " + getExternalCacheDir());
                 final File tempFile = new File(getExternalCacheDir() + File.separator + filename);
-
                 final DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url));
                 request.setDestinationUri(Uri.fromFile(tempFile));
                 mCurrentCatalogDownloadId = dm.enqueue(request);

@@ -35,10 +35,10 @@ public class DialogPreferenceCatalogsListAdapter extends BaseExpandableListAdapt
 
     private final SparseArray<DialogPreferenceCatalogsGroup> mGroups;
     private final ICatalogsListAdapterListener mCallback;
-    public LayoutInflater mInflater;
-    public Context mContext;
+    private LayoutInflater mInflater;
+    private Context mContext;
 
-    public DialogPreferenceCatalogsListAdapter(Context context, SparseArray<DialogPreferenceCatalogsGroup> groups, ICatalogsListAdapterListener callback) {
+    DialogPreferenceCatalogsListAdapter(Context context, SparseArray<DialogPreferenceCatalogsGroup> groups, ICatalogsListAdapterListener callback) {
         mGroups = groups;
         mContext = context;
         mInflater =  LayoutInflater.from(mContext);
@@ -62,11 +62,11 @@ public class DialogPreferenceCatalogsListAdapter extends BaseExpandableListAdapt
     @Override
     public View getChildView(int groupPosition, final int childPosition, boolean isLastChild, View convertView, ViewGroup parent) {
         final CatalogDownload children = (CatalogDownload) getChild(groupPosition, childPosition);
-        TextView text = null;
+        TextView text;
         if (convertView == null) {
             convertView = mInflater.inflate(R.layout.dialogpreference_catalogs_detail, null);
         }
-        text = (TextView) convertView.findViewById(R.id.textView1);
+        text = convertView.findViewById(R.id.textView1);
         text.setText(children.getTitle());
         text.setTag(children.getUrl());
         convertView.setOnClickListener(new OnClickListener() {

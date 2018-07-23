@@ -29,11 +29,6 @@ import android.util.SparseArray;
 import android.view.View;
 import android.widget.ExpandableListView;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.params.BasicHttpParams;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -43,6 +38,8 @@ import org.openbmap.unifiedNlp.utils.ICatalogsListAdapterListener;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -69,7 +66,7 @@ public class DialogPreferenceCatalogs extends DialogPreference implements ICatal
     protected void onBindDialogView(View v) {
         super.onBindDialogView(v);
         groups = new SparseArray<>();
-        ExpandableListView listView = (ExpandableListView) v.findViewById(R.id.list);
+        ExpandableListView listView = v.findViewById(R.id.list);
         mAdapter = new DialogPreferenceCatalogsListAdapter(getContext(), groups, this);
         listView.setAdapter(mAdapter);
 
@@ -97,7 +94,7 @@ public class DialogPreferenceCatalogs extends DialogPreference implements ICatal
     /**
      * Creates list of online maps
      */
-    public void populateListView() {
+    private void populateListView() {
         DialogPreferenceCatalogsGroup group = null;
         String name;
         int j = 0;
@@ -139,42 +136,37 @@ public class DialogPreferenceCatalogs extends DialogPreference implements ICatal
         protected List<CatalogDownload> doInBackground(String... params) {
             List<CatalogDownload> result = new ArrayList<>();
 
-            DefaultHttpClient httpclient = new DefaultHttpClient(new BasicHttpParams());
-            HttpGet httpGet = new HttpGet(LIST_DOWNLOADS_URL);
-            httpGet.setHeader("Content-type", "application/json");
-
-            InputStream inputStream = null;
+            String json = "";
             try {
-                HttpResponse response = httpclient.execute(httpGet);
-                HttpEntity entity = response.getEntity();
-
-                inputStream = entity.getContent();
-                // json is UTF-8 by default
-                BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"), 8);
-                StringBuilder sb = new StringBuilder();
-
+                URL endpoint = new URL(LIST_DOWNLOADS_URL);
+                HttpURLConnection con = (HttpURLConnection) endpoint.openConnection();
+                con.setRequestProperty("Content-Type", "application/json");
+                con.setRequestProperty("Accept", "application/json");
+                con.connect();
+                InputStream stream = con.getInputStream();
+                BufferedReader rd = new BufferedReader(new InputStreamReader(stream));
+                StringBuilder bf = new StringBuilder();
                 String line;
-                while ((line = reader.readLine()) != null)
-                {
-                    sb.append(line + "\n");
-                }
 
-                JSONObject jObject = new JSONObject(sb.toString());
-                JSONArray arr = jObject.getJSONArray("downloads");
+                while ((line = rd.readLine()) != null) {
+                    bf.append(line).append("\n");
+                }
+                json = bf.toString();
+            } catch (Exception e) {
+                Log.e(TAG, "Error parsing json");
+            }
+
+            try {
+                JSONObject jObject = new JSONObject(json);
+                JSONArray arr;
+                arr = jObject.getJSONArray("downloads");
                 for (int i = 0; i < arr.length(); i++) {
                     result.add(jsonToDownload(arr.getJSONObject(i)));
                 }
-            } catch (Exception e) {
-                Log.e(TAG, "Error parsing server reply:" + e.getMessage());
-            } finally {
-                try {
-                    if(inputStream != null) {
-                        inputStream.close();
-                    }
-                } catch (Exception squish){
-                    return null;
-                }
+            } catch (JSONException e) {
+                Log.e(TAG, "Error parsing JSON");
             }
+
             return result;
         }
 

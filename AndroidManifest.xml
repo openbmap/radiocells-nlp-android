@@ -1,12 +1,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="org.openbmap.unifiedNlp"
     android:sharedUserId="org.openbmap"
-    android:versionCode="20"
-    android:versionName="0.2.8">
+    android:versionCode="21"
+    android:versionName="0.2.9">
 
     <uses-sdk
         android:minSdkVersion="16"
-        android:targetSdkVersion="26" />
+        android:targetSdkVersion="27" />
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
@@ -25,12 +25,13 @@
         <activity
             android:name="org.openbmap.unifiedNlp.SettingsActivity"
             android:exported="true"
-            android:label="@string/preferences"/>
+            android:label="@string/preferences"
+            android:theme="@style/AppBaseTheme" />
 
         <service
-            android:name="org.openbmap.unifiedNlp.services.RadiocellsOrgNlpService"
+            android:name="org.openbmap.unifiedNlp.services.RadiocellsLocationService"
             android:exported="true"
-            android:label="Radiocells.org Unified Network Location Provider Backend"
+            android:label="@string/backend_name"
             android:permission="android.permission.ACCESS_COARSE_LOCATION">
             <intent-filter>
                 <action android:name="org.microg.nlp.LOCATION_BACKEND" />
@@ -39,6 +40,7 @@
             <meta-data
                 android:name="org.microg.nlp.BACKEND_SETTINGS_ACTIVITY"
                 android:value="org.openbmap.unifiedNlp.SettingsActivity" />
+            <meta-data android:name="org.microg.nlp.BACKEND_SUMMARY" android:value="@string/summary" />
         </service>
     </application>
 
