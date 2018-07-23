@@ -1,5 +1,11 @@
 <resources>
+<<<<<<< HEAD
     <string name="app_name" translatable="false">UnifiedNlpProvider for Radiocells.org</string>
+=======
+    <string name="app_name" translatable="false">org.openbmap.unifiedNlpProvider</string>
+    <string name="backend_name">openbmap Location Service</string>
+    <string name="summary">Locate using downloaded Radiocells.org's database</string>
+>>>>>>> 8dd081d8f49d7cd19317fc81f2558214d13ceb9f
     <string name="prefs_none">None</string>
     <string name="operation_mode_summary">When using offline mode, be sure to press \'Update offline database\' below. Online mode queries the Radiocells.org geolocation service and requires mobile data access</string>
     <string name="operation_mode_title">Online/offline mode</string>

@@ -31,7 +31,7 @@
         <service
             android:name="org.openbmap.unifiedNlp.services.RadiocellsLocationService"
             android:exported="true"
-            android:label="Radiocells.org Unified Network Location Provider Backend"
+            android:label="@string/backend_name"
             android:permission="android.permission.ACCESS_COARSE_LOCATION">
             <intent-filter>
                 <action android:name="org.microg.nlp.LOCATION_BACKEND" />
@@ -40,6 +40,7 @@
             <meta-data
                 android:name="org.microg.nlp.BACKEND_SETTINGS_ACTIVITY"
                 android:value="org.openbmap.unifiedNlp.SettingsActivity" />
+            <meta-data android:name="org.microg.nlp.BACKEND_SUMMARY" android:value="@string/summary" />
         </service>
     </application>
 
