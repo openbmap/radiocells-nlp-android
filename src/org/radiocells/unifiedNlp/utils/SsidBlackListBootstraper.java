@@ -17,7 +17,7 @@ Radiobeacon - Openbmap wifi and cell logger
  */
 
 
-package org.openbmap.unifiedNlp.utils;
+package org.radiocells.unifiedNlp.utils;
 
 import android.util.Log;
 

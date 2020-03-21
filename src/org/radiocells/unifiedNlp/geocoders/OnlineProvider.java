@@ -15,7 +15,7 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-package org.openbmap.unifiedNlp.geocoders;
+package org.radiocells.unifiedNlp.geocoders;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -28,8 +28,8 @@ import android.util.Log;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.openbmap.unifiedNlp.models.Cell;
-import org.openbmap.unifiedNlp.services.JSONParser;
+import org.radiocells.unifiedNlp.models.Cell;
+import org.radiocells.unifiedNlp.services.JSONParser;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -131,9 +131,9 @@ public class OnlineProvider extends AbstractProvider implements ILocationProvide
                     if (jsonData.has("location")) {
                         String source = jsonData.optString("source", "unknown");
                         JSONObject location = jsonData.getJSONObject("location");
-                        Double lat = location.getDouble("lat");
-                        Double lon = location.getDouble("lng");
-                        Long acc = jsonData.getLong("accuracy");
+                        double lat = location.getDouble("lat");
+                        double lon = location.getDouble("lng");
+                        long acc = jsonData.getLong("accuracy");
                         Location result = new Location(TAG);
                         result.setLatitude(lat);
                         result.setLongitude(lon);

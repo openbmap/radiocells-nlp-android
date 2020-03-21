@@ -1,4 +1,4 @@
-package org.openbmap.unifiedNlp;
+package org.radiocells.unifiedNlp;
 
 public interface ICatalogChooser {
     void catalogSelected(String url);

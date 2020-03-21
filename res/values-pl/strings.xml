@@ -1,4 +1,4 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="backend_name">Usługa lokalizacji openbmap</string>
     <string name="summary">Określaj lokalizację używając pobieralnej bazy danych Radiocells.org</string>
     <string name="prefs_none">brak</string>
@@ -38,6 +38,6 @@
     <string name="prefs_check_server">Łączenie z serwerem…</string>
     <string name="please_stay_patient">Prosimy o cierpliwość…</string>
     <string name="prefs_download_wifi_catalog">Pobierz bazę danych Wi-Fi</string>
-    <string name="prefs_download_wifi_catalog_summary">Rozmiar 10-400MB w zależności od kraju</string>
+    <string name="prefs_download_wifi_catalog_summary" tools:ignore="TypographyDashes">Rozmiar 10-400MB w zależności od kraju</string>
     <string name="server_parsing_error">Błąd przetwarzania zapytania serwera</string>
 </resources>

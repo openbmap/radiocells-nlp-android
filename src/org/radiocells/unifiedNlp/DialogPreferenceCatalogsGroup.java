@@ -1,5 +1,5 @@
 /*
-	Radiobeacon - Openbmap Unified Network Location Provider
+	Radiobeacon - Openbmap wifi and cell logger
     Copyright (C) 2013  wish7
 
     This program is free software: you can redistribute it and/or modify
@@ -14,15 +14,22 @@
 
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
-package org.openbmap.unifiedNlp.geocoders;
+ */
 
-import android.net.wifi.ScanResult;
+package org.radiocells.unifiedNlp;
 
-import org.openbmap.unifiedNlp.models.Cell;
+import org.radiocells.unifiedNlp.utils.CatalogDownload;
 
+import java.util.ArrayList;
 import java.util.List;
 
-public interface ILocationProvider {
-    void getLocation(List<ScanResult> wifiList, List<Cell> cellsList);
+public class DialogPreferenceCatalogsGroup {
+
+    public String string;
+    public final List<CatalogDownload> children = new ArrayList<>();
+
+    DialogPreferenceCatalogsGroup(String string) {
+        this.string = string;
+    }
+
 }

@@ -15,8 +15,10 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-package org.openbmap.unifiedNlp.services;
+package org.radiocells.unifiedNlp.geocoders;
 
-public interface WifiScanCallback {
-    void onWifiResultsAvailable();
+import android.location.Location;
+
+public interface ILocationCallback {
+    Location onLocationReceived(Location location);
 }

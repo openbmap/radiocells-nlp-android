@@ -16,7 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.openbmap.unifiedNlp.utils;
+package org.radiocells.unifiedNlp.utils;
 
 public class CatalogDownload {
     private String mUpdated;

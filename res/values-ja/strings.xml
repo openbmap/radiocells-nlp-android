@@ -1,6 +1,6 @@
 <resources>
-    <string name="backend_name">openbmap Location Service</string>
-    <string name="summary">Locate using downloaded Radiocells.org's database</string>
+    <string name="backend_name">UnifiedNlpProvider for Radiocells.org</string>
+    <string name="summary">Locate using downloaded Radiocells.org\'s database</string>
     <string name="prefs_none">なし</string>
     <string name="operation_mode_summary">オフラインモードを使用するときは、下の \'オフラインデータベースを更新\' を押してください。 オンラインモードは Radiocells.org ジオロケーションサービスに問い合わせし、モバイルデータアクセスが必要です</string>
     <string name="operation_mode_title">オンライン/オフラインモード</string>

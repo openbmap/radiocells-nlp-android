@@ -15,10 +15,8 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-package org.openbmap.unifiedNlp;
+package org.radiocells.unifiedNlp;
 
-import android.Manifest;
-import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.DownloadManager;
 import android.content.BroadcastReceiver;
@@ -29,101 +27,40 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
-import android.location.Criteria;
-import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
-import android.support.annotation.NonNull;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.widget.Toast;
 
-import org.openbmap.unifiedNlp.utils.DirectoryChooserDialog;
-import org.openbmap.unifiedNlp.utils.FileHelpers;
-import org.openbmap.unifiedNlp.utils.MediaScanner;
+import org.radiocells.unifiedNlp.utils.DirectoryChooserDialog;
+import org.radiocells.unifiedNlp.utils.FileHelpers;
+import org.radiocells.unifiedNlp.utils.MediaScanner;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import static org.microg.nlp.api.Constants.LOCATION_EXTRA_BACKEND_COMPONENT;
 
 /**
  * Preferences activity.
  */
-public class SettingsActivity extends PreferenceActivity implements ICatalogChooser, LocationListener {
+public class SettingsActivity extends PreferenceActivity implements ICatalogChooser {
 
     private static final String TAG = SettingsActivity.class.getSimpleName();
-    private static final int MY_PERMISSIONS_REQUEST_COARSE_LOCATION = 121212;
 
     private DownloadManager mDownloadManager;
     private BroadcastReceiver mReceiver = null;
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], int[] grantResults) {
-        switch (requestCode) {
-            case MY_PERMISSIONS_REQUEST_COARSE_LOCATION: {
-                // If request is cancelled, the result arrays are empty.
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    Log.i(TAG, "Location permission granted");
-                } else {
-                    // permission not granted (or revoked) - ask user again?
-                    requestPermission();
-                }
-            }
-        }
-    }
-
-    private void requestPermission() {
-        AlertDialog.Builder bld = new AlertDialog.Builder(this);
-        bld.setMessage(this.getString(R.string.app_name) + " won't work without location permission.\nGrant permission now?");
-        bld.setCancelable(true);
-        bld.setPositiveButton(
-                "Yes",
-                new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        dialog.cancel();
-                        ActivityCompat.requestPermissions(SettingsActivity.this,
-                                new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
-                                MY_PERMISSIONS_REQUEST_COARSE_LOCATION);
-                    }
-                });
-        bld.setNegativeButton(
-                "No",
-                new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        dialog.cancel();
-                        // permission denied, boo! Disable the
-                        // functionality that depends on this permission.
-                    }
-                });
-        AlertDialog alertDlg = bld.create();
-        alertDlg.show();
-    }
-
-    @Override
     protected final void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         addPreferencesFromResource(R.xml.preferences);
-        if (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            Log.i(TAG, "Coarse Location permission is missing");
-            requestPermission();
-        }
 
         registerDownloadManager();
 
@@ -156,48 +93,6 @@ public class SettingsActivity extends PreferenceActivity implements ICatalogChoo
             AlertDialog dialog = builder.create();
             dialog.show();
         }
-
-        Preference button = findPreference("test");
-        button.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-            @Override
-            public boolean onPreferenceClick(Preference preference) {
-                if (ActivityCompat.checkSelfPermission(SettingsActivity.this,
-                        Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
-                {
-                    Log.i(TAG, "Coarse location permission missing - abort");
-                    requestPermission();
-                    return true;
-                }
-
-                final LocationManager locationManager = (LocationManager) getSystemService(
-                        Context.LOCATION_SERVICE);
-
-                boolean networkEnabled = locationManager.getProviders(true).contains(
-                        LocationManager.NETWORK_PROVIDER);
-                Log.i(TAG, "Network provider enabled: " + networkEnabled);
-                if (!networkEnabled) {
-                    Toast.makeText(SettingsActivity.this,
-                            SettingsActivity.this.getString(R.string.warning_no_network_location),
-                            Toast.LENGTH_LONG).show();
-                }
-                Log.i(TAG, "Requesting network location");
-
-                // TODO use check as in https://github.com/microg/android_packages_apps_UnifiedNlp/blob/bf8682e00fa829d3c6041a3646afce9a264696da/unifiednlp-base/src/main/java/org/microg/tools/selfcheck/NlpStatusChecks.java
-                locationManager.requestSingleUpdate(LocationManager.NETWORK_PROVIDER,
-                        SettingsActivity.this, null);
-                Runnable myRunnable = new Runnable() {
-                    public void run() {
-                        Log.i(TAG, "Timeout reached");
-                        locationManager.removeUpdates(SettingsActivity.this);
-                        //Toast.makeText(TAG, "Timeout - no response received", Toast.LENGTH_LONG).show();
-                    }
-                };
-
-                Handler handler = new Handler();
-                handler.postDelayed(myRunnable, 10000);
-                return true;
-            }
-        });
 
         Preference pref = findPreference(Preferences.KEY_VERSION_INFO);
         String version = "n/a";
@@ -573,29 +468,5 @@ public class SettingsActivity extends PreferenceActivity implements ICatalogChoo
         } else {
             Toast.makeText(this, R.string.error_save_file_failed, Toast.LENGTH_SHORT).show();
         }
-    }
-
-
-    @Override
-    public void onLocationChanged(Location location) {
-        Toast.makeText(this, location.toString(), Toast.LENGTH_LONG).show();
-        //Toast.makeText(this,location.getExtras().toString(), Toast.LENGTH_SHORT).show();
-        //boolean hasKnown = location != null && location.getExtras() != null &&
-        //        location.getExtras().containsKey("SERVICE_BACKEND_COMPONENT");
-    }
-
-    @Override
-    public void onStatusChanged(String s, int i, Bundle bundle) {
-
-    }
-
-    @Override
-    public void onProviderEnabled(String s) {
-
-    }
-
-    @Override
-    public void onProviderDisabled(String s) {
-
     }
 }

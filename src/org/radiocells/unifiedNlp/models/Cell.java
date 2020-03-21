@@ -1,4 +1,4 @@
-package org.openbmap.unifiedNlp.models;
+package org.radiocells.unifiedNlp.models;
 
 
 public class Cell {

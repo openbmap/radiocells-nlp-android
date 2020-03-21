@@ -16,7 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.openbmap.unifiedNlp;
+package org.radiocells.unifiedNlp;
 
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -32,8 +32,8 @@ import android.widget.ExpandableListView;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.openbmap.unifiedNlp.utils.CatalogDownload;
-import org.openbmap.unifiedNlp.utils.ICatalogsListAdapterListener;
+import org.radiocells.unifiedNlp.utils.CatalogDownload;
+import org.radiocells.unifiedNlp.utils.ICatalogsListAdapterListener;
 
 import java.io.BufferedReader;
 import java.io.InputStream;

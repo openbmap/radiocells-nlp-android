@@ -16,7 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.openbmap.unifiedNlp;
+package org.radiocells.unifiedNlp;
 
 import android.content.Context;
 import android.util.SparseArray;
@@ -28,12 +28,12 @@ import android.widget.BaseExpandableListAdapter;
 import android.widget.CheckedTextView;
 import android.widget.TextView;
 
-import org.openbmap.unifiedNlp.utils.CatalogDownload;
-import org.openbmap.unifiedNlp.utils.ICatalogsListAdapterListener;
+import org.radiocells.unifiedNlp.utils.CatalogDownload;
+import org.radiocells.unifiedNlp.utils.ICatalogsListAdapterListener;
 
 public class DialogPreferenceCatalogsListAdapter extends BaseExpandableListAdapter {
 
-    private final SparseArray<DialogPreferenceCatalogsGroup> mGroups;
+    private final SparseArray<org.radiocells.unifiedNlp.DialogPreferenceCatalogsGroup> mGroups;
     private final ICatalogsListAdapterListener mCallback;
     private LayoutInflater mInflater;
     private Context mContext;

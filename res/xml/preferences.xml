@@ -23,7 +23,7 @@
             android:summary="@string/wifi_catalog_summary"
             android:title="@string/wifi_catalog_title"/>
 
-        <org.openbmap.unifiedNlp.DialogPreferenceCatalogs
+        <org.radiocells.unifiedNlp.DialogPreferenceCatalogs
             android:selectable="true"
             android:enabled="true"
             android:title="@string/prefs_download_wifi_catalog"
@@ -44,10 +44,6 @@
             android:summaryOn="@string/on"
             android:title="@string/debug_title" />
     </PreferenceCategory>
-    <Preference
-        android:key="test"
-        android:summary="@string/test_summary"
-        android:title="@string/test"/>
     <Preference
         android:key="version"
         android:summary="-"

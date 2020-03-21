@@ -15,14 +15,14 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-package org.openbmap.unifiedNlp.services;
+package org.radiocells.unifiedNlp.services;
 
 import android.content.Context;
 import android.util.Log;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.openbmap.unifiedNlp.BuildConfig;
+import org.radiocells.unifiedNlp.BuildConfig;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
@@ -30,6 +30,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 
 public class JSONParser {
     private static final String TAG = JSONParser.class.getSimpleName();
@@ -62,7 +63,7 @@ public class JSONParser {
             con.connect();
 
             OutputStream os = con.getOutputStream();
-            os.write(params.toString().getBytes("UTF-8"));
+            os.write(params.toString().getBytes(StandardCharsets.UTF_8));
             os.close();
 
             try {

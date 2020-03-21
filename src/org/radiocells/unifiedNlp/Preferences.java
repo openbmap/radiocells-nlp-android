@@ -15,7 +15,7 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-package org.openbmap.unifiedNlp;
+package org.radiocells.unifiedNlp;
 
 /**
  * Stores settings keys and default values.
@@ -71,7 +71,7 @@ public final class Preferences {
      * Deprecated, use getExternalFilesDir(null).getAbsolutePath() instead
      * see https://github.com/wish7code/org.openbmap.unifiedNlpProvider/issues/10
      */
-    //public static final String VAL_DATA_FOLDER = "/org.openbmap.unifiednlp";
+    //public static final String VAL_DATA_FOLDER = "/org.radiocells.unifiednlp";
 
     /**
      * Default catalog filename

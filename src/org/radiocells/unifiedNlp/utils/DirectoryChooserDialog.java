@@ -1,4 +1,4 @@
-package org.openbmap.unifiedNlp.utils;
+package org.radiocells.unifiedNlp.utils;
 /*
  * Gregory Shpitalnik
  * http://www.codeproject.com/Articles/547636/Android-Ready-to-use-simple-directory-chooser-dial?msg=4923192#xx4923192xx
@@ -10,7 +10,6 @@ import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.content.DialogInterface.OnKeyListener;
 import android.os.Environment;
-import android.support.annotation.NonNull;
 import android.text.Editable;
 import android.util.Log;
 import android.view.Gravity;
@@ -25,7 +24,9 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import org.openbmap.unifiedNlp.R;
+import androidx.annotation.NonNull;
+
+import org.radiocells.unifiedNlp.R;
 
 import java.io.File;
 import java.util.ArrayList;
