@@ -49,9 +49,10 @@ public class MediaScanner implements MediaScannerConnectionClient {
     @Override
     public final void onMediaScannerConnected() {
         final File[] files = mFolder.listFiles();
-        for (final File file : files) {
-            mScanner.scanFile(file.getAbsolutePath(), null);
-        }
+        if (files != null)
+            for (final File file : files) {
+                mScanner.scanFile(file.getAbsolutePath(), null);
+            }
     }
 
     @Override
