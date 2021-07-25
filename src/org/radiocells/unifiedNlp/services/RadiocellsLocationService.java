@@ -58,6 +58,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -208,16 +209,29 @@ public class RadiocellsLocationService extends LocationBackendService implements
     protected Location update() {
         Calendar now = Calendar.getInstance();
 
+        HashSet<String> missingPerms = new HashSet<String>();
+
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             Log.d(TAG, "Fine location access available");
         } else {
             Log.i(TAG, "Missing fine location access - requesting");
+            missingPerms.add(Manifest.permission.ACCESS_FINE_LOCATION);
+        }
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
+            Log.d(TAG, "Read phone state permission available");
+        } else {
+            Log.i(TAG, "Missing phone state read access - requesting");
+            missingPerms.add(Manifest.permission.READ_PHONE_STATE);
+        }
+
+        if (!missingPerms.isEmpty()){
             PermissionHelper.requestPermissions(
                     (UnifiedNlpApplication) (getApplicationContext()),
-                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    missingPerms.toArray(new String[] {}),
                     1212,
                     "Permission needed",
-                    "Location access is needed for radiocells.org UnifiedNLP backend",
+                    "Permissions are needed for radiocells.org UnifiedNLP backend",
                     R.drawable.ic_launcher);
             return null;
         }
@@ -274,7 +288,7 @@ public class RadiocellsLocationService extends LocationBackendService implements
             Log.d(TAG, "Scanning cells only");
             getLocationFromWifisAndCells(null);
         } else {
-            Log.e(TAG, "Neigther cells nor wifis as source selected? Com'on..");
+            Log.e(TAG, "Neither cells nor wifis as source selected? Com'on..");
         }
 
         return null;

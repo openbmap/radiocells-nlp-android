@@ -12,12 +12,20 @@ public class UnifiedNlpApplication extends Application implements ActivityCompat
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
-        boolean isGranted = false;
+        boolean isLocationGranted = false;
+        boolean isPhoneStateGranted = false;
         for (int i = 0; i < grantResults.length; i++)
-            if (permissions[i].equals(Manifest.permission.ACCESS_FINE_LOCATION) && (grantResults[i] == PackageManager.PERMISSION_GRANTED))
-                isGranted = true;
-        if (!isGranted) {
+            if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
+                if (permissions[i].equals(Manifest.permission.ACCESS_FINE_LOCATION))
+                    isLocationGranted = true;
+                else if (permissions[i].equals(Manifest.permission.READ_PHONE_STATE))
+                isPhoneStateGranted = true;
+            }
+        if (!isLocationGranted) {
             Log.w(TAG, "ACCESS_FINE_LOCATION permission not granted");
+        }
+        if (!isPhoneStateGranted) {
+            Log.w(TAG, "READ_PHONE_STATE permission not granted");
         }
     }
 
