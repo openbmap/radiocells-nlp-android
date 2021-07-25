@@ -135,10 +135,12 @@ public class PermissionHelper {
          */
         @Override
         public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
-            Bundle resultData = new Bundle();
-            resultData.putStringArray("permissions", permissions);
-            resultData.putIntArray("grantResults", grantResults);
-            resultReceiver.send(requestCode, resultData);
+            if (resultReceiver != null) {
+                Bundle resultData = new Bundle();
+                resultData.putStringArray("permissions", permissions);
+                resultData.putIntArray("grantResults", grantResults);
+                resultReceiver.send(requestCode, resultData);
+            }
             finish();
         }
 
