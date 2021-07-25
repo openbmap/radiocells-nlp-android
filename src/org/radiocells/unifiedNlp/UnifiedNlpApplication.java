@@ -16,7 +16,9 @@ public class UnifiedNlpApplication extends Application implements ActivityCompat
         boolean isPhoneStateGranted = false;
         for (int i = 0; i < grantResults.length; i++)
             if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
-                if (permissions[i].equals(Manifest.permission.ACCESS_FINE_LOCATION))
+                if (permissions[i].equals(Manifest.permission.ACCESS_FINE_LOCATION) && (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.Q))
+                    isLocationGranted = true;
+                else if (permissions[i].equals(Manifest.permission.ACCESS_BACKGROUND_LOCATION) && (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q))
                     isLocationGranted = true;
                 else if (permissions[i].equals(Manifest.permission.READ_PHONE_STATE))
                 isPhoneStateGranted = true;

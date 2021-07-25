@@ -213,6 +213,17 @@ public class RadiocellsLocationService extends LocationBackendService implements
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             Log.d(TAG, "Fine location access available");
+            /*
+             * We need both permissions, but we cannot request them together (if we do, Android 11+ will deny the request).
+             */
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_BACKGROUND_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                    Log.d(TAG, "Background location access available");
+                } else {
+                    Log.i(TAG, "Missing background location access - requesting");
+                    missingPerms.add(Manifest.permission.ACCESS_BACKGROUND_LOCATION);
+                }
+            }
         } else {
             Log.i(TAG, "Missing fine location access - requesting");
             missingPerms.add(Manifest.permission.ACCESS_FINE_LOCATION);
